@@ -1,0 +1,30 @@
+{
+  "name": "vendidero/trusted-shops-easy-integration-for-woocommerce",
+  "description": "Trusted Shops Easy Integration for WooCommerce",
+  "homepage": "https://github.com/vendidero/trusted-shops-easy-integration-for-woocommerce",
+  "license": "GPL-3.0-or-later",
+  "type": "wordpress-plugin",
+  "prefer-stable": true,
+  "minimum-stability": "dev",
+  "require": {
+    "automattic/jetpack-autoloader": "^2.6.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "7.5.14",
+    "yoast/phpunit-polyfills": "^1.0"
+  },
+  "config": {
+    "platform": {
+      "php": "7.1"
+    },
+    "preferred-install": "dist",
+    "sort-packages": true,
+    "optimize-autoloader": true,
+    "allow-plugins": true
+  },
+  "autoload": {
+    "psr-4": {
+      "Vendidero\\TrustedShopsEasyIntegration\\": "src/"
+    }
+  }
+}
