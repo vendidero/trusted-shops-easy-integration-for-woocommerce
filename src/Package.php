@@ -16,7 +16,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '0.0.1-alpha';
+	const VERSION = '0.0.2-alpha';
 
 	public static function init() {
 		if ( ! self::has_dependencies() ) {
@@ -33,10 +33,6 @@ class Package {
 			Helper::init();
             Ajax::init();
 		}
-
-        add_action( 'admin_init', function() {
-
-        });
 
 		self::includes();
 
