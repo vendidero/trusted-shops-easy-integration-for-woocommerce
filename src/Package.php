@@ -34,6 +34,10 @@ class Package {
             Ajax::init();
 		}
 
+        add_action( 'admin_init', function() {
+
+        });
+
 		self::includes();
 
 		do_action( 'ts_easy_integration_init' );
@@ -232,7 +236,7 @@ class Package {
      *
 	 * @return array
 	 */
-    protected static function get_channels() {
+    public static function get_channels() {
         $channels = array_filter( (array) self::get_setting( 'channels', array() ) );
 
         if ( ! empty( $channels ) ) {
@@ -250,6 +254,45 @@ class Package {
 
         return $channels;
     }
+
+    public static function get_trustbadges() {
+	    $trustbadges = array_filter( (array) self::get_setting( 'trustbadges', array() ) );
+
+        return $trustbadges;
+    }
+
+    public static function get_trustbadge( $sale_channel = 'main' ) {
+        $trustbadges = self::get_trustbadges();
+        $trustbadge  = array_key_exists( $sale_channel, $trustbadges ) ? $trustbadges[ $sale_channel ] : false;
+
+        return $trustbadge;
+    }
+
+    public static function get_enable_review_invites() {
+	    $invites = array_filter( (array) self::get_setting( 'enable_invites', array() ) );
+
+        return $invites;
+    }
+
+	public static function enable_review_invites( $sale_channel = 'main' ) {
+		$invites = self::get_enable_review_invites();
+
+        return in_array( $sale_channel, $invites ) ? true : false;
+	}
+
+	public static function get_widgets( $sale_channel = 'main' ) {
+		$widgets = array_filter( (array) self::get_setting( 'widgets', array() ) );
+
+		if ( ! empty( $sale_channel ) ) {
+			$widgets = array_key_exists( $sale_channel, $widgets ) ? $widgets[ $sale_channel ] : array();
+
+            if ( ! empty( $widgets ) ) {
+                $widgets = isset( $widgets->children ) ? $widgets->children[0]->children : array();
+            }
+		}
+
+		return $widgets;
+	}
 
 	/**
      * Returns TS settings.
@@ -280,9 +323,14 @@ class Package {
 	 * @return array
 	 */
     public static function get_settings() {
-        return array(
-            'channels' => self::get_channels(),
+        $settings = array(
+            'channels'       => self::get_channels(),
+            'trustbadges'    => self::get_trustbadges(),
+            'widgets'        => self::get_widgets( '' ),
+            'enable_invites' => self::get_enable_review_invites(),
         );
+
+        return $settings;
     }
 
 	/**
@@ -291,7 +339,7 @@ class Package {
 	 * @param $name
 	 * @param $value
 	 *
-	 * @return bool
+	 * @return bool|\WP_Error
 	 */
 	public static function update_setting( $name, $value ) {
 		$option_name = "ts_easy_integration_{$name}";
@@ -303,11 +351,13 @@ class Package {
 			 * In case encryption fails, returns false.
 			 */
             if ( is_wp_error( $value ) ) {
-                return false;
+                return $value;
             }
 		}
 
-		return update_option( $option_name, $value );
+		update_option( $option_name, $value );
+
+        return true;
 	}
 
 	/**

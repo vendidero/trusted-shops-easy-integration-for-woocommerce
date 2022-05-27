@@ -64,7 +64,7 @@ class Ajax {
 		}
 
 		$settings = self::get_request_data();
-		$result   = false;
+		$result   = true;
 
 		foreach( $settings as $setting_name => $value ) {
 			$value = wc_clean( $value );
@@ -78,15 +78,15 @@ class Ajax {
 			/**
 			 * If an error occurs during saving option, stop here.
 			 */
-			if ( false === $result ) {
+			if ( is_wp_error( $result ) ) {
 				break;
 			}
 		}
 
-		if ( ! $result || is_wp_error( $result ) ) {
+		if ( is_wp_error( $result ) ) {
 			$response = array(
 				'success'  => false,
-				'message'  => is_wp_error( $result ) ? $result->get_error_messages() : _x( 'An error occurred during settings update. Please try again.', 'trusted-shops', 'trusted-shops-easy-integration' ),
+				'message'  => $result->get_error_messages(),
 				'settings' => Package::get_settings()
 			);
 		} else {

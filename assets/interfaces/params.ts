@@ -1,4 +1,5 @@
 import type { SaleChannel } from './sale-channel'
+import type { WidgetLocation } from './widget-location'
 
 export interface Params {
     ajax_url: string;
@@ -9,5 +10,6 @@ export interface Params {
     name_of_system: string;
     version_of_system: string;
     version: string;
-    sale_channels: SaleChannel[];
+    widget_locations: [],
+    sale_channels: WidgetLocation[];
 }

@@ -4,7 +4,9 @@
   "description": "TS Easy Integration for WooCommerce",
   "scripts": {
     "dev": "webpack --env development --watch",
-    "build": "webpack --env production"
+    "build": "webpack --env production",
+    "docker-clean": "docker-compose rm && docker-compose pull && docker-compose build --no-cache wordpress-unit-tests && docker-compose up -d --force-recreate --build db && docker-compose up -d --force-recreate --build wordpress-unit-tests && docker exec wordpress_test /usr/local/bin/dockerInit wordpress wordpress wordpress db latest latest true",
+    "phpunit": "docker-compose up -d db && docker-compose up -d --build wordpress-unit-tests && docker exec -it --workdir /var/www/html/wp-content/plugins/trusted-shops-easy-integration-for-woocommerce ts_easy_integration_wordpress_test php ./vendor/bin/phpunit"
   },
   "author": "vendidero",
   "devDependencies": {

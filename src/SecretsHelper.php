@@ -40,7 +40,9 @@ class SecretsHelper {
 	}
 
 	public static function get_encryption_key_constant( $encryption_type = '' ) {
-		return Package::is_integration() ? \WC_GZD_Secret_Box_Helper::get_encryption_key_constant( $encryption_type ) : apply_filters( 'ts_easy_integration_encryption_key_constant', 'WC_TS_EASY_INTEGRATION_ENCRYPTION_KEY', $encryption_type );
+		$constant_name = apply_filters( 'ts_easy_integration_encryption_key_constant', 'WC_TS_EASY_INTEGRATION_ENCRYPTION_KEY', $encryption_type );
+
+		return Package::is_integration() && ! defined( $constant_name ) ? \WC_GZD_Secret_Box_Helper::get_encryption_key_constant( $encryption_type ) : $constant_name;
 	}
 
 	/**

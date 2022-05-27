@@ -65,6 +65,7 @@ copy_dest_files() {
     --exclude=Gruntfile.js \
     --exclude=node_modules/ \
     --exclude=none \
+    --exclude=tsconfig.json \
     --exclude=auth.json \
     --exclude=package.json \
     --exclude=package-lock.json \

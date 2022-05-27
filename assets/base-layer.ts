@@ -2,7 +2,9 @@ import type { Settings } from './interfaces/settings'
 import type { EventsLib } from './interfaces/events-lib'
 import type { Params } from './interfaces/params'
 import type { SaleChannel } from './interfaces/sale-channel'
+import type { Trustbadge } from "./interfaces/trustbadge";
 import type { Channel } from './interfaces/channel'
+import type { Widgets } from './interfaces/widgets'
 
 const getTrustedBadge = (id: string) => {
     return {
@@ -94,124 +96,7 @@ const mappedChannelsData = [
     },
 ]
 
-const widgetLocation = [
-    { id: '21d3d933eb93', name: 'Home Page' },
-    {
-        id: '21d3d933eb93',
-        name: 'Footer',
-    },
-]
 
-let dataWidgets = {
-    children: [
-        {
-            tag: 'script',
-            attributes: {
-                src: {
-                    value: 'https://integrations.etrusted.site/applications/widget.js/v2',
-                    attributeName: 'src',
-                },
-                async: {
-                    attributeName: 'async',
-                },
-                defer: {
-                    attributeName: 'defer',
-                },
-            },
-            children: [
-                {
-                    tag: 'etrusted-widget',
-                    applicationType: 'product_star',
-                    widgetId: 'wdg-deleted-in-api',
-                    widgetLocation: {
-                        id: '21d3d933eb93',
-                        name: 'Footer',
-                    },
-                    attributes: {
-                        id: {
-                            value: 'wdg-deleted-in-api',
-                            attributeName: 'data-etrusted-widget-id',
-                        },
-                        productIdentifier: {
-                            attributeName: 'data-sku',
-                        },
-                    },
-                },
-
-                {
-                    tag: 'etrusted-widget',
-                    applicationType: 'product_review_list',
-                    widgetId: 'wdg-92de735d-6d02-4ccf-941c-9d72d3c0cc46',
-                    widgetLocation: {
-                        id: '21d3d933eb93',
-                        name: 'Footer',
-                    },
-                    extensions: {
-                        product_star: {
-                            tag: 'etrusted-product-review-list-widget-product-star-extension',
-                        },
-                    },
-                    attributes: {
-                        id: {
-                            value: 'wdg-92de735d-6d02-4ccf-941c-9d72d3c0cc46',
-                            attributeName: 'data-etrusted-widget-id',
-                        },
-                        productIdentifier: {
-                            attributeName: 'data-mpn',
-                        },
-                    },
-                },
-                {
-                    tag: 'etrusted-widget',
-                    applicationType: 'product_star',
-                    widgetId: 'wdg-deleted-in-api-2',
-                    widgetLocation: {
-                        id: '21d3d933eb93',
-                        name: 'Footer',
-                    },
-                    attributes: {
-                        id: {
-                            value: 'wdg-deleted-in-api-2',
-                            attributeName: 'data-etrusted-widget-id',
-                        },
-                        productIdentifier: {
-                            attributeName: 'data-sku',
-                        },
-                    },
-                },
-                {
-                    tag: 'etrusted-widget',
-                    applicationType: 'trusted_stars_service',
-                    widgetId: 'wdg-52c26016-c3e7-42d5-972b-9851a28809ea',
-                    widgetLocation: { id: '21d3d933eb93', name: 'Home Page' },
-                    attributes: {
-                        id: {
-                            value: 'wdg-52c26016-c3e7-42d5-972b-9851a28809ea',
-                            attributeName: 'data-etrusted-widget-id',
-                        },
-                        productIdentifier: {
-                            attributeName: 'data-gtin',
-                        },
-                    },
-                },
-                {
-                    tag: 'etrusted-widget',
-                    applicationType: 'review_carousel_service',
-                    widgetId: 'wdg-b893f1f2-c178-4fd8-b067-a66613bc3329',
-                    widgetLocation: { id: '21d3d933eb93', name: 'Home Page' },
-                    attributes: {
-                        id: {
-                            value: 'wdg-b893f1f2-c178-4fd8-b067-a66613bc3329',
-                            attributeName: 'data-etrusted-widget-id',
-                        },
-                    },
-                },
-            ],
-        },
-    ],
-}
-
-let reviewChannel:any = null
 
 class BaseLayer {
     private static _instance: BaseLayer;
@@ -224,13 +109,15 @@ class BaseLayer {
 
     private constructor() {
         this.settings = null;
-        this.eventsLib = (window as any).eventsLib as EventsLib;
-        this.params = (window as any).ts_easy_integration_params as Params;
+        this.eventsLib = ( window as any ).eventsLib as EventsLib;
+        this.params = ( window as any ).ts_easy_integration_params as Params;
         
         this.registerEvents();
     }
 
     private sendingNotification(event: any, status: string, type = 'save') {
+        console.log("Notification", event, status);
+
         this.eventsLib.dispatchAction({
             action: this.eventsLib.EVENTS.NOTIFICATION,
             payload: {
@@ -260,7 +147,7 @@ class BaseLayer {
     }
 
     private async getCredentialsCallback() {
-        await this.getCredentials().then(credentials => {
+        await this.getCredentials().then( credentials => {
             this.eventsLib.dispatchAction({
                 action: this.eventsLib.EVENTS.SET_CREDENTIALS_PROVIDED,
                 payload: credentials,
@@ -270,18 +157,18 @@ class BaseLayer {
 
     private async saveCredentialsCallback(event: { payload: { clientId: string; clientSecret: string; }; }) {
         try {
-            const settings = await this.getSettings().then(settings => {
+            const settings = await this.getSettings().then( settings => {
                 settings.client_id = event.payload.clientId;
                 settings.client_secret = event.payload.clientSecret;
 
                 return settings;
-            }).then(settings => {
-                return this.updateSettings(settings);
+            }).then( settings => {
+                return this.updateSettings( settings );
             });
 
-            this.sendingNotification(this.eventsLib.EVENTS.SAVE_CREDENTIALS, 'success');
+            this.sendingNotification( this.eventsLib.EVENTS.SAVE_CREDENTIALS, 'success' );
         } catch(e) {
-            this.sendingNotification(this.eventsLib.EVENTS.SAVE_CREDENTIALS, 'error');
+            this.sendingNotification( this.eventsLib.EVENTS.SAVE_CREDENTIALS, 'error' );
         }
     }
 
@@ -293,7 +180,7 @@ class BaseLayer {
     }
 
     private async getMappedChannelsCallback() {
-        await this.getChannels().then(channels => {
+        await this.getChannels().then( channels => {
             this.eventsLib.dispatchAction({
                 action: this.eventsLib.EVENTS.SET_MAPPED_CHANNELS,
                 payload: channels,
@@ -303,176 +190,171 @@ class BaseLayer {
 
     private async saveMappedChannelsCallback(event: { payload: Channel[]; }) {
         try {
-            const settings = await this.getSettings().then(settings => {
+            const settings = await this.getSettings().then( settings => {
                 settings.channels = event.payload;
 
                 return settings;
-            }).then(settings => {
+            }).then( settings => {
                 return this.updateSettings(settings);
             });
 
             await this.getMappedChannelsCallback().then( () => {
-                this.sendingNotification(this.eventsLib.EVENTS.SET_MAPPED_CHANNELS, 'success');
+                this.sendingNotification( this.eventsLib.EVENTS.SET_MAPPED_CHANNELS, 'success' );
             });
         } catch(e) {
-            this.sendingNotification(this.eventsLib.EVENTS.SET_MAPPED_CHANNELS, 'error');
+            this.sendingNotification( this.eventsLib.EVENTS.SET_MAPPED_CHANNELS, 'error' );
         }
     }
 
     private async disconnectCallback() {
         try {
-            await this.disconnect().then(result => {
+            await this.disconnect().then( result => {
                 this.eventsLib.dispatchAction({ action: this.eventsLib.EVENTS.SET_DISCONNECTED, payload: null });
                 this.settings = null;
             });
         } catch(e) {
-            this.sendingNotification(this.eventsLib.EVENTS.SET_DISCONNECTED, 'error');
+            this.sendingNotification( this.eventsLib.EVENTS.SET_DISCONNECTED, 'error' );
         }
+    }
+
+    private getUniqueId( tsChannelRef: string, salesChannelRef: string ) {
+        return tsChannelRef + '_' + salesChannelRef;
+    }
+
+    private async getTrustbadgeCallback( event: { payload: { id: string; salesChannelRef: string }; } ) {
+        await this.getTrustbadge( event.payload.salesChannelRef ).then( trustbadge => {
+            this.eventsLib.dispatchAction({
+                action: this.eventsLib.EVENTS.SET_TRUSTBADGE_CONFIGURATION_PROVIDED,
+                payload: trustbadge ? trustbadge : { id: 'id' , children: [] },
+            })
+        });
+    }
+
+    private async saveTrustbadgeCallback(event: { payload: Trustbadge }) {
+        try {
+            const settings = await this.getSettings().then( settings => {
+                settings.trustbadges[ event.payload.salesChannelRef ] = event.payload;
+
+                return settings;
+            }).then(settings => {
+                return this.updateSettings( settings );
+            });
+
+            await this.getTrustbadgeCallback( { payload: event.payload } ).then( () => {
+                this.sendingNotification( this.eventsLib.EVENTS.SAVE_TRUSTBADGE_CONFIGURATION, 'success' );
+            });
+        } catch(e) {
+            this.sendingNotification( this.eventsLib.EVENTS.SAVE_TRUSTBADGE_CONFIGURATION, 'error' );
+        }
+    }
+
+    private async getWidgetsCallback( event: { payload: { id: string; salesChannelRef: string }; } ) {
+        await this.getWidgets( event.payload.salesChannelRef ).then( widgets => {
+            this.eventsLib.dispatchAction({
+                action: this.eventsLib.EVENTS.SET_WIDGET_PROVIDED,
+                payload: widgets,
+            })
+        });
+    }
+
+    private getAdditionalWidgetLocationsCallback() {
+        this.eventsLib.dispatchAction({
+            action: this.eventsLib.EVENTS.SET_LOCATION_FOR_WIDGET,
+            payload: this.params.widget_locations,
+        });
+    }
+
+    private async saveWidgetsCallback(event: { payload: Widgets }) {
+        try {
+            const settings = await this.getSettings().then( settings => {
+                settings.widgets[ event.payload.salesChannelRef ] = event.payload;
+
+                return settings;
+            }).then(settings => {
+                return this.updateSettings( settings );
+            });
+
+            await this.getWidgetsCallback( { payload: event.payload } ).then( () => {
+                this.sendingNotification( this.eventsLib.EVENTS.SAVE_WIDGET_CHANGES, 'success' );
+            });
+        } catch(e) {
+            this.sendingNotification( this.eventsLib.EVENTS.SAVE_WIDGET_CHANGES, 'error' );
+        }
+    }
+
+    private async getHasReviewInvitesCallback( event: { payload: { id: string; salesChannelRef: string }; } ) {
+        await this.getChannelById( event.payload.salesChannelRef ).then( channel => {
+            if ( ! channel ) {
+                this.eventsLib.dispatchAction({
+                    action: this.eventsLib.EVENTS.SET_PRODUCT_REVIEW_FOR_CHANNEL,
+                    payload: null,
+                });
+            } else {
+                this.hasEnabledReviewInvites( event.payload.salesChannelRef ).then( hasEnabled => {
+                    this.eventsLib.dispatchAction({
+                        action: this.eventsLib.EVENTS.SET_PRODUCT_REVIEW_FOR_CHANNEL,
+                        payload: hasEnabled ? channel : null,
+                    })
+                });
+            }
+        });
+    }
+
+    private async updateReviewInvitesCallback(channel: Channel, isActivated = false) {
+        const event = isActivated ? this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL : this.eventsLib.EVENTS.DEACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL;
+
+        try {
+            const settings = await this.getSettings().then( settings => {
+                if ( isActivated && ! settings.enable_invites.includes( channel.salesChannelRef ) ) {
+                    settings.enable_invites.push( channel.salesChannelRef );
+                } else if ( ! isActivated && settings.enable_invites.includes( channel.salesChannelRef ) ) {
+                    settings.enable_invites = settings.enable_invites.filter( item => item !== channel.salesChannelRef );
+                }
+
+                console.log(settings.enable_invites);
+
+                return settings;
+            }).then(settings => {
+                return this.updateSettings( settings );
+            });
+
+            await this.getHasReviewInvitesCallback( { payload: { id: channel.eTrustedChannelRef, salesChannelRef: channel.salesChannelRef } } ).then( () => {
+                this.sendingNotification( event, 'success' );
+            });
+        } catch(e) {
+            this.sendingNotification( event, 'error' );
+        }
+    }
+
+    private async activateReviewInvitesCallback(event: { payload: Channel }) {
+        await this.updateReviewInvitesCallback( event.payload, true );
+    }
+
+    private async deactivateReviewInvitesCallback(event: { payload: Channel }) {
+        await this.updateReviewInvitesCallback( event.payload, false );
     }
 
     private async registerEvents() {
         this.eventsLib.registerEvents({
-            [this.eventsLib.EVENTS.GET_INFORMATION_OF_SYSTEAM]: this.getInformationOfSystemCallback.bind( this ),
-            [this.eventsLib.EVENTS.GET_LOCALE]: this.getLocaleCallback.bind( this ),
-            [this.eventsLib.EVENTS.SAVE_CREDENTIALS]: this.saveCredentialsCallback.bind( this ),
-            [this.eventsLib.EVENTS.GET_CREDENTIALS_PROVIDED]: this.getCredentialsCallback.bind( this ),
-            [this.eventsLib.EVENTS.GET_SALES_CHANNELS_PROVIDED]: this.getSalesChannelsCallback.bind( this ),
-            [this.eventsLib.EVENTS.GET_MAPPED_CHANNELS]: this.getMappedChannelsCallback.bind( this ),
-            [this.eventsLib.EVENTS.SAVE_MAPPED_CHANNEL]: this.saveMappedChannelsCallback.bind( this ),
-            [this.eventsLib.EVENTS.DISCONNECTED]: this.disconnectCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_INFORMATION_OF_SYSTEAM ]: this.getInformationOfSystemCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_LOCALE ]: this.getLocaleCallback.bind( this ),
+            [ this.eventsLib.EVENTS.SAVE_CREDENTIALS ]: this.saveCredentialsCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_CREDENTIALS_PROVIDED ]: this.getCredentialsCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_SALES_CHANNELS_PROVIDED ]: this.getSalesChannelsCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_MAPPED_CHANNELS ]: this.getMappedChannelsCallback.bind( this ),
+            [ this.eventsLib.EVENTS.SAVE_MAPPED_CHANNEL ]: this.saveMappedChannelsCallback.bind( this ),
+            [ this.eventsLib.EVENTS.DISCONNECTED ]: this.disconnectCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_TRUSTBADGE_CONFIGURATION_PROVIDED ]: this.getTrustbadgeCallback.bind( this ),
+            [ this.eventsLib.EVENTS.SAVE_TRUSTBADGE_CONFIGURATION ]: this.saveTrustbadgeCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_LOCATION_FOR_WIDGET ]: this.getAdditionalWidgetLocationsCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_WIDGET_PROVIDED ]: this.getWidgetsCallback.bind( this ),
+            [ this.eventsLib.EVENTS.SAVE_WIDGET_CHANGES ]: this.saveWidgetsCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_PRODUCT_REVIEW_FOR_CHANNEL ]: this.getHasReviewInvitesCallback.bind( this ),
+            [ this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL ]: this.activateReviewInvitesCallback.bind( this ),
+            [ this.eventsLib.EVENTS.DEACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL ]: this.deactivateReviewInvitesCallback.bind( this ),
 
-            [this.eventsLib.EVENTS.GET_TRUSTBADGE_CONFIGURATION_PROVIDED]: (event: { payload: { id: string; }; }) => {
-                console.log('DEMO:GET_TRUSTBADGE_CONFIGURATION_PROVIDED')
-                setTimeout(() => {
-                    this.eventsLib.dispatchAction({
-                        action: this.eventsLib.EVENTS.SET_TRUSTBADGE_CONFIGURATION_PROVIDED,
-                        payload: getTrustedBadge(event.payload.id),
-                    })
-                }, 3000)
-            },
-            [this.eventsLib.EVENTS.SAVE_TRUSTBADGE_CONFIGURATION]: (event: { payload: any; }) => {
-                console.log('DEMO:SAVE_TRUSTBADGE_CONFIGURATION_BaseLayer', event.payload)
-                try {
-                    setTimeout(() => {
-                        this.eventsLib.dispatchAction({
-                            action: this.eventsLib.EVENTS.SET_TRUSTBADGE_CONFIGURATION_PROVIDED,
-                            payload: event.payload,
-                        })
-                        this.sendingNotification(
-                            this.eventsLib.EVENTS.SAVE_TRUSTBADGE_CONFIGURATION,
-                            'TRUSTBADGE CONFIGURATION SAVED',
-                            'success'
-                        )
-                    }, 3000)
-                } catch (error) {
-                    setTimeout(() => {
-                        this.sendingNotification(
-                            this.eventsLib.EVENTS.SAVE_TRUSTBADGE_CONFIGURATION,
-                            'TRUSTBADGE CONFIGURATION NOT SAVED',
-                            'error'
-                        )
-                    }, 400)
-                }
-            },
-
-            [this.eventsLib.EVENTS.GET_LOCATION_FOR_WIDGET]: () => {
-                this.eventsLib.dispatchAction({
-                    action: this.eventsLib.EVENTS.SET_LOCATION_FOR_WIDGET,
-                    payload: widgetLocation,
-                })
-            },
-            [this.eventsLib.EVENTS.GET_WIDGET_PROVIDED]: (event: { payload: { id: string; }; }) => {
-                setTimeout(() => {
-                    this.eventsLib.dispatchAction({
-                        action: this.eventsLib.EVENTS.SET_WIDGET_PROVIDED,
-                        payload:
-                            event.payload.id === 'chl-7e52920a-2722-4881-9908-ecec98c716e4'
-                                ? dataWidgets
-                                : { children: [] },
-                    })
-                }, 3000)
-            },
-            [this.eventsLib.EVENTS.SAVE_WIDGET_CHANGES]: (event: { payload: { children: { tag: string; attributes: { src: { value: string; attributeName: string; }; async: { attributeName: string; }; defer: { attributeName: string; }; }; children: ({ tag: string; applicationType: string; widgetId: string; widgetLocation: { id: string; name: string; }; attributes: { id: { value: string; attributeName: string; }; productIdentifier: { attributeName: string; }; }; extensions?: undefined; } | { tag: string; applicationType: string; widgetId: string; widgetLocation: { id: string; name: string; }; extensions: { product_star: { tag: string; }; }; attributes: { id: { value: string; attributeName: string; }; productIdentifier: { attributeName: string; }; }; } | { tag: string; applicationType: string; widgetId: string; widgetLocation: { id: string; name: string; }; attributes: { id: { value: string; attributeName: string; }; productIdentifier?: undefined; }; extensions?: undefined; })[]; }[]; }; }) => {
-                try {
-                    console.log('DEMO:SAVE_WIDGET_CHANGES', event.payload)
-                    dataWidgets = event.payload
-                    setTimeout(() => {
-                        this.eventsLib.dispatchAction({
-                            action: this.eventsLib.EVENTS.SET_WIDGET_PROVIDED,
-                            payload: dataWidgets,
-                        })
-                        this.sendingNotification(this.eventsLib.EVENTS.SAVE_WIDGET_CHANGES, 'WIDGET SAVED', 'success')
-                    }, 3000)
-                } catch (error) {
-                    setTimeout(() => {
-                        this.sendingNotification(this.eventsLib.EVENTS.SAVE_WIDGET_CHANGES, 'WIDGET NOT SAVED', 'error')
-                    }, 400)
-                }
-            },
-
-            [this.eventsLib.EVENTS.GET_PRODUCT_REVIEW_FOR_CHANNEL]: (event: { payload: any; }) => {
-                console.log('DEMO:GET_PRODUCT_REVIEW_FOR_CHANNEL', event.payload)
-                setTimeout(() => {
-                    this.eventsLib.dispatchAction({
-                        action: this.eventsLib.EVENTS.SET_PRODUCT_REVIEW_FOR_CHANNEL,
-                        payload: null,
-                    })
-                }, 3000)
-            },
-
-            [this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL]: (event: { payload: null; }) => {
-                try {
-                    console.log('DEMO:ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL', event.payload)
-                    reviewChannel = event.payload
-                    setTimeout(() => {
-                        this.eventsLib.dispatchAction({
-                            action: this.eventsLib.EVENTS.SET_PRODUCT_REVIEW_FOR_CHANNEL,
-                            payload: reviewChannel,
-                        })
-                        this.sendingNotification(
-                            this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL,
-                            'PRODUCT REVIEW FOR CHANNEL ACTIVATED',
-                            'success'
-                        )
-                    }, 3000)
-                } catch (error) {
-                    setTimeout(() => {
-                        this.sendingNotification(
-                            this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL,
-                            'PRODUCT REVIEW FOR CHANNEL NOT ACTIVATED',
-                            'error'
-                        )
-                    }, 400)
-                }
-            },
-            [this.eventsLib.EVENTS.DEACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL]: (event: { payload: any; }) => {
-                try {
-                    console.log('DEMO:DEACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL', event.payload)
-
-                    setTimeout(() => {
-                        this.eventsLib.dispatchAction({
-                            action: this.eventsLib.EVENTS.SET_PRODUCT_REVIEW_FOR_CHANNEL,
-                            payload: reviewChannel,
-                        })
-                        this.sendingNotification(
-                            this.eventsLib.EVENTS.DEACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL,
-                            'PRODUCT REVIEW FOR CHANNEL DEACTIVATED',
-                            'success'
-                        )
-                    }, 3000)
-                } catch (error) {
-                    setTimeout(() => {
-                        this.sendingNotification(
-                            this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL,
-                            'PRODUCT REVIEW FOR CHANNEL NOT DEACTIVATED',
-                            'error'
-                        )
-                    }, 400)
-                }
-            },
-
-            [this.eventsLib.EVENTS.GET_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL]: (event: { payload: { id: any; }; }) => {
-                console.log('DEMO:GET_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL')
+            [this.eventsLib.EVENTS.GET_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL]: (event: { payload: any; }) => {
+                console.log('DEMO:GET_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL', event.payload)
                 setTimeout(() => {
                     this.eventsLib.dispatchAction({
                         action: this.eventsLib.EVENTS.SET_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL,
@@ -486,19 +368,19 @@ class BaseLayer {
                     setTimeout(() => {
                         this.eventsLib.dispatchAction({
                             action: this.eventsLib.EVENTS.SET_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL,
-                            payload: event.payload,
+                            payload: { id: event.payload.id, isUseDateToSendReviewInvites: true },
                         })
                         this.sendingNotification(
                             this.eventsLib.EVENTS.SAVE_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL,
-                            'USE ESTIMATED DELIVERY DATE FOR CHANNEL SAVED',
                             'success'
                         )
                     }, 3000)
                 } catch (error) {
+                    console.log("Error", error);
+
                     setTimeout(() => {
                         this.sendingNotification(
                             this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL,
-                            'USE ESTIMATED DELIVERY DATE FOR CHANNEL NOT SAVED',
                             'error'
                         )
                     }, 400)
@@ -553,6 +435,9 @@ class BaseLayer {
 
             this.settings.client_id     = client_id !== null ? atob( client_id ) : '';
             this.settings.client_secret = client_secret !== null ? atob( client_secret ) : '';
+            // Force parsing index signatures as objects to make sure JSON.stringify works as expected
+            this.settings.trustbadges  = {...this.settings.trustbadges}
+            this.settings.widgets      = {...this.settings.widgets}
         }
 
         if ( ! this.settings ) {
@@ -562,7 +447,7 @@ class BaseLayer {
         return this.settings;
     }
 
-    private updateSettingsData(result:Settings) {
+    private updateSettingsData(result: Settings) {
         const client_id     = this.settings ? this.settings.client_id : '';
         const client_secret = this.settings ? this.settings.client_secret : '';
 
@@ -593,7 +478,7 @@ class BaseLayer {
         });
     }
 
-    private async updateSettings( settings:Settings ): Promise<Settings> {
+    private async updateSettings( settings: Settings ): Promise<Settings> {
         this.settings = await fetch( this.getAjaxUrl( 'update_settings' ), {
             headers: {
                 'Content-Type': 'application/json;charset=UTF-8'
@@ -607,7 +492,7 @@ class BaseLayer {
                 throw new TypeError( result.message );
             }
 
-            return this.updateSettingsData(result.settings);
+            return this.updateSettingsData( result.settings );
         }).catch( () => {
             throw new TypeError( "Error while updating settings." );
         });
@@ -626,7 +511,7 @@ class BaseLayer {
         }
 
         try {
-            return await this.getSettings().then(settings => {
+            return await this.getSettings().then( settings => {
                 return {
                     'clientId': settings.client_id,
                     'clientSecret': settings.client_secret
@@ -639,7 +524,7 @@ class BaseLayer {
 
     private async getChannels(): Promise<Channel[]> {
         try {
-            return await this.getSettings().then(settings => {
+            return await this.getSettings().then( settings => {
                 return settings.channels;
             });
         } catch(e) {
@@ -647,8 +532,48 @@ class BaseLayer {
         }
     }
 
+    private async getChannelById( salesRef: string ): Promise<Channel|null> {
+        try {
+            return await this.getSettings().then( settings => {
+                return settings.channels.filter( channel => channel.salesChannelRef === salesRef )[0];
+            });
+        } catch(e) {
+            return null;
+        }
+    }
+
+    private async getTrustbadge( id: string ): Promise<Trustbadge|null> {
+        try {
+            return await this.getSettings().then( settings => {
+                return settings.trustbadges.hasOwnProperty( id ) ? settings.trustbadges[ id ] : null;
+            });
+        } catch(e) {
+            return null;
+        }
+    }
+
+    private async getWidgets( id: string ): Promise<Widgets|null> {
+        try {
+            return await this.getSettings().then( settings => {
+                return settings.widgets.hasOwnProperty( id ) ? settings.widgets[ id ] : null;
+            });
+        } catch(e) {
+            return null;
+        }
+    }
+
+    private async hasEnabledReviewInvites( id: string ): Promise<boolean> {
+        try {
+            return await this.getSettings().then( settings => {
+                return settings.enable_invites.includes( id );
+            });
+        } catch(e) {
+            return false;
+        }
+    }
+
     public static get Instance() {
-        return this._instance || (this._instance = new this());
+        return this._instance || ( this._instance = new this() );
     }
 }
 

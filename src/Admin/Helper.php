@@ -65,6 +65,7 @@ class Helper {
 					'version_of_system'     => Package::get_system_version(),
 					'version'               => Package::get_version(),
 					'sale_channels'         => array_values( Package::get_sale_channels() ),
+					'widget_locations'      => array(),
 				)
 			);
 		}
