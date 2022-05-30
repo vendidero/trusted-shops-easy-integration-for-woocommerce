@@ -69,10 +69,25 @@ class Ajax {
 		foreach( $settings as $setting_name => $value ) {
 			$value = wc_clean( $value );
 
-			switch( $setting_name ) {
-				default:
-					$result = Package::update_setting( $setting_name, $value );
-					break;
+			try {
+				if ( 'trustbadges' === $setting_name ) {
+					$value = (array) $value;
+
+					foreach( $value as $sale_channel => $trustbadge ) {
+						/**
+						 * Do not allow storing invalid trustbadges.
+						 */
+						if ( ! isset( $trustbadge->id ) || ! isset( $trustbadge->children ) || ! isset( $trustbadge->children[0]->attributes ) ) {
+							unset( $value[ $sale_channel ] );
+
+							throw new \Exception( _x( 'Invalid trustbadge detected.', 'trusted-shops', 'trusted-shops-easy-integration' ), 'trustbadge-invalid' );
+						}
+					}
+				}
+
+				$result = Package::update_setting( $setting_name, $value );
+			} catch( \Exception $e ) {
+				$result = new \WP_Error( $e->getCode(), $e->getMessage() );
 			}
 
 			/**

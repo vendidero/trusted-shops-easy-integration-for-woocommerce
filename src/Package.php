@@ -34,9 +34,33 @@ class Package {
             Ajax::init();
 		}
 
+        if ( self::is_frontend() ) {
+			if ( did_action( 'woocommerce_loaded' ) ) {
+				Hooks::init();
+			} else {
+				add_action( 'woocommerce_loaded', array( '\Vendidero\TrustedShopsEasyIntegration\Hooks', 'init' ) );
+			}
+        }
+
 		self::includes();
 
 		do_action( 'ts_easy_integration_init' );
+	}
+
+    protected static function is_frontend() {
+        return ( ! is_admin() || defined( 'DOING_AJAX' ) ) && ! defined( 'DOING_CRON' ) && ! self::is_rest_api_request();
+    }
+
+	protected static function is_rest_api_request() {
+		if ( function_exists( 'WC' ) ) {
+			$wc = WC();
+
+			if ( is_callable( array( $wc, 'is_rest_api_request' ) ) ) {
+				return $wc->is_rest_api_request();
+			}
+		}
+
+		return false;
 	}
 
 	public static function dependency_notice() {
@@ -158,6 +182,14 @@ class Package {
 		return dirname( __DIR__ );
 	}
 
+    public static function get_template( $template, $args = array() ) {
+	    wc_get_template( $template, $args, '', Package::get_path() . '/templates/' );
+    }
+
+	public static function get_template_html( $template, $args = array() ) {
+		return wc_get_template_html( $template, $args, '', Package::get_path() . '/templates/' );
+	}
+
 	/**
 	 * Return the path to the package.
 	 *
@@ -210,6 +242,10 @@ class Package {
         ) );
     }
 
+    public static function get_current_sale_channel() {
+        return apply_filters( 'ts_easy_integration_current_sale_channel', 'main' );
+    }
+
 	/**
      * Retrieves a sale channel by id.
      *
@@ -257,12 +293,29 @@ class Package {
         return $trustbadges;
     }
 
-    public static function get_trustbadge( $sale_channel = 'main' ) {
-        $trustbadges = self::get_trustbadges();
-        $trustbadge  = array_key_exists( $sale_channel, $trustbadges ) ? $trustbadges[ $sale_channel ] : false;
+    public static function get_trustbadge( $sale_channel = '' ) {
+        $sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
+        $trustbadges  = self::get_trustbadges();
+        $trustbadge   = array_key_exists( $sale_channel, $trustbadges ) ? $trustbadges[ $sale_channel ] : false;
 
         return $trustbadge;
     }
+
+	public static function get_trustbadge_id( $sale_channel = '' ) {
+		if ( $trustbadge = self::get_trustbadge( $sale_channel ) ) {
+			return ! empty( $trustbadge->id ) ? $trustbadge->id : false;
+		}
+
+        return false;
+	}
+
+	public static function has_valid_trustbadge( $sale_channel = '' ) {
+        if ( $trustbadge = self::get_trustbadge( $sale_channel ) ) {
+            return ! empty( $trustbadge->id ) ? true : false;
+        }
+
+        return false;
+ 	}
 
     public static function get_enable_review_invites() {
 	    $invites = array_filter( (array) self::get_setting( 'enable_invites', array() ) );
@@ -270,14 +323,147 @@ class Package {
         return $invites;
     }
 
-	public static function enable_review_invites( $sale_channel = 'main' ) {
-		$invites = self::get_enable_review_invites();
+	public static function enable_review_invites( $sale_channel = '' ) {
+		$sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
+		$invites      = self::get_enable_review_invites();
 
         return in_array( $sale_channel, $invites ) ? true : false;
 	}
 
-	public static function get_widgets( $sale_channel = 'main' ) {
-		$widgets = array_filter( (array) self::get_setting( 'widgets', array() ) );
+	/**
+	 * @param \WC_Order $order
+	 *
+	 * @return string
+	 */
+    public static function get_order_payment_method( $order ) {
+        return $order->get_payment_method_title();
+    }
+
+	/**
+	 * @param \WC_Product $product
+     * @param string $attribute
+	 *
+	 * @return string
+	 */
+	protected static function get_product_data( $product, $attribute, $force_parent = false ) {
+		$product = is_numeric( $product ) ? wc_get_product( $product ) : $product;
+
+		if ( ! $product ) {
+			return '';
+		}
+
+		if ( $force_parent && $product->get_parent_id() ) {
+			if ( $parent = wc_get_product( $product->get_parent_id() ) ) {
+				return Package::get_product_data( $parent, $attribute );
+			}
+		}
+
+        $getter = "get_{$attribute}";
+
+        if ( '_' !== substr( $attribute, 0, 1 ) && is_callable( array( $product, $getter ) ) ) {
+            $data = $product->{$getter}();
+        } else {
+            $data = $product->get_meta( $attribute, true );
+        }
+
+		if ( '' === $data && $product->get_parent_id() ) {
+			if ( $parent = wc_get_product( $product->get_parent_id() ) ) {
+				return Package::get_product_data( $parent, $attribute );
+			}
+		}
+
+		return apply_filters( "ts_easy_integration_product_data", $data, $product, $attribute, $force_parent );
+	}
+
+	/**
+	 * @param \WC_Product $product
+	 *
+	 * @return string
+	 */
+    public static function get_product_sku( $product ) {
+	    return self::get_product_data( $product, 'sku' );
+    }
+
+	/**
+	 * @param \WC_Product $product
+	 *
+	 * @return string
+	 */
+	public static function get_product_gtin( $product ) {
+		return self::get_product_data( $product, '_ts_gtin' );
+	}
+
+	/**
+	 * @param \WC_Product $product
+	 *
+	 * @return string
+	 */
+	public static function get_product_mpn( $product ) {
+		return self::get_product_data( $product, '_ts_mpn' );
+	}
+
+	/**
+	 * @param \WC_Product $product
+	 *
+	 * @return string
+	 */
+	public static function get_product_image_src( $product ) {
+		$product = is_numeric( $product ) ? wc_get_product( $product ) : $product;
+
+		if ( ! $product ) {
+			return false;
+		}
+
+		$image  = '';
+	    $images = array();
+
+        if ( $product->get_image_id() ) {
+			$images = wp_get_attachment_image_src( $product->get_image_id(), 'woocommerce_thumbnail', false );
+		} elseif ( $product->get_parent_id() ) {
+			$parent_product = wc_get_product( $product->get_parent_id() );
+
+            if ( $parent_product && $parent_product->get_image_id() ) {
+	            $images = wp_get_attachment_image_src( $parent_product->get_image_id(), 'woocommerce_thumbnail', false );
+			}
+		}
+
+        if ( ! empty( $images ) ) {
+            $image = $images[0];
+        }
+
+		return $image;
+	}
+
+	/**
+	 * @param \WC_Product $product
+	 *
+	 * @return string
+	 */
+	public static function get_product_brand( $product ) {
+		$product = is_numeric( $product ) ? wc_get_product( $product ) : $product;
+
+        // Force parent product brand
+		if ( $product && $product->get_parent_id() ) {
+			$product = wc_get_product( $product->get_parent_id() );
+		}
+
+		if ( ! $product ) {
+			return '';
+		}
+
+        $brand_attribute_name = apply_filters( 'ts_easy_integration_product_brand_attribute_name', '', $product );
+        $brand                = '';
+
+        if ( ! empty( $brand_attribute_name ) ) {
+            $brand = $product->get_attribute( $brand_attribute_name );
+        }
+
+		return apply_filters( 'ts_easy_integration_product_brand', $brand, $product );
+	}
+
+	public static function get_widgets( $sale_channel = '' ) {
+		$sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
+		$widgets      = array_filter( (array) self::get_setting( 'widgets', array() ) );
 
 		if ( ! empty( $sale_channel ) ) {
 			$widgets = array_key_exists( $sale_channel, $widgets ) ? $widgets[ $sale_channel ] : array();

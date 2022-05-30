@@ -6,98 +6,6 @@ import type { Trustbadge } from "./interfaces/trustbadge";
 import type { Channel } from './interfaces/channel'
 import type { Widgets } from './interfaces/widgets'
 
-const getTrustedBadge = (id: string) => {
-    return {
-        id,
-        children: [
-            {
-                tag: 'script',
-                attributes: {
-                    async: {
-                        attributeName: 'async',
-                    },
-                    'data-desktop-y-offset': {
-                        value: 8,
-                        attributeName: 'data-desktop-y-offset',
-                    },
-                    'data-mobile-y-offset': {
-                        value: 10,
-                        attributeName: 'data-mobile-y-offset',
-                    },
-                    'data-desktop-disable-reviews': {
-                        value: false,
-                        attributeName: 'data-desktop-disable-reviews',
-                    },
-                    'data-desktop-enable-custom': {
-                        value: false,
-                        attributeName: 'data-desktop-enable-custom',
-                    },
-                    'data-desktop-position': {
-                        value: 'right',
-                        attributeName: 'data-desktop-position',
-                    },
-                    'data-desktop-custom-width': {
-                        value: 156,
-                        attributeName: 'data-desktop-custom-width',
-                    },
-                    'data-desktop-enable-fadeout': {
-                        value: false,
-                        attributeName: 'data-desktop-enable-fadeout',
-                    },
-                    'data-disable-mobile': {
-                        value: false,
-                        attributeName: 'data-disable-mobile',
-                    },
-                    'data-disable-trustbadge': {
-                        value: false,
-                        attributeName: 'data-disable-trustbadge',
-                    },
-                    'data-mobile-custom-width': {
-                        value: 156,
-                        attributeName: 'data-mobile-custom-width',
-                    },
-                    'data-mobile-disable-reviews': {
-                        value: false,
-                        attributeName: 'data-mobile-disable-reviews',
-                    },
-                    'data-mobile-enable-custom': {
-                        value: false,
-                        attributeName: 'data-mobile-enable-custom',
-                    },
-                    'data-mobile-position': {
-                        value: 'right',
-                        attributeName: 'data-mobile-position',
-                    },
-                    charset: {
-                        value: 'UTF-8',
-                        attributeName: 'charset',
-                    },
-                    src: {
-                        value: `//widgets.trustedshops.com/js/${id}.js`,
-                        attributeName: 'src',
-                    },
-                },
-            },
-        ],
-    }
-}
-
-const mappedChannelsData = [
-    {
-        eTrustedChannelRef: 'chl-7e52920a-2722-4881-9908-ecec98c716e4',
-        eTrustedLocale: 'de_DE',
-        eTrustedName: 'eTrusted Any Shop',
-        eTrustedUrl: 'www.newurl.com',
-        eTrustedAccountRef: 'acc-9be350d7-bd85-4465-b4da-62fec5939f3c',
-        salesChannelLocale: 'de_DE',
-        salesChannelName: 'eTrusted Any Shop',
-        salesChannelRef: 'shop-7e52920a-2722-4881-9908-ecec98c716e4',
-        salesChannelUrl: 'www.newurl.com',
-    },
-]
-
-
-
 class BaseLayer {
     private static _instance: BaseLayer;
 
@@ -352,56 +260,9 @@ class BaseLayer {
             [ this.eventsLib.EVENTS.GET_PRODUCT_REVIEW_FOR_CHANNEL ]: this.getHasReviewInvitesCallback.bind( this ),
             [ this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL ]: this.activateReviewInvitesCallback.bind( this ),
             [ this.eventsLib.EVENTS.DEACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL ]: this.deactivateReviewInvitesCallback.bind( this ),
-
-            [this.eventsLib.EVENTS.GET_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL]: (event: { payload: any; }) => {
-                console.log('DEMO:GET_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL', event.payload)
-                setTimeout(() => {
-                    this.eventsLib.dispatchAction({
-                        action: this.eventsLib.EVENTS.SET_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL,
-                        payload: { id: event.payload.id, isUseDateToSendReviewInvites: true },
-                    })
-                }, 3000)
-            },
-            [this.eventsLib.EVENTS.SAVE_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL]: (event: { payload: any; }) => {
-                try {
-                    console.log('DEMO:SAVE_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL', event.payload)
-                    setTimeout(() => {
-                        this.eventsLib.dispatchAction({
-                            action: this.eventsLib.EVENTS.SET_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL,
-                            payload: { id: event.payload.id, isUseDateToSendReviewInvites: true },
-                        })
-                        this.sendingNotification(
-                            this.eventsLib.EVENTS.SAVE_USE_ESTIMATED_DELIVERY_DATE_FOR_CHANNEL,
-                            'success'
-                        )
-                    }, 3000)
-                } catch (error) {
-                    console.log("Error", error);
-
-                    setTimeout(() => {
-                        this.sendingNotification(
-                            this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL,
-                            'error'
-                        )
-                    }, 400)
-                }
-            },
             [this.eventsLib.EVENTS.EXPORT_PREVIOUS_ORDER]: (event: { payload: any; }) => {
-                console.log('DEMO:EXPORT_PREVIOUS_ORDER', event.payload)
-                setTimeout(() => {
-                    const link = document.createElement('a')
-                    link.download = `./Brand_Logo_Trusted_Shops.svg`
-                    const blob = new Blob(['Hello, world!'], { type: 'text/plain' })
-                    link.href = URL.createObjectURL(blob)
-                    link.click()
-                    URL.revokeObjectURL(link.href)
-                    this.eventsLib.dispatchAction({
-                        action: this.eventsLib.EVENTS.SET_EXPORT_PREVIOUS_ORDER,
-                        payload: event.payload,
-                    })
-                }, 3000)
+                console.log('DEMO:EXPORT_PREVIOUS_ORDER', event.payload);
             },
-            [this.eventsLib.EVENTS.ERROR]: (error: any) => console.log('DEMO:eventError', error),
         })
     }
 
