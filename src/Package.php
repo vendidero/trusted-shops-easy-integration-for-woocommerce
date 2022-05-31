@@ -16,7 +16,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '0.0.2-alpha';
+	const VERSION = '0.0.3-alpha';
 
 	public static function init() {
 		if ( ! self::has_dependencies() ) {
