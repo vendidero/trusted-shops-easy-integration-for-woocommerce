@@ -207,6 +207,10 @@ class Package {
 		return 'https://static-app.connect' . ( self::is_debug_mode() ? '-qa' : '' ) . '.trustedshops.com';
 	}
 
+	public static function get_widget_integration_url() {
+		return 'https://integrations.etrusted.' . ( self::is_debug_mode() ? 'site' : 'com' ) . '/applications/widget.js/v2';
+	}
+
     public static function get_ts_locale( $locale ) {
 	    $ts_locale = strtolower( substr( $locale, 0, 2 ) );
 
@@ -380,8 +384,8 @@ class Package {
 	 *
 	 * @return string
 	 */
-    public static function get_product_sku( $product ) {
-	    return self::get_product_data( $product, 'sku' );
+    public static function get_product_sku( $product, $force_parent = true ) {
+	    return self::get_product_data( $product, 'sku', $force_parent );
     }
 
 	/**
@@ -389,8 +393,8 @@ class Package {
 	 *
 	 * @return string
 	 */
-	public static function get_product_gtin( $product ) {
-		return self::get_product_data( $product, '_ts_gtin' );
+	public static function get_product_gtin( $product, $force_parent = true ) {
+		return self::get_product_data( $product, '_ts_gtin', $force_parent );
 	}
 
 	/**
@@ -398,8 +402,8 @@ class Package {
 	 *
 	 * @return string
 	 */
-	public static function get_product_mpn( $product ) {
-		return self::get_product_data( $product, '_ts_mpn' );
+	public static function get_product_mpn( $product, $force_parent = true ) {
+		return self::get_product_data( $product, '_ts_mpn', $force_parent );
 	}
 
 	/**
@@ -461,6 +465,106 @@ class Package {
 		return apply_filters( 'ts_easy_integration_product_brand', $brand, $product );
 	}
 
+	/**
+	 * @param \WC_Product|integer $product
+	 * @param string $type
+	 *
+	 * @return string
+	 */
+	public static function get_product_identifier( $product, $type = 'sku' ) {
+		$identifier_sku = self::get_product_sku( $product );
+
+		if ( empty( $identifier_sku ) ) {
+			$identifier_sku = self::get_product_data( $product, 'id', true );
+		}
+
+		$identifier = $identifier_sku;
+
+		if ( 'gtin' === $type ) {
+			$identifier = self::get_product_gtin( $product );
+		} elseif ( 'mpn' === $type ) {
+			$identifier = self::get_product_mpn( $product );
+		}
+
+		/**
+		 * Fallback to SKU
+		 */
+		if ( empty( $identifier ) ) {
+			$identifier = $identifier_sku;
+		}
+
+		return $identifier;
+	}
+
+	public static function get_product_identifier_name( $widget_product_identifier ) {
+		$identifier = 'sku';
+
+		if ( 'data-gtin' === $widget_product_identifier ) {
+			$identifier = 'gtin';
+		} elseif ( 'data-mpn' === $widget_product_identifier ) {
+			$identifier = 'mpn';
+		}
+
+		return $identifier;
+	}
+
+	public static function get_widget_by_type( $type, $location = 'wdg-loc-pp', $sale_channel = '' ) {
+		$widgets = self::get_widgets( $sale_channel );
+		$widget  = false;
+
+		foreach( $widgets as $inner_widget ) {
+			if ( $type === $inner_widget->applicationType && $inner_widget->widgetLocation->id === $location ) {
+				$widget = $inner_widget;
+				break;
+			}
+		}
+
+		return $widget;
+	}
+
+	public static function get_widgets_by_location( $location = 'wdg-loc-pp', $sale_channel = '' ) {
+		$widgets            = self::get_widgets( $sale_channel );
+		$widgets_applicable = array();
+
+		foreach( $widgets as $inner_widget ) {
+			if ( $inner_widget->widgetLocation->id === $location ) {
+				$widgets_applicable[] = $inner_widget;
+			}
+		}
+
+		return $widgets_applicable;
+	}
+
+	public static function get_product_widgets_by_location( $location = 'wdg-loc-pp', $sale_channel = '' ) {
+		$widgets            = self::get_widgets( $sale_channel );
+		$widgets_applicable = array();
+
+		foreach( $widgets as $inner_widget ) {
+			if ( $inner_widget->widgetLocation->id === $location ) {
+				if ( isset( $ts_widget->attributes, $ts_widget->attributes->productIdentifier ) ) {
+					$widgets_applicable[] = $inner_widget;
+				}
+			}
+		}
+
+		return $widgets_applicable;
+	}
+
+	public static function get_service_widgets_by_location( $location = 'wdg-loc-pp', $sale_channel = '' ) {
+		$widgets            = self::get_widgets( $sale_channel );
+		$widgets_applicable = array();
+
+		foreach( $widgets as $inner_widget ) {
+			if ( $inner_widget->widgetLocation->id === $location ) {
+				if ( ! isset( $ts_widget->attributes ) || ! isset( $ts_widget->attributes->productIdentifier ) ) {
+					$widgets_applicable[] = $inner_widget;
+				}
+			}
+		}
+
+		return $widgets_applicable;
+	}
+
 	public static function get_widgets( $sale_channel = '' ) {
 		$sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
 		$widgets      = array_filter( (array) self::get_setting( 'widgets', array() ) );
@@ -508,7 +612,7 @@ class Package {
         $settings = array(
             'channels'       => self::get_channels(),
             'trustbadges'    => self::get_trustbadges(),
-            'widgets'        => self::get_widgets( '' ),
+            'widgets'        => self::get_widgets( false ),
             'enable_invites' => self::get_enable_review_invites(),
         );
 

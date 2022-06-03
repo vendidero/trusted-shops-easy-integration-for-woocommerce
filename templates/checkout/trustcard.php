@@ -58,9 +58,9 @@ $ts_sale_channel = isset( $ts_sale_channel ) ? $ts_sale_channel : '';
 			$sku = Package::get_product_sku( $parent_product );
 			?>
             <span class="tsCheckoutProductItem">
-				<span class="tsCheckoutProductUrl"><?php echo esc_html( $parent_product->get_permalink() ); ?></span>
-				<span class="tsCheckoutProductImageUrl"><?php echo esc_html( Package::get_product_image_src( $org_product ) ); ?></span>
-				<span class="tsCheckoutProductName"><?php echo esc_html( $item->get_name() ); ?></span>
+				<span class="tsCheckoutProductUrl"><?php echo esc_url( $parent_product->get_permalink() ); ?></span>
+				<span class="tsCheckoutProductImageUrl"><?php echo esc_url( Package::get_product_image_src( $parent_product ) ); ?></span>
+				<span class="tsCheckoutProductName"><?php echo esc_html( $parent_product->get_title() ); ?></span>
                 <span class="tsCheckoutProductSKU"><?php echo esc_html( $sku ); ?></span>
                 <span class="tsCheckoutProductGTIN"><?php echo esc_html( Package::get_product_gtin( $parent_product ) ? Package::get_product_gtin( $parent_product ) : $sku ); ?></span>
                 <span class="tsCheckoutProductBrand"><?php echo esc_html( Package::get_product_brand( $parent_product ) ? Package::get_product_brand( $parent_product ) : $sku ); ?></span>

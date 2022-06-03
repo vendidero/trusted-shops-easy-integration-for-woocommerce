@@ -182,6 +182,11 @@ class SecretsHelper {
 		}
 	}
 
+	/**
+	 * Checks whether this installation supports auto-inserting the encryption key to the wp-config.php file.
+	 *
+	 * @return bool
+	 */
 	public static function supports_auto_insert() {
 		$supports          = false;
 		$path_to_wp_config = ABSPATH . '/wp-config.php';
@@ -193,6 +198,13 @@ class SecretsHelper {
 		return $supports;
 	}
 
+	/**
+	 * Try to insert the encryption key (e.g. for securely storing API credentials) in the wp-config.php file.
+	 *
+	 * @param $encryption_type
+	 *
+	 * @return bool
+	 */
 	public static function maybe_insert_missing_key( $encryption_type = '' ) {
 		$updated = false;
 
