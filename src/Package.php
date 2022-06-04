@@ -541,7 +541,7 @@ class Package {
 
 		foreach( $widgets as $inner_widget ) {
 			if ( $inner_widget->widgetLocation->id === $location ) {
-				if ( isset( $ts_widget->attributes, $ts_widget->attributes->productIdentifier ) ) {
+				if ( isset( $inner_widget->attributes, $inner_widget->attributes->productIdentifier ) ) {
 					$widgets_applicable[] = $inner_widget;
 				}
 			}
@@ -556,7 +556,7 @@ class Package {
 
 		foreach( $widgets as $inner_widget ) {
 			if ( $inner_widget->widgetLocation->id === $location ) {
-				if ( ! isset( $ts_widget->attributes ) || ! isset( $ts_widget->attributes->productIdentifier ) ) {
+				if ( ! isset( $inner_widget->attributes ) || ! isset( $inner_widget->attributes->productIdentifier ) ) {
 					$widgets_applicable[] = $inner_widget;
 				}
 			}

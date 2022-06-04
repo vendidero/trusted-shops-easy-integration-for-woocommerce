@@ -13,10 +13,6 @@ defined( 'ABSPATH' ) || exit;
 
 $ts_widget = isset( $ts_widget ) ? $ts_widget : null;
 
-if ( is_null( $ts_widget ) ) {
-	global $ts_widget;
-}
-
 global $product;
 
 if ( ! $ts_widget || ! is_a( $product, 'WC_Product' ) ) {

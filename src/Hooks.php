@@ -9,28 +9,120 @@ class Hooks {
 	public static function init() {
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register_scripts' ) );
 		add_filter( 'script_loader_tag', array( __CLASS__, 'filter_script_loader_tag' ), 1500, 2 );
-
 		add_action( 'wp_footer', array( __CLASS__, 'fallback_scripts' ), 500 );
 
 		add_action( 'woocommerce_thankyou', array( __CLASS__, 'thankyou' ), 10, 1 );
 
 		add_filter( 'woocommerce_locate_template', array( __CLASS__, 'locate_template_filter' ), 10, 3 );
+		add_action( 'ts_easy_integration_single_product_rating_widgets', array( __CLASS__, 'single_product_rating_widgets' ) );
+		add_action( 'ts_easy_integration_product_loop_rating_widgets', array( __CLASS__, 'product_loop_rating_widgets' ) );
+
 		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'unregister_review_tab' ), 50, 1 );
 		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'register_custom_review_tab' ), 50, 1 );
+		add_action( 'ts_easy_integration_single_product_review_tab_widgets', array( __CLASS__, 'single_product_review_tab_widgets' ) );
 
-		add_action( 'woocommerce_product_after_tabs', array( __CLASS__, 'single_product_description' ), 20 );
-		add_action( 'woocommerce_after_shop_loop_item', array( __CLASS__, 'loop_inner_product' ), 20 );
+		add_action( 'woocommerce_product_after_tabs', array( __CLASS__, 'register_single_product_description' ), 20 );
+		add_action( 'ts_easy_integration_product_loop_inner_product_widgets', array( __CLASS__, 'single_product_description_widgets' ) );
+
+		add_action( 'woocommerce_after_shop_loop_item', array( __CLASS__, 'register_product_loop_inner' ), 20 );
+		add_action( 'ts_easy_integration_product_loop_inner_widgets', array( __CLASS__, 'product_loop_inner_widgets' ) );
+
+		add_action( 'woocommerce_after_single_product', array( __CLASS__, 'register_single_product' ), 10 );
+		add_action( 'ts_easy_integration_single_product_widgets', array( __CLASS__, 'single_product_widgets' ) );
+
+		add_action( 'woocommerce_after_shop_loop', array( __CLASS__, 'register_product_loop' ), 50 );
+		add_action( 'ts_easy_integration_product_loop_widgets', array( __CLASS__, 'product_loop_widgets' ) );
+
+		add_action( 'dynamic_sidebar', array( __CLASS__, 'register_sidebar' ), 500 );
+		add_action( 'ts_easy_integration_sidebar_widgets', array( __CLASS__, 'sidebar_widgets' ) );
+
+		add_action( 'woocommerce_after_main_content', array( __CLASS__, 'register_homepage' ), 20 );
+		add_action( 'ts_easy_integration_homepage_widgets', array( __CLASS__, 'homepage_widgets' ) );
+
+		add_action( 'wp_footer', array( __CLASS__, 'register_footer' ), 30 );
+		add_action( 'ts_easy_integration_footer_widgets', array( __CLASS__, 'footer_widgets' ) );
+
+		add_action( 'wp_body_open', array( __CLASS__, 'register_header' ), 50 );
+		add_action( 'ts_easy_integration_header_widgets', array( __CLASS__, 'header_widgets' ) );
+	}
+
+	public static function header_widgets() {
+		foreach( Package::get_widgets_by_location( 'wdg-loc-hd' ) as $ts_widget ) {
+			self::render_single_widget( $ts_widget );
+		}
+	}
+
+	public static function register_header() {
+		do_action( 'ts_easy_integration_header_widgets' );
+	}
+
+	public static function footer_widgets() {
+		foreach( Package::get_widgets_by_location( 'wdg-loc-ft' ) as $ts_widget ) {
+			self::render_single_widget( $ts_widget );
+		}
+	}
+
+	public static function register_footer() {
+		do_action( 'ts_easy_integration_footer_widgets' );
+	}
+
+	public static function homepage_widgets() {
+		foreach( Package::get_widgets_by_location( 'wdg-loc-hp' ) as $ts_widget ) {
+			self::render_single_widget( $ts_widget );
+		}
+	}
+
+	public static function register_homepage() {
+		do_action( 'ts_easy_integration_homepage_widgets' );
+	}
+
+	public static function sidebar_widgets() {
+		foreach( Package::get_widgets_by_location( 'wdg-loc-lrm' ) as $ts_widget ) {
+			self::render_single_widget( $ts_widget );
+		}
+	}
+
+	public static function register_sidebar() {
+		do_action( 'ts_easy_integration_sidebar_widgets' );
+
+		remove_action( 'dynamic_sidebar', array( __CLASS__, 'sidebar' ), 500 );
+	}
+
+	public static function register_product_loop() {
+		do_action( 'ts_easy_integration_product_loop_widgets' );
+	}
+
+	public static function product_loop_widgets() {
+		foreach( Package::get_service_widgets_by_location( 'wdg-loc-pl' ) as $ts_widget ) {
+			self::render_single_widget( $ts_widget );
+		}
+	}
+
+	public static function register_single_product() {
+		do_action( 'ts_easy_integration_single_product_widgets' );
+	}
+
+	public static function single_product_widgets() {
+		foreach( Package::get_service_widgets_by_location( 'wdg-loc-pp' ) as $ts_widget ) {
+			self::render_single_widget( $ts_widget );
+		}
 	}
 
 	protected static function render_single_widget( $ts_widget ) {
-		if ( isset( $ts_widget->attributes, $ts_widget->attributes->productIdentifier ) ) {
+		if ( isset( $ts_widget->attributes, $ts_widget->attributes->productIdentifier ) || 'etrusted-product-review-list-widget-product-star-extension' === $ts_widget->tag ) {
 			Package::get_template( 'widgets/product-widget.php', array( 'ts_widget' => $ts_widget ) );
 		} else {
 			Package::get_template( 'widgets/service-widget.php', array( 'ts_widget' => $ts_widget ) );
 		}
+
+		add_action( 'wp_footer', array( __CLASS__, 'embed_widget_script' ), 500 );
 	}
 
-	public static function loop_inner_product() {
+	public static function register_product_loop_inner() {
+		do_action( 'ts_easy_integration_product_loop_inner_widgets' );
+	}
+
+	public static function product_loop_inner_widgets() {
 		foreach( Package::get_product_widgets_by_location( 'wdg-loc-pl' ) as $ts_widget ) {
 			/**
 			 * Product star widget is being rendered in a separate location.
@@ -39,14 +131,18 @@ class Hooks {
 				continue;
 			}
 
-			Package::get_template( 'widgets/product-widget.php', array( 'ts_widget' => $ts_widget ) );
+			self::render_single_widget( $ts_widget );
 		}
 	}
 
-	public static function single_product_description() {
+	public static function single_product_description_widgets() {
 		foreach( Package::get_widgets_by_location( 'wdg-loc-pd' ) as $ts_widget ) {
 			self::render_single_widget( $ts_widget );
 		}
+	}
+
+	public static function register_single_product_description() {
+		do_action( 'ts_easy_integration_single_product_description_widgets' );
 	}
 
 	public static function unregister_review_tab( $tabs ) {
@@ -62,21 +158,66 @@ class Hooks {
 			$tabs['ts_reviews'] = array(
 				'title'    => _x( 'Reviews', 'trusted-shops', 'trusted-shops-easy-integration' ),
 				'priority' => 30,
-				'callback' => array( __CLASS__, 'review_tab' ),
+				'callback' => array( __CLASS__, 'register_review_tab' ),
 			);
 		}
 
 		return $tabs;
 	}
 
-	public static function review_tab() {
-		Package::get_template( 'widgets/product-widget.php', array( 'ts_widget' => Package::get_widget_by_type( 'product_review_list' ) ) );
+	public static function single_product_review_tab_widgets() {
+		if ( $ts_widget = Package::get_widget_by_type( 'product_review_list' ) ) {
+			self::render_single_widget( $ts_widget );
+		}
+	}
+
+	public static function register_review_tab() {
+		do_action( 'ts_easy_integration_single_product_review_tab_widgets' );
 	}
 
 	public static function embed_widget_script() {
 		?>
 		<script src="<?php echo esc_url( Package::get_widget_integration_url() ); ?>" async defer></script>
 		<?php
+	}
+
+	public static function product_loop_rating_widgets() {
+		$product_star          = Package::get_widget_by_type( 'product_star', 'wdg-loc-pl' );
+		$product_review_list   = Package::get_widget_by_type( 'product_review_list', 'wdg-loc-pl' );
+		$product_rating_widget = false;
+
+		if ( $product_review_list && isset( $product_review_list->extensions->product_star ) ) {
+			$product_rating_widget = $product_review_list->extensions->product_star;
+		} elseif ( $product_star ) {
+			$product_rating_widget = $product_star;
+		}
+
+		if ( $product_rating_widget ) {
+			self::render_single_widget( $product_rating_widget );
+		}
+	}
+
+	public static function single_product_rating_widgets() {
+		$product_star          = Package::get_widget_by_type( 'product_star' );
+		$product_review_list   = Package::get_widget_by_type( 'product_review_list' );
+		$product_rating_widget = false;
+
+		/**
+		 * On single product pages, do support anchors in product description too.
+		 */
+		if ( ! $product_review_list ) {
+			$product_review_list = Package::get_widget_by_type( 'product_review_list', 'wdg-loc-pd' );
+		}
+
+		if ( $product_review_list && isset( $product_review_list->extensions->product_star ) ) {
+			$product_rating_widget = $product_review_list->extensions->product_star;
+		} elseif ( $product_star ) {
+			$product_rating_widget = $product_star;
+		}
+
+		if ( $product_rating_widget ) {
+			self::render_single_widget( $product_rating_widget );
+		}
 	}
 
 	public static function locate_template_filter( $template, $template_name, $template_path ) {
@@ -102,11 +243,11 @@ class Hooks {
 			}
 
 			if ( $product_rating_widget ) {
-				global $ts_widget;
-				$ts_widget = $product_rating_widget;
-
-				add_action( 'wp_footer', array( __CLASS__, 'embed_widget_script' ), 500 );
-				$template = Package::get_path() . '/templates/widgets/product-widget.php';
+				if ( $is_single ) {
+					$template = Package::get_path() . '/templates/widgets/single-product-rating.php';
+				} else {
+					$template = Package::get_path() . '/templates/widgets/product-loop-rating.php';
+				}
 			}
 		}
 
