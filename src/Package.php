@@ -75,6 +75,8 @@ class Package {
 		if ( ! self::is_integration() ) {
 			add_action( 'init', array( __CLASS__, 'load_plugin_textdomain' ) );
 		}
+
+		add_action( 'init', array( '\Vendidero\TrustedShopsEasyIntegration\Shortcodes', 'init' ) );
 	}
 
 	public static function load_plugin_textdomain() {

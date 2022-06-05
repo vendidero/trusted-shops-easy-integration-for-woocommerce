@@ -17,6 +17,8 @@ class Hooks {
 		add_action( 'ts_easy_integration_single_product_rating_widgets', array( __CLASS__, 'single_product_rating_widgets' ) );
 		add_action( 'ts_easy_integration_product_loop_rating_widgets', array( __CLASS__, 'product_loop_rating_widgets' ) );
 
+		$theme = function_exists( 'wp_get_theme' ) ? wp_get_theme() : '';
+
 		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'unregister_review_tab' ), 50, 1 );
 		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'register_custom_review_tab' ), 50, 1 );
 		add_action( 'ts_easy_integration_single_product_review_tab_widgets', array( __CLASS__, 'single_product_review_tab_widgets' ) );
@@ -33,13 +35,24 @@ class Hooks {
 		add_action( 'woocommerce_after_shop_loop', array( __CLASS__, 'register_product_loop' ), 50 );
 		add_action( 'ts_easy_integration_product_loop_widgets', array( __CLASS__, 'product_loop_widgets' ) );
 
-		add_action( 'dynamic_sidebar', array( __CLASS__, 'register_sidebar' ), 500 );
+		add_action( 'dynamic_sidebar_before', array( __CLASS__, 'register_sidebar' ), 500 );
 		add_action( 'ts_easy_integration_sidebar_widgets', array( __CLASS__, 'sidebar_widgets' ) );
 
 		add_action( 'woocommerce_after_main_content', array( __CLASS__, 'register_homepage' ), 20 );
 		add_action( 'ts_easy_integration_homepage_widgets', array( __CLASS__, 'homepage_widgets' ) );
 
-		add_action( 'wp_footer', array( __CLASS__, 'register_footer' ), 1 );
+		switch ( $theme->get_template() ) {
+			case 'storefront':
+				add_action( 'storefront_footer', array( __CLASS__, 'register_footer' ), 20 );
+				break;
+			case 'astra':
+				add_action( 'astra_footer_after', array( __CLASS__, 'register_footer' ), 20 );
+				break;
+			default:
+				add_action( 'wp_footer', array( __CLASS__, 'register_footer' ), 1 );
+				break;
+		}
+
 		add_action( 'ts_easy_integration_footer_widgets', array( __CLASS__, 'footer_widgets' ) );
 
 		add_action( 'wp_body_open', array( __CLASS__, 'register_header' ), 50 );
@@ -82,10 +95,10 @@ class Hooks {
 		}
 	}
 
-	public static function register_sidebar() {
-		do_action( 'ts_easy_integration_sidebar_widgets' );
-
-		remove_action( 'dynamic_sidebar', array( __CLASS__, 'sidebar' ), 500 );
+	public static function register_sidebar( $sidebar ) {
+		if ( apply_filters( 'ts_easy_integration_is_main_sidebar', ( strstr( $sidebar, 'sidebar' ) ), $sidebar ) ) {
+			do_action( 'ts_easy_integration_sidebar_widgets' );
+		}
 	}
 
 	public static function register_product_loop() {
@@ -108,7 +121,7 @@ class Hooks {
 		}
 	}
 
-	protected static function render_single_widget( $ts_widget ) {
+	public static function render_single_widget( $ts_widget ) {
 		if ( isset( $ts_widget->attributes, $ts_widget->attributes->productIdentifier ) || 'etrusted-product-review-list-widget-product-star-extension' === $ts_widget->tag ) {
 			Package::get_template( 'widgets/product-widget.php', array( 'ts_widget' => $ts_widget ) );
 		} else {
