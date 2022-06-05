@@ -39,7 +39,7 @@ class Hooks {
 		add_action( 'woocommerce_after_main_content', array( __CLASS__, 'register_homepage' ), 20 );
 		add_action( 'ts_easy_integration_homepage_widgets', array( __CLASS__, 'homepage_widgets' ) );
 
-		add_action( 'wp_footer', array( __CLASS__, 'register_footer' ), 30 );
+		add_action( 'wp_footer', array( __CLASS__, 'register_footer' ), 1 );
 		add_action( 'ts_easy_integration_footer_widgets', array( __CLASS__, 'footer_widgets' ) );
 
 		add_action( 'wp_body_open', array( __CLASS__, 'register_header' ), 50 );
@@ -47,7 +47,7 @@ class Hooks {
 	}
 
 	public static function header_widgets() {
-		foreach( Package::get_widgets_by_location( 'wdg-loc-hd' ) as $ts_widget ) {
+		foreach ( Package::get_widgets_by_location( 'wdg-loc-hd' ) as $ts_widget ) {
 			self::render_single_widget( $ts_widget );
 		}
 	}
@@ -57,7 +57,7 @@ class Hooks {
 	}
 
 	public static function footer_widgets() {
-		foreach( Package::get_widgets_by_location( 'wdg-loc-ft' ) as $ts_widget ) {
+		foreach ( Package::get_widgets_by_location( 'wdg-loc-ft' ) as $ts_widget ) {
 			self::render_single_widget( $ts_widget );
 		}
 	}
@@ -67,7 +67,7 @@ class Hooks {
 	}
 
 	public static function homepage_widgets() {
-		foreach( Package::get_widgets_by_location( 'wdg-loc-hp' ) as $ts_widget ) {
+		foreach ( Package::get_widgets_by_location( 'wdg-loc-hp' ) as $ts_widget ) {
 			self::render_single_widget( $ts_widget );
 		}
 	}
@@ -77,7 +77,7 @@ class Hooks {
 	}
 
 	public static function sidebar_widgets() {
-		foreach( Package::get_widgets_by_location( 'wdg-loc-lrm' ) as $ts_widget ) {
+		foreach ( Package::get_widgets_by_location( 'wdg-loc-lrm' ) as $ts_widget ) {
 			self::render_single_widget( $ts_widget );
 		}
 	}
@@ -93,7 +93,7 @@ class Hooks {
 	}
 
 	public static function product_loop_widgets() {
-		foreach( Package::get_service_widgets_by_location( 'wdg-loc-pl' ) as $ts_widget ) {
+		foreach ( Package::get_service_widgets_by_location( 'wdg-loc-pl' ) as $ts_widget ) {
 			self::render_single_widget( $ts_widget );
 		}
 	}
@@ -103,7 +103,7 @@ class Hooks {
 	}
 
 	public static function single_product_widgets() {
-		foreach( Package::get_service_widgets_by_location( 'wdg-loc-pp' ) as $ts_widget ) {
+		foreach ( Package::get_service_widgets_by_location( 'wdg-loc-pp' ) as $ts_widget ) {
 			self::render_single_widget( $ts_widget );
 		}
 	}
@@ -115,7 +115,7 @@ class Hooks {
 			Package::get_template( 'widgets/service-widget.php', array( 'ts_widget' => $ts_widget ) );
 		}
 
-		add_action( 'wp_footer', array( __CLASS__, 'embed_widget_script' ), 500 );
+		wp_enqueue_script( 'ts-easy-integration-widgets' );
 	}
 
 	public static function register_product_loop_inner() {
@@ -123,11 +123,11 @@ class Hooks {
 	}
 
 	public static function product_loop_inner_widgets() {
-		foreach( Package::get_product_widgets_by_location( 'wdg-loc-pl' ) as $ts_widget ) {
+		foreach ( Package::get_product_widgets_by_location( 'wdg-loc-pl' ) as $ts_widget ) {
 			/**
 			 * Product star widget is being rendered in a separate location.
 			 */
-			if ( 'product_star' === $ts_widget->applicationType ) {
+			if ( 'product_star' === $ts_widget->applicationType ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 				continue;
 			}
 
@@ -136,7 +136,7 @@ class Hooks {
 	}
 
 	public static function single_product_description_widgets() {
-		foreach( Package::get_widgets_by_location( 'wdg-loc-pd' ) as $ts_widget ) {
+		foreach ( Package::get_widgets_by_location( 'wdg-loc-pd' ) as $ts_widget ) {
 			self::render_single_widget( $ts_widget );
 		}
 	}
@@ -173,12 +173,6 @@ class Hooks {
 
 	public static function register_review_tab() {
 		do_action( 'ts_easy_integration_single_product_review_tab_widgets' );
-	}
-
-	public static function embed_widget_script() {
-		?>
-		<script src="<?php echo esc_url( Package::get_widget_integration_url() ); ?>" async defer></script>
-		<?php
 	}
 
 	public static function product_loop_rating_widgets() {
@@ -269,31 +263,35 @@ class Hooks {
 				if ( ! empty( $ts_id ) ) {
 					$script_data = '';
 
-					foreach( $trustbadge->children[0]->attributes as $attribute ) {
-						if ( in_array( $attribute->attributeName, array( 'src', 'async' ) ) ) {
+					foreach ( $trustbadge->children[0]->attributes as $attribute ) {
+						if ( in_array( $attribute->attributeName, array( 'src', 'async', 'defer' ), true ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 							continue;
 						}
 
 						$value = isset( $attribute->value ) ? $attribute->value : true;
 						$value = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
 
-						$script_data .= " " . esc_attr( $attribute->attributeName ) . "='" . esc_attr( $value ) . "'";
+						$script_data .= ' ' . esc_attr( $attribute->attributeName ) . "='" . esc_attr( $value ) . "'"; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 					}
 
-					echo "<script src='//widgets.trustedshops.com/js/{$ts_id}.js?ver=" . esc_attr( Package::get_version() ) . "' id='ts-easy-integration-trustbadge-{$sale_channel}-js' asnyc{$script_data}></script>";
+					echo "<script src='//widgets.trustedshops.com/js/" . esc_attr( $ts_id ) . '.js?ver=' . esc_attr( Package::get_version() ) . "' id='ts-easy-integration-trustbadge-" . esc_attr( $sale_channel ) . "-js' asnyc{$script_data}></script>"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.WP.EnqueuedResources.NonEnqueuedScript
 				}
+			}
+
+			if ( wp_script_is( 'ts-easy-integration-widgets', 'enqueued' ) ) {
+				echo "<script src='" . esc_url( Package::get_widget_integration_url() ) . '?ver=' . esc_attr( Package::get_version() ) . "' id='ts-easy-integration-widgets-js' asnyc defer></script>"; // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript
 			}
 		}
 	}
 
 	public static function filter_script_loader_tag( $tag, $handle ) {
-		if ( strstr( $handle, 'ts-easy-integration-trustbadge-' ) ) {
+		if ( strstr( $handle, 'ts-easy-integration-' ) ) {
 			if ( wp_script_is( $handle, 'registered' ) ) {
-				foreach( wp_scripts()->registered[ $handle ]->extra	as $attr => $value ) {
-					if ( 'async' === $attr ) {
+				foreach ( wp_scripts()->registered[ $handle ]->extra as $attr => $value ) {
+					if ( in_array( $attr, array( 'async', 'defer' ), true ) ) {
 						$replacement = " $attr";
 					} else {
-						$replacement = " " . esc_attr( $attr ) . "='" . esc_attr( $value ) . "'";
+						$replacement = ' ' . esc_attr( $attr ) . "='" . esc_attr( $value ) . "'";
 					}
 
 					// Prevent adding attribute when already added.
@@ -308,6 +306,10 @@ class Hooks {
 	}
 
 	public static function register_scripts() {
+		wp_register_script( 'ts-easy-integration-widgets', Package::get_widget_integration_url(), array(), Package::get_version(), true );
+		wp_script_add_data( 'ts-easy-integration-widgets', 'defer', true );
+		wp_script_add_data( 'ts-easy-integration-widgets', 'async', true );
+
 		if ( $trustbadge = Package::get_trustbadge() ) {
 			$sale_channel = Package::get_current_sale_channel();
 			$ts_id        = $trustbadge->id;
@@ -316,15 +318,15 @@ class Hooks {
 				wp_register_script( "ts-easy-integration-trustbadge-{$sale_channel}", "//widgets.trustedshops.com/js/{$ts_id}.js", array(), Package::get_version(), true );
 				wp_enqueue_script( "ts-easy-integration-trustbadge-{$sale_channel}" );
 
-				foreach( $trustbadge->children[0]->attributes as $attribute ) {
-					if ( 'src' === $attribute->attributeName ) {
+				foreach ( $trustbadge->children[0]->attributes as $attribute ) {
+					if ( 'src' === $attribute->attributeName ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 						continue;
 					}
 
 					$value = isset( $attribute->value ) ? $attribute->value : true;
 					$value = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
 
-					wp_script_add_data( "ts-easy-integration-trustbadge-{$sale_channel}", $attribute->attributeName , $value );
+					wp_script_add_data( "ts-easy-integration-trustbadge-{$sale_channel}", $attribute->attributeName, $value ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 				}
 			}
 		}

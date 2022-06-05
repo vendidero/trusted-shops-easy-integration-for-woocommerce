@@ -16,5 +16,6 @@ if ( ! $ts_widget ) {
 	return;
 }
 ?>
-
+<!-- added by Trusted Shops app: Start -->
 <etrusted-widget data-etrusted-widget-id="<?php echo esc_attr( $ts_widget->attributes->id->value ); ?>"></etrusted-widget>
+<!-- End -->

@@ -18,7 +18,7 @@ class Ajax {
 		$ajax_events = array(
 			'update_settings',
 			'get_settings',
-			'disconnect'
+			'disconnect',
 		);
 
 		foreach ( $ajax_events as $ajax_event ) {
@@ -34,7 +34,7 @@ class Ajax {
 	 */
 	public static function suppress_errors() {
 		if ( ! WP_DEBUG || ( WP_DEBUG && ! WP_DEBUG_DISPLAY ) ) {
-			@ini_set( 'display_errors', 0 ); // Turn off display_errors during AJAX events to prevent malformed JSON.
+			@ini_set( 'display_errors', 0 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.PHP.IniSet.display_errors_Blacklisted
 		}
 
 		$GLOBALS['wpdb']->hide_errors();
@@ -66,14 +66,14 @@ class Ajax {
 		$settings = self::get_request_data();
 		$result   = true;
 
-		foreach( $settings as $setting_name => $value ) {
+		foreach ( $settings as $setting_name => $value ) {
 			$value = wc_clean( $value );
 
 			try {
 				if ( 'trustbadges' === $setting_name ) {
 					$value = (array) $value;
 
-					foreach( $value as $sale_channel => $trustbadge ) {
+					foreach ( $value as $sale_channel => $trustbadge ) {
 						/**
 						 * Do not allow storing invalid trustbadges.
 						 */
@@ -86,7 +86,7 @@ class Ajax {
 				}
 
 				$result = Package::update_setting( $setting_name, $value );
-			} catch( \Exception $e ) {
+			} catch ( \Exception $e ) {
 				$result = new \WP_Error( $e->getCode(), $e->getMessage() );
 			}
 
@@ -102,13 +102,13 @@ class Ajax {
 			$response = array(
 				'success'  => false,
 				'message'  => $result->get_error_messages(),
-				'settings' => Package::get_settings()
+				'settings' => Package::get_settings(),
 			);
 		} else {
 			$response = array(
 				'success'  => true,
 				'message'  => '',
-				'settings' => Package::get_settings()
+				'settings' => Package::get_settings(),
 			);
 		}
 
@@ -127,14 +127,14 @@ class Ajax {
 			wp_die( -1 );
 		}
 
-		header( "Access-Control-Allow-Headers: [Client-ID, Client-Secret]" );
-		header( "Client-Id:" . base64_encode( Package::get_setting( 'client_id', '' ) ) );
-		header( "Client-Secret:" . base64_encode( Package::get_setting( 'client_secret', '' ) ) );
+		header( 'Access-Control-Allow-Headers: [Client-ID, Client-Secret]' );
+		header( 'Client-Id:' . base64_encode( Package::get_setting( 'client_id', '' ) ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+		header( 'Client-Secret:' . base64_encode( Package::get_setting( 'client_secret', '' ) ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
 
 		$response = array(
 			'success'  => true,
 			'message'  => '',
-			'settings' => Package::get_settings()
+			'settings' => Package::get_settings(),
 		);
 
 		wp_send_json( $response );

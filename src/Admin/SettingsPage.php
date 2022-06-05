@@ -23,10 +23,10 @@ class SettingsPage extends \WC_Settings_Page {
 		global $current_section;
 
 		if ( '' === $current_section ) {
-            Settings::output();
-        } else {
-            parent::output();
-        }
+			Settings::output();
+		} else {
+			parent::output();
+		}
 	}
 
 	/**

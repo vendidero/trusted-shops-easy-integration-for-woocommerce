@@ -17,4 +17,4 @@ if ( ! is_a( $product, 'WC_Product' ) ) {
 }
 
 do_action( 'ts_easy_integration_single_product_rating_widgets' );
-?>
+

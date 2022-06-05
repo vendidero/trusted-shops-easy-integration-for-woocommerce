@@ -16,7 +16,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '0.0.3-alpha';
+	const VERSION = '1.0.0-alpha';
 
 	public static function init() {
 		if ( ! self::has_dependencies() ) {
@@ -31,25 +31,23 @@ class Package {
 
 		if ( is_admin() ) {
 			Helper::init();
-            Ajax::init();
+			Ajax::init();
 		}
 
-        if ( self::is_frontend() ) {
+		if ( self::is_frontend() ) {
 			if ( did_action( 'woocommerce_loaded' ) ) {
 				Hooks::init();
 			} else {
 				add_action( 'woocommerce_loaded', array( '\Vendidero\TrustedShopsEasyIntegration\Hooks', 'init' ) );
 			}
-        }
-
-		self::includes();
+		}
 
 		do_action( 'ts_easy_integration_init' );
 	}
 
-    protected static function is_frontend() {
-        return ( ! is_admin() || defined( 'DOING_AJAX' ) ) && ! defined( 'DOING_CRON' ) && ! self::is_rest_api_request();
-    }
+	protected static function is_frontend() {
+		return ( ! is_admin() || defined( 'DOING_AJAX' ) ) && ! defined( 'DOING_CRON' ) && ! self::is_rest_api_request();
+	}
 
 	protected static function is_rest_api_request() {
 		if ( function_exists( 'WC' ) ) {
@@ -65,7 +63,7 @@ class Package {
 
 	public static function dependency_notice() {
 		?>
-		<div class="error notice notice-error"><p><?php _ex( 'To use the Trusted Shops Easy Integration for WooCommerce plugin please make sure that WooCommerce is installed and activated.', 'trusted-shops', 'trusted-shops-easy-integration' ); ?></p></div>
+		<div class="error notice notice-error"><p><?php echo esc_html_x( 'To use the Trusted Shops Easy Integration for WooCommerce plugin please make sure that WooCommerce is installed and activated.', 'trusted-shops', 'trusted-shops-easy-integration' ); ?></p></div>
 		<?php
 	}
 
@@ -95,14 +93,14 @@ class Package {
 
 	public static function install() {
 		self::init();
-        Install::install();
+		Install::install();
 	}
 
 	/**
-     * Whether debug mode is enabled or not.
-     *
-     * @TODO Disable before release.
-     *
+	 * Whether debug mode is enabled or not.
+	 *
+	 * @TODO Disable before release.
+	 *
 	 * @return bool
 	 */
 	public static function is_debug_mode() {
@@ -110,10 +108,10 @@ class Package {
 	}
 
 	/**
-     * Whether this installation is an integration (e.g. bundled within Germanized) or standalone.
-     *
-     * @TODO Need to check for Germanized existence.
-     *
+	 * Whether this installation is an integration (e.g. bundled within Germanized) or standalone.
+	 *
+	 * @TODO Need to check for Germanized existence.
+	 *
 	 * @return false
 	 */
 	public static function is_integration() {
@@ -123,8 +121,8 @@ class Package {
 	}
 
 	/**
-     * Log via the Woo file logger if WP_DEBUG is enabled.
-     *
+	 * Log via the Woo file logger if WP_DEBUG is enabled.
+	 *
 	 * @param $message
 	 * @param $type
 	 *
@@ -149,20 +147,16 @@ class Package {
 
 		$logger->{$type}( $message, array( 'source' => 'ts-easy-integration' ) );
 
-        return true;
-	}
-
-	private static function includes() {
-		// include_once self::get_path() . '/includes/';
+		return true;
 	}
 
 	private static function is_frontend_request() {
 		return ( ! is_admin() || defined( 'DOING_AJAX' ) ) && ! defined( 'DOING_CRON' );
 	}
 
-    public static function get_system_version() {
-        return self::is_integration() ? get_option( 'woocommerce_gzd_version' ) : get_option( 'woocommerce_version' );
-    }
+	public static function get_system_version() {
+		return self::is_integration() ? get_option( 'woocommerce_gzd_version' ) : get_option( 'woocommerce_version' );
+	}
 
 	/**
 	 * Return the version of the package.
@@ -182,12 +176,12 @@ class Package {
 		return dirname( __DIR__ );
 	}
 
-    public static function get_template( $template, $args = array() ) {
-	    wc_get_template( $template, $args, '', Package::get_path() . '/templates/' );
-    }
+	public static function get_template( $template, $args = array() ) {
+		wc_get_template( $template, $args, '', self::get_path() . '/templates/' );
+	}
 
 	public static function get_template_html( $template, $args = array() ) {
-		return wc_get_template_html( $template, $args, '', Package::get_path() . '/templates/' );
+		return wc_get_template_html( $template, $args, '', self::get_path() . '/templates/' );
 	}
 
 	/**
@@ -211,127 +205,134 @@ class Package {
 		return 'https://integrations.etrusted.' . ( self::is_debug_mode() ? 'site' : 'com' ) . '/applications/widget.js/v2';
 	}
 
-    public static function get_ts_locale( $locale ) {
-	    $ts_locale = strtolower( substr( $locale, 0, 2 ) );
+	public static function get_ts_locale( $locale ) {
+		$ts_locale = strtolower( substr( $locale, 0, 2 ) );
 
-	    if ( ! in_array( $ts_locale, array(
-		    'de',
-		    'en',
-		    'es',
-		    'fr',
-		    'it',
-		    'nl',
-		    'pt',
-		    'pl'
-	    ) ) ) {
-		    $ts_locale = 'en';
-	    }
+		if ( ! in_array(
+			$ts_locale,
+			array(
+				'de',
+				'en',
+				'es',
+				'fr',
+				'it',
+				'nl',
+				'pt',
+				'pl',
+			),
+			true
+		) ) {
+			$ts_locale = 'en';
+		}
 
-        return $ts_locale;
-    }
+		return $ts_locale;
+	}
 
 	/**
-     * Returns available sale channels.
-     *
+	 * Returns available sale channels.
+	 *
 	 * @return array[]
 	 */
-    public static function get_sale_channels() {
-        return apply_filters( 'ts_sale_channels', array(
-            'main' => array(
-                'id'     => 'main',
-                'name'   => get_bloginfo( 'name' ),
-                'url'    => get_bloginfo( 'url' ),
-                'locale' => self::get_ts_locale( get_locale() ),
-            ),
-        ) );
-    }
+	public static function get_sale_channels() {
+		return apply_filters(
+			'ts_sale_channels',
+			array(
+				'main' => array(
+					'id'     => 'main',
+					'name'   => get_bloginfo( 'name' ),
+					'url'    => get_bloginfo( 'url' ),
+					'locale' => self::get_ts_locale( get_locale() ),
+				),
+			)
+		);
+	}
 
-    public static function get_current_sale_channel() {
-        return apply_filters( 'ts_easy_integration_current_sale_channel', 'main' );
-    }
+	public static function get_current_sale_channel() {
+		return apply_filters( 'ts_easy_integration_current_sale_channel', 'main' );
+	}
 
 	/**
-     * Retrieves a sale channel by id.
-     *
+	 * Retrieves a sale channel by id.
+	 *
 	 * @param $id
 	 *
 	 * @return array|false
 	 */
-    public static function get_sale_channel( $id ) {
-        $channels = self::get_sale_channels();
+	public static function get_sale_channel( $id ) {
+		$channels = self::get_sale_channels();
 
-        if ( array_key_exists( $id, $channels ) ) {
-            return $channels[ $id ];
-        }
+		if ( array_key_exists( $id, $channels ) ) {
+			return $channels[ $id ];
+		}
 
-        return false;
-    }
+		return false;
+	}
 
 	/**
-     * Get TS mapped channels.
-     *
+	 * Get TS mapped channels.
+	 *
 	 * @return array
 	 */
-    public static function get_channels() {
-        $channels = array_filter( (array) self::get_setting( 'channels', array() ) );
+	public static function get_channels() {
+		$channels = array_filter( (array) self::get_setting( 'channels', array() ) );
 
-        if ( ! empty( $channels ) ) {
-            foreach( $channels as $key => $channel ) {
-	            /**
-	             * Merge channel data with current (subject to change) sale channel data.
-	             */
-                if ( $sale_channel = self::get_sale_channel( $channel->salesChannelRef ) ) {
-                    $channels[ $key ]->salesChannelLocale = $sale_channel['locale'];
-	                $channels[ $key ]->salesChannelName   = $sale_channel['name'];
-	                $channels[ $key ]->salesChannelUrl    = $sale_channel['url'];
-                }
-            }
-        }
+		if ( ! empty( $channels ) ) {
+			foreach ( $channels as $key => $channel ) {
+				/**
+				 * Merge channel data with current (subject to change) sale channel data.
+				 */
+				if ( $sale_channel = self::get_sale_channel( $channel->salesChannelRef ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+					$channels[ $key ]->salesChannelLocale = $sale_channel['locale'];
+					$channels[ $key ]->salesChannelName   = $sale_channel['name'];
+					$channels[ $key ]->salesChannelUrl    = $sale_channel['url'];
+				}
+			}
+		}
 
-        return $channels;
-    }
+		return $channels;
+	}
 
-    public static function get_trustbadges() {
-	    $trustbadges = array_filter( (array) self::get_setting( 'trustbadges', array() ) );
+	public static function get_trustbadges() {
+		$trustbadges = array_filter( (array) self::get_setting( 'trustbadges', array() ) );
 
-        return $trustbadges;
-    }
+		return $trustbadges;
+	}
 
-    public static function get_trustbadge( $sale_channel = '' ) {
-        $sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
-        $trustbadges  = self::get_trustbadges();
-        $trustbadge   = array_key_exists( $sale_channel, $trustbadges ) ? $trustbadges[ $sale_channel ] : false;
+	public static function get_trustbadge( $sale_channel = '' ) {
+		$sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
+		$trustbadges  = self::get_trustbadges();
+		$trustbadge   = array_key_exists( $sale_channel, $trustbadges ) ? $trustbadges[ $sale_channel ] : false;
 
-        return $trustbadge;
-    }
+		return $trustbadge;
+	}
 
 	public static function get_trustbadge_id( $sale_channel = '' ) {
 		if ( $trustbadge = self::get_trustbadge( $sale_channel ) ) {
 			return ! empty( $trustbadge->id ) ? $trustbadge->id : false;
 		}
 
-        return false;
+		return false;
 	}
 
 	public static function has_valid_trustbadge( $sale_channel = '' ) {
-        if ( $trustbadge = self::get_trustbadge( $sale_channel ) ) {
-            return ! empty( $trustbadge->id ) ? true : false;
-        }
+		if ( $trustbadge = self::get_trustbadge( $sale_channel ) ) {
+			return ! empty( $trustbadge->id ) ? true : false;
+		}
 
-        return false;
- 	}
+		return false;
+	}
 
-    public static function get_enable_review_invites() {
-	    $invites = array_filter( (array) self::get_setting( 'enable_invites', array() ) );
+	public static function get_enable_review_invites() {
+		$invites = array_filter( (array) self::get_setting( 'enable_invites', array() ) );
 
-        return $invites;
-    }
+		return $invites;
+	}
 
 	public static function enable_review_invites( $sale_channel = '' ) {
 		$sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
 		$invites      = self::get_enable_review_invites();
 
-        return in_array( $sale_channel, $invites ) ? true : false;
+		return in_array( $sale_channel, $invites, true ) ? true : false;
 	}
 
 	/**
@@ -339,13 +340,13 @@ class Package {
 	 *
 	 * @return string
 	 */
-    public static function get_order_payment_method( $order ) {
-        return $order->get_payment_method_title();
-    }
+	public static function get_order_payment_method( $order ) {
+		return $order->get_payment_method_title();
+	}
 
 	/**
 	 * @param \WC_Product $product
-     * @param string $attribute
+	 * @param string $attribute
 	 *
 	 * @return string
 	 */
@@ -358,25 +359,25 @@ class Package {
 
 		if ( $force_parent && $product->get_parent_id() ) {
 			if ( $parent = wc_get_product( $product->get_parent_id() ) ) {
-				return Package::get_product_data( $parent, $attribute );
+				return self::get_product_data( $parent, $attribute );
 			}
 		}
 
-        $getter = "get_{$attribute}";
+		$getter = "get_{$attribute}";
 
-        if ( '_' !== substr( $attribute, 0, 1 ) && is_callable( array( $product, $getter ) ) ) {
-            $data = $product->{$getter}();
-        } else {
-            $data = $product->get_meta( $attribute, true );
-        }
+		if ( '_' !== substr( $attribute, 0, 1 ) && is_callable( array( $product, $getter ) ) ) {
+			$data = $product->{$getter}();
+		} else {
+			$data = $product->get_meta( $attribute, true );
+		}
 
 		if ( '' === $data && $product->get_parent_id() ) {
 			if ( $parent = wc_get_product( $product->get_parent_id() ) ) {
-				return Package::get_product_data( $parent, $attribute );
+				return self::get_product_data( $parent, $attribute );
 			}
 		}
 
-		return apply_filters( "ts_easy_integration_product_data", $data, $product, $attribute, $force_parent );
+		return apply_filters( 'ts_easy_integration_product_data', $data, $product, $attribute, $force_parent );
 	}
 
 	/**
@@ -384,9 +385,9 @@ class Package {
 	 *
 	 * @return string
 	 */
-    public static function get_product_sku( $product, $force_parent = true ) {
-	    return self::get_product_data( $product, 'sku', $force_parent );
-    }
+	public static function get_product_sku( $product, $force_parent = true ) {
+		return self::get_product_data( $product, 'sku', $force_parent );
+	}
 
 	/**
 	 * @param \WC_Product $product
@@ -419,21 +420,21 @@ class Package {
 		}
 
 		$image  = '';
-	    $images = array();
+		$images = array();
 
-        if ( $product->get_image_id() ) {
+		if ( $product->get_image_id() ) {
 			$images = wp_get_attachment_image_src( $product->get_image_id(), 'woocommerce_thumbnail', false );
 		} elseif ( $product->get_parent_id() ) {
 			$parent_product = wc_get_product( $product->get_parent_id() );
 
-            if ( $parent_product && $parent_product->get_image_id() ) {
-	            $images = wp_get_attachment_image_src( $parent_product->get_image_id(), 'woocommerce_thumbnail', false );
+			if ( $parent_product && $parent_product->get_image_id() ) {
+				$images = wp_get_attachment_image_src( $parent_product->get_image_id(), 'woocommerce_thumbnail', false );
 			}
 		}
 
-        if ( ! empty( $images ) ) {
-            $image = $images[0];
-        }
+		if ( ! empty( $images ) ) {
+			$image = $images[0];
+		}
 
 		return $image;
 	}
@@ -446,7 +447,7 @@ class Package {
 	public static function get_product_brand( $product ) {
 		$product = is_numeric( $product ) ? wc_get_product( $product ) : $product;
 
-        // Force parent product brand
+		// Force parent product brand
 		if ( $product && $product->get_parent_id() ) {
 			$product = wc_get_product( $product->get_parent_id() );
 		}
@@ -455,12 +456,12 @@ class Package {
 			return '';
 		}
 
-        $brand_attribute_name = apply_filters( 'ts_easy_integration_product_brand_attribute_name', '', $product );
-        $brand                = '';
+		$brand_attribute_name = apply_filters( 'ts_easy_integration_product_brand_attribute_name', '', $product );
+		$brand                = '';
 
-        if ( ! empty( $brand_attribute_name ) ) {
-            $brand = $product->get_attribute( $brand_attribute_name );
-        }
+		if ( ! empty( $brand_attribute_name ) ) {
+			$brand = $product->get_attribute( $brand_attribute_name );
+		}
 
 		return apply_filters( 'ts_easy_integration_product_brand', $brand, $product );
 	}
@@ -512,8 +513,8 @@ class Package {
 		$widgets = self::get_widgets( $sale_channel );
 		$widget  = false;
 
-		foreach( $widgets as $inner_widget ) {
-			if ( $type === $inner_widget->applicationType && $inner_widget->widgetLocation->id === $location ) {
+		foreach ( $widgets as $inner_widget ) {
+			if ( $type === $inner_widget->applicationType && $inner_widget->widgetLocation->id === $location ) {  // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 				$widget = $inner_widget;
 				break;
 			}
@@ -526,8 +527,8 @@ class Package {
 		$widgets            = self::get_widgets( $sale_channel );
 		$widgets_applicable = array();
 
-		foreach( $widgets as $inner_widget ) {
-			if ( $inner_widget->widgetLocation->id === $location ) {
+		foreach ( $widgets as $inner_widget ) {
+			if ( $inner_widget->widgetLocation->id === $location ) {  // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 				$widgets_applicable[] = $inner_widget;
 			}
 		}
@@ -539,8 +540,8 @@ class Package {
 		$widgets            = self::get_widgets( $sale_channel );
 		$widgets_applicable = array();
 
-		foreach( $widgets as $inner_widget ) {
-			if ( $inner_widget->widgetLocation->id === $location ) {
+		foreach ( $widgets as $inner_widget ) {
+			if ( $inner_widget->widgetLocation->id === $location ) {  // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 				if ( isset( $inner_widget->attributes, $inner_widget->attributes->productIdentifier ) ) {
 					$widgets_applicable[] = $inner_widget;
 				}
@@ -554,8 +555,8 @@ class Package {
 		$widgets            = self::get_widgets( $sale_channel );
 		$widgets_applicable = array();
 
-		foreach( $widgets as $inner_widget ) {
-			if ( $inner_widget->widgetLocation->id === $location ) {
+		foreach ( $widgets as $inner_widget ) {
+			if ( $inner_widget->widgetLocation->id === $location ) {  // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 				if ( ! isset( $inner_widget->attributes ) || ! isset( $inner_widget->attributes->productIdentifier ) ) {
 					$widgets_applicable[] = $inner_widget;
 				}
@@ -572,17 +573,17 @@ class Package {
 		if ( ! empty( $sale_channel ) ) {
 			$widgets = array_key_exists( $sale_channel, $widgets ) ? $widgets[ $sale_channel ] : array();
 
-            if ( ! empty( $widgets ) ) {
-                $widgets = isset( $widgets->children ) ? $widgets->children[0]->children : array();
-            }
+			if ( ! empty( $widgets ) ) {
+				$widgets = isset( $widgets->children ) ? $widgets->children[0]->children : array();
+			}
 		}
 
 		return $widgets;
 	}
 
 	/**
-     * Returns TS settings.
-     *
+	 * Returns TS settings.
+	 *
 	 * @param $name
 	 * @param $default
 	 *
@@ -592,36 +593,36 @@ class Package {
 		$option_name  = "ts_easy_integration_{$name}";
 		$option_value = get_option( $option_name, $default );
 
-		if ( ! empty( $option_value ) && in_array( $name, array( 'client_id', 'client_secret' ) ) ) {
+		if ( ! empty( $option_value ) && in_array( $name, array( 'client_id', 'client_secret' ), true ) ) {
 			$option_value = SecretsHelper::decrypt( $option_value );
 
-            if ( is_wp_error( $option_value ) ) {
-                $option_value = '';
-            }
+			if ( is_wp_error( $option_value ) ) {
+				$option_value = '';
+			}
 		}
 
 		return $option_value;
 	}
 
 	/**
-     * Get TS settings.
-     *
+	 * Get TS settings.
+	 *
 	 * @return array
 	 */
-    public static function get_settings() {
-        $settings = array(
-            'channels'       => self::get_channels(),
-            'trustbadges'    => self::get_trustbadges(),
-            'widgets'        => self::get_widgets( false ),
-            'enable_invites' => self::get_enable_review_invites(),
-        );
+	public static function get_settings() {
+		$settings = array(
+			'channels'       => self::get_channels(),
+			'trustbadges'    => self::get_trustbadges(),
+			'widgets'        => self::get_widgets( false ),
+			'enable_invites' => self::get_enable_review_invites(),
+		);
 
-        return $settings;
-    }
+		return $settings;
+	}
 
 	/**
-     * Update a specific TS setting.
-     *
+	 * Update a specific TS setting.
+	 *
 	 * @param $name
 	 * @param $value
 	 *
@@ -630,36 +631,36 @@ class Package {
 	public static function update_setting( $name, $value ) {
 		$option_name = "ts_easy_integration_{$name}";
 
-		if ( ! empty( $value ) && in_array( $name, array( 'client_id', 'client_secret' ) ) ) {
+		if ( ! empty( $value ) && in_array( $name, array( 'client_id', 'client_secret' ), true ) ) {
 			$value = SecretsHelper::encrypt( $value );
 
 			/**
 			 * In case encryption fails, returns false.
 			 */
-            if ( is_wp_error( $value ) ) {
-                return $value;
-            }
+			if ( is_wp_error( $value ) ) {
+				return $value;
+			}
 		}
 
 		update_option( $option_name, $value );
 
-        return true;
+		return true;
 	}
 
 	/**
-     * Deletes all TS settings stored in DB.
-     *
+	 * Deletes all TS settings stored in DB.
+	 *
 	 * @return bool
 	 */
-    public static function delete_settings() {
-	    delete_option( "ts_easy_integration_client_id" );
-	    delete_option( "ts_easy_integration_client_secret" );
+	public static function delete_settings() {
+		delete_option( 'ts_easy_integration_client_id' );
+		delete_option( 'ts_easy_integration_client_secret' );
 
-        foreach( self::get_settings() as $name => $value ) {
-	        $option_name  = "ts_easy_integration_{$name}";
-	        delete_option( $option_name );
-        }
+		foreach ( self::get_settings() as $name => $value ) {
+			$option_name = "ts_easy_integration_{$name}";
+			delete_option( $option_name );
+		}
 
-        return true;
-    }
+		return true;
+	}
 }

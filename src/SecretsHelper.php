@@ -18,7 +18,7 @@ class SecretsHelper {
 			}
 
 			if ( empty( $explanation ) ) {
-				$explanation = _x( 'Encrypt your Client ID and Client Secret', 'trusted-shops', 'trusted-shops-easy-integration' );
+				$explanation = esc_html_x( 'Encrypt your Client ID and Client Secret', 'trusted-shops', 'trusted-shops-easy-integration' );
 			}
 
 			$notice  = '<p>' . sprintf( _x( 'Attention! The <em>%1$s</em> (%2$s) constant is missing. Germanized uses a derived key based on the <em>LOGGED_IN_KEY</em> constant instead. This constant might change under certain circumstances. To prevent data losses, please insert the following snippet within your <a href="%3$s" target="_blank">wp-config.php</a> file:', 'trusted-shops', 'trusted-shops-easy-integration' ), $constant, $explanation, 'https://wordpress.org/support/article/editing-wp-config-php/' ) . '</p>';
@@ -61,8 +61,8 @@ class SecretsHelper {
 			$result['key'] = sodium_hex2bin( constant( self::get_encryption_key_constant( $encryption_type ) ) );
 		} else {
 			try {
-				$pw             = LOGGED_IN_KEY;
-				$result['key']  = sodium_crypto_pwhash(
+				$pw            = LOGGED_IN_KEY;
+				$result['key'] = sodium_crypto_pwhash(
 					SODIUM_CRYPTO_SECRETBOX_KEYBYTES,
 					$pw,
 					$result['salt'],
@@ -88,7 +88,7 @@ class SecretsHelper {
 	protected static function memzero( $pw ) {
 		try {
 			sodium_memzero( $pw );
-		} catch( \SodiumException $e ) {
+		} catch ( \SodiumException $e ) {
 			return;
 		}
 	}
@@ -112,7 +112,7 @@ class SecretsHelper {
 				return $key_data;
 			}
 
-			return base64_encode( $key_data['salt'] . $nonce . sodium_crypto_secretbox( $message, $nonce, $key_data['key'] ) );
+			return base64_encode( $key_data['salt'] . $nonce . sodium_crypto_secretbox( $message, $nonce, $key_data['key'] ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
 		} catch ( \Exception $e ) {
 			return self::log_error( new \WP_Error( 'encrypt-error', sprintf( 'Error while encrypting data: %s', wc_print_r( $e, true ) ) ) );
 		}
@@ -124,13 +124,13 @@ class SecretsHelper {
 	 * @param $cipher
 	 * @param string $encryption_type
 	 *
-	 * @return \WP_Error|mixed
+	 * @return WP_Error|mixed
 	 */
 	public static function decrypt( $cipher, $encryption_type = '' ) {
-		$decoded = base64_decode( $cipher );
+		$decoded = base64_decode( $cipher ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
 		$error   = new \WP_Error();
 
-		if ( $decoded === false ) {
+		if ( false === $decoded ) {
 			$error->add( 'decrypt-decode', 'Error while decoding the encrypted message.' );
 			return self::log_error( $error );
 		}
@@ -141,8 +141,8 @@ class SecretsHelper {
 				return self::log_error( $error );
 			}
 
-			$salt       = mb_substr( $decoded, 0, SODIUM_CRYPTO_PWHASH_SALTBYTES, '8bit' );
-			$key_data   = self::get_encryption_key_data( $salt, $encryption_type );
+			$salt     = mb_substr( $decoded, 0, SODIUM_CRYPTO_PWHASH_SALTBYTES, '8bit' );
+			$key_data = self::get_encryption_key_data( $salt, $encryption_type );
 
 			if ( is_wp_error( $key_data ) ) {
 				return $key_data;
@@ -156,18 +156,18 @@ class SecretsHelper {
 			/**
 			 * Try the fallback key.
 			 */
-			if ( $plain === false ) {
-				$key_data   = self::get_encryption_key_data( $salt, $encryption_type, true );
+			if ( false === $plain ) {
+				$key_data = self::get_encryption_key_data( $salt, $encryption_type, true );
 
 				if ( is_wp_error( $key_data ) ) {
 					return $key_data;
 				}
 
-				$key        = $key_data['key'];
-				$plain      = sodium_crypto_secretbox_open( $ciphertext, $nonce, $key );
+				$key   = $key_data['key'];
+				$plain = sodium_crypto_secretbox_open( $ciphertext, $nonce, $key );
 			}
 
-			if ( $plain === false ) {
+			if ( false === $plain ) {
 				$error->add( 'decrypt', 'Message could not be decrypted.' );
 				return self::log_error( $error );
 			}
@@ -191,7 +191,7 @@ class SecretsHelper {
 		$supports          = false;
 		$path_to_wp_config = ABSPATH . '/wp-config.php';
 
-		if ( @file_exists( $path_to_wp_config ) && @is_writeable( $path_to_wp_config ) ) {
+		if ( @file_exists( $path_to_wp_config ) && @is_writeable( $path_to_wp_config ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 			$supports = true;
 		}
 
@@ -218,16 +218,16 @@ class SecretsHelper {
 
 			$path_to_wp_config = ABSPATH . '/wp-config.php';
 
-			if ( @file_exists( $path_to_wp_config ) ) {
-				error_reporting( 0 );
+			if ( @file_exists( $path_to_wp_config ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+				error_reporting( 0 ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.runtime_configuration_error_reporting,WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting
 
 				// Load file data
-				$config_file       = file( $path_to_wp_config );
-				$last_define_line  = false;
-				$stop_line         = false;
-				$path_line         = false;
-				$to_insert         = "define( '" . $constant . "', '" . addcslashes( $key_value, "\\'" ) . "' );\r\n";
-				$exists            = false;
+				$config_file      = file( $path_to_wp_config );
+				$last_define_line = false;
+				$stop_line        = false;
+				$path_line        = false;
+				$to_insert        = "define( '" . $constant . "', '" . addcslashes( $key_value, "\\'" ) . "' );\r\n";
+				$exists           = false;
 
 				if ( ! $config_file ) {
 					return false;
@@ -258,20 +258,20 @@ class SecretsHelper {
 				if ( ! $exists ) {
 					if ( $stop_line ) {
 						array_splice( $config_file, $stop_line, 0, $to_insert );
-					} elseif( $path_line ) {
+					} elseif ( $path_line ) {
 						array_splice( $config_file, $path_line, 0, $to_insert );
 					} elseif ( $last_define_line ) {
 						array_splice( $config_file, $last_define_line + 1, 0, $to_insert );
 					}
 
-					$handle = fopen( $path_to_wp_config, 'w' );
+					$handle = fopen( $path_to_wp_config, 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fopen
 
 					if ( $handle ) {
 						foreach ( $config_file as $line ) {
-							fwrite( $handle, $line );
+							fwrite( $handle, $line ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fwrite
 						}
 
-						fclose( $handle );
+						fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fclose
 						$updated = true;
 					}
 				}
@@ -287,9 +287,9 @@ class SecretsHelper {
 	protected static function log_error( $error ) {
 		update_option( 'ts_easy_integration_has_encryption_error', 'yes' );
 
-		if ( apply_filters( 'ts_easy_integration_log_encryption_errors', true ) ) {
-			foreach( $error->get_error_messages() as $message ) {
-				Package::log( $message, 'encryption' );
+		if ( apply_filters( 'ts_easy_integration_enable_encryption_logging', false ) && ( $logger = wc_get_logger() ) ) {
+			foreach ( $error->get_error_messages() as $message ) {
+				$logger->error( $message, array( 'source' => 'ts-easy-integration-encryption' ) );
 			}
 		}
 
