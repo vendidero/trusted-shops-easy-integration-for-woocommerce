@@ -419,7 +419,13 @@ class Package {
 	 * @return string
 	 */
 	public static function get_product_sku( $product, $force_parent = true ) {
-		return self::get_product_data( $product, 'sku', $force_parent );
+		$sku = self::get_product_data( $product, 'sku', $force_parent );
+
+		if ( empty( $sku ) ) {
+			$sku = $product->get_id();
+		}
+
+		return $sku;
 	}
 
 	/**

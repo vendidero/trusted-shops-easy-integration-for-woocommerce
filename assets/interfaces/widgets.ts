@@ -3,6 +3,7 @@ import type { Widget } from './widget'
 export interface Widgets {
     id: string
     salesChannelRef: string
+    eTrustedChannelRef: string
     children: Array<{
         tag?: string
         attributes?: {
