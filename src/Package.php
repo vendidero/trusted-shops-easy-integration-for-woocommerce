@@ -16,7 +16,9 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.0.0-alpha';
+	const VERSION = '1.0.1-alpha';
+
+	protected static $sale_channels_map = null;
 
 	public static function init() {
 		if ( ! self::has_dependencies() ) {
@@ -270,13 +272,40 @@ class Package {
 		return false;
 	}
 
+	public static function get_etrusted_channel_ref( $sale_channel = '' ) {
+		$sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
+
+		if ( is_null( self::$sale_channels_map ) ) {
+			self::get_channels();
+		}
+
+		if ( array_key_exists( $sale_channel, self::$sale_channels_map ) ) {
+			return self::$sale_channels_map[ $sale_channel ];
+		} else {
+			return false;
+		}
+	}
+
+	protected static function get_setting_key( $sale_channel = '' ) {
+		$sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
+
+		if ( $etrusted_channel_ref = self::get_etrusted_channel_ref( $sale_channel ) ) {
+			$setting_key = $sale_channel . '_' . $etrusted_channel_ref;
+		} else {
+			$setting_key = '';
+		}
+
+		return $setting_key;
+	}
+
 	/**
 	 * Get TS mapped channels.
 	 *
 	 * @return array
 	 */
 	public static function get_channels() {
-		$channels = array_filter( (array) self::get_setting( 'channels', array() ) );
+		$channels                = array_filter( (array) self::get_setting( 'channels', array() ) );
+		self::$sale_channels_map = array();
 
 		if ( ! empty( $channels ) ) {
 			foreach ( $channels as $key => $channel ) {
@@ -288,6 +317,8 @@ class Package {
 					$channels[ $key ]->salesChannelName   = $sale_channel['name'];
 					$channels[ $key ]->salesChannelUrl    = $sale_channel['url'];
 				}
+
+				self::$sale_channels_map[ $channel->salesChannelRef ] = $channel->eTrustedChannelRef;
 			}
 		}
 
@@ -301,9 +332,9 @@ class Package {
 	}
 
 	public static function get_trustbadge( $sale_channel = '' ) {
-		$sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
+		$setting_key  = self::get_setting_key( $sale_channel );
 		$trustbadges  = self::get_trustbadges();
-		$trustbadge   = array_key_exists( $sale_channel, $trustbadges ) ? $trustbadges[ $sale_channel ] : false;
+		$trustbadge   = array_key_exists( $setting_key, $trustbadges ) ? $trustbadges[ $setting_key ] : false;
 
 		return $trustbadge;
 	}
@@ -331,10 +362,10 @@ class Package {
 	}
 
 	public static function enable_review_invites( $sale_channel = '' ) {
-		$sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
+		$setting_key  = self::get_setting_key( $sale_channel );
 		$invites      = self::get_enable_review_invites();
 
-		return in_array( $sale_channel, $invites, true ) ? true : false;
+		return in_array( $setting_key, $invites, true ) ? true : false;
 	}
 
 	/**
@@ -569,11 +600,11 @@ class Package {
 	}
 
 	public static function get_widgets( $sale_channel = '' ) {
-		$sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
+		$setting_key  = self::get_setting_key( $sale_channel );
 		$widgets      = array_filter( (array) self::get_setting( 'widgets', array() ) );
 
-		if ( ! empty( $sale_channel ) ) {
-			$widgets = array_key_exists( $sale_channel, $widgets ) ? $widgets[ $sale_channel ] : array();
+		if ( ! empty( $setting_key ) ) {
+			$widgets = array_key_exists( $setting_key, $widgets ) ? $widgets[ $setting_key ] : array();
 
 			if ( ! empty( $widgets ) ) {
 				$widgets = isset( $widgets->children ) ? $widgets->children[0]->children : array();
@@ -645,6 +676,13 @@ class Package {
 		}
 
 		update_option( $option_name, $value );
+
+		/**
+		 * Clear sale channel mapping cache.
+		 */
+		if ( 'channels' === $name ) {
+			self::$sale_channels_map = null;
+		}
 
 		return true;
 	}

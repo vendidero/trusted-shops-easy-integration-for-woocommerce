@@ -35,27 +35,22 @@ $ts_sale_channel = isset( $ts_sale_channel ) ? $ts_sale_channel : '';
 	<?php if ( Package::enable_review_invites( $ts_sale_channel ) ) : ?>
 		<!-- product reviews start -->
 		<?php
+		$product_parent_map = array();
+
 		foreach ( $order->get_items() as $item_id => $item ) :
 			if ( ! is_a( $item, 'WC_Order_Item_Product' ) ) {
 				continue;
 			}
 
-			$org_product    = $item->get_product();
-			$parent_product = $org_product;
+			// Get forced parent product
+			$parent_product = wc_get_product( $item->get_product_id() );
 
-			if ( ! $org_product ) {
+			// Skip additional variations of the same parent product
+			if ( ! $parent_product || in_array( $item->get_product_id(), $product_parent_map ) ) {
 				continue;
 			}
 
-			// In case of variations, force using parent SKU data
-			if ( $org_product->get_parent_id() ) {
-				$parent_product = wc_get_product( $org_product->get_parent_id() );
-
-				if ( ! $parent_product ) {
-					continue;
-				}
-			}
-
+			$product_parent_map[] = $item->get_product_id();
 			$sku = Package::get_product_sku( $parent_product );
 			?>
 			<span class="tsCheckoutProductItem">

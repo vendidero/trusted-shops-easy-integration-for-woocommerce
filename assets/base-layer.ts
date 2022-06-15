@@ -71,7 +71,7 @@ class BaseLayer {
 
                 return settings;
             }).then( settings => {
-                return this.updateSettings( settings );
+                return this.updateSettings( settings, true );
             });
 
             this.sendingNotification( this.eventsLib.EVENTS.SAVE_CREDENTIALS, 'success' );
@@ -103,7 +103,7 @@ class BaseLayer {
 
                 return settings;
             }).then( settings => {
-                return this.updateSettings(settings);
+                return this.updateSettings( settings );
             });
 
             await this.getMappedChannelsCallback().then( () => {
@@ -125,23 +125,41 @@ class BaseLayer {
         }
     }
 
-    private getUniqueId( tsChannelRef: string, salesChannelRef: string ) {
-        return tsChannelRef + '_' + salesChannelRef;
+    private getUniqueId( salesChannelRef: string, tsSalesChannelRef: string ) {
+        return salesChannelRef + '_' + tsSalesChannelRef;
     }
 
-    private async getTrustbadgeCallback( event: { payload: { id: string; salesChannelRef: string }; } ) {
-        await this.getTrustbadge( event.payload.salesChannelRef ).then( trustbadge => {
-            this.eventsLib.dispatchAction({
-                action: this.eventsLib.EVENTS.SET_TRUSTBADGE_CONFIGURATION_PROVIDED,
-                payload: trustbadge ? trustbadge : { id: 'id' , children: [] },
-            })
-        });
+    private async getTrustbadgeCallback( event: { payload: { id: string; salesChannelRef: string; eTrustedChannelRef?: string; }; } ) {
+        if ( event.payload.eTrustedChannelRef !== undefined  ) {
+            await this.getTrustbadge( this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ).then( trustbadge => {
+                this.eventsLib.dispatchAction({
+                    action: this.eventsLib.EVENTS.SET_TRUSTBADGE_CONFIGURATION_PROVIDED,
+                    payload: trustbadge ? trustbadge : { id: 'id' , children: [] },
+                })
+            });
+        } else {
+            await this.getChannelBySalesRef( event.payload.salesChannelRef ).then( channel => {
+                if ( channel ) {
+                    return this.getTrustbadge( this.getUniqueId( event.payload.salesChannelRef, channel.eTrustedChannelRef ) ).then( trustbadge => {
+                        this.eventsLib.dispatchAction({
+                            action: this.eventsLib.EVENTS.SET_TRUSTBADGE_CONFIGURATION_PROVIDED,
+                            payload: trustbadge ? trustbadge : {id: 'id', children: []},
+                        })
+                    });
+                } else {
+                    return this.eventsLib.dispatchAction({
+                        action: this.eventsLib.EVENTS.SET_TRUSTBADGE_CONFIGURATION_PROVIDED,
+                        payload: {id: 'id', children: []},
+                    });
+                }
+            });
+        }
     }
 
     private async saveTrustbadgeCallback(event: { payload: Trustbadge }) {
         try {
             const settings = await this.getSettings().then( settings => {
-                settings.trustbadges[ event.payload.salesChannelRef ] = event.payload;
+                settings.trustbadges[ this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ] = event.payload;
 
                 return settings;
             }).then(settings => {
@@ -157,7 +175,7 @@ class BaseLayer {
     }
 
     private async getWidgetsCallback( event: { payload: { id: string; salesChannelRef: string }; } ) {
-        await this.getWidgets( event.payload.salesChannelRef ).then( widgets => {
+        await this.getWidgets( this.getUniqueId( event.payload.salesChannelRef, event.payload.id ) ).then( widgets => {
             this.eventsLib.dispatchAction({
                 action: this.eventsLib.EVENTS.SET_WIDGET_PROVIDED,
                 payload: widgets,
@@ -175,7 +193,7 @@ class BaseLayer {
     private async saveWidgetsCallback(event: { payload: Widgets }) {
         try {
             const settings = await this.getSettings().then( settings => {
-                settings.widgets[ event.payload.salesChannelRef ] = event.payload;
+                settings.widgets[ this.getUniqueId( event.payload.salesChannelRef, event.payload.id ) ] = event.payload;
 
                 return settings;
             }).then(settings => {
@@ -191,14 +209,14 @@ class BaseLayer {
     }
 
     private async getHasReviewInvitesCallback( event: { payload: { id: string; salesChannelRef: string }; } ) {
-        await this.getChannelById( event.payload.salesChannelRef ).then( channel => {
+        await this.getChannelById( event.payload.salesChannelRef, event.payload.id ).then( channel => {
             if ( ! channel ) {
                 this.eventsLib.dispatchAction({
                     action: this.eventsLib.EVENTS.SET_PRODUCT_REVIEW_FOR_CHANNEL,
                     payload: null,
                 });
             } else {
-                this.hasEnabledReviewInvites( event.payload.salesChannelRef ).then( hasEnabled => {
+                this.hasEnabledReviewInvites( this.getUniqueId( event.payload.salesChannelRef, event.payload.id ) ).then( hasEnabled => {
                     this.eventsLib.dispatchAction({
                         action: this.eventsLib.EVENTS.SET_PRODUCT_REVIEW_FOR_CHANNEL,
                         payload: hasEnabled ? channel : null,
@@ -212,14 +230,14 @@ class BaseLayer {
         const event = isActivated ? this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL : this.eventsLib.EVENTS.DEACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL;
 
         try {
-            const settings = await this.getSettings().then( settings => {
-                if ( isActivated && ! settings.enable_invites.includes( channel.salesChannelRef ) ) {
-                    settings.enable_invites.push( channel.salesChannelRef );
-                } else if ( ! isActivated && settings.enable_invites.includes( channel.salesChannelRef ) ) {
-                    settings.enable_invites = settings.enable_invites.filter( item => item !== channel.salesChannelRef );
-                }
+            const refId = this.getUniqueId( channel.salesChannelRef, channel.eTrustedChannelRef );
 
-                console.log(settings.enable_invites);
+            const settings = await this.getSettings().then( settings => {
+                if ( isActivated && ! settings.enable_invites.includes( refId ) ) {
+                    settings.enable_invites.push( refId );
+                } else if ( ! isActivated && settings.enable_invites.includes( refId ) ) {
+                    settings.enable_invites = settings.enable_invites.filter( item => item !== refId );
+                }
 
                 return settings;
             }).then(settings => {
@@ -297,8 +315,9 @@ class BaseLayer {
             this.settings.client_id     = client_id !== null ? atob( client_id ) : '';
             this.settings.client_secret = client_secret !== null ? atob( client_secret ) : '';
             // Force parsing index signatures as objects to make sure JSON.stringify works as expected
-            this.settings.trustbadges  = {...this.settings.trustbadges}
-            this.settings.widgets      = {...this.settings.widgets}
+            this.settings.trustbadges    = { ...this.settings.trustbadges }
+            this.settings.widgets        = { ...this.settings.widgets }
+            this.settings.enable_invites = { ...this.settings.enable_invites }
         }
 
         if ( ! this.settings ) {
@@ -308,7 +327,7 @@ class BaseLayer {
         return this.settings;
     }
 
-    private updateSettingsData(result: Settings) {
+    private updateSettingsData( result: Settings ) {
         const client_id     = this.settings ? this.settings.client_id : '';
         const client_secret = this.settings ? this.settings.client_secret : '';
 
@@ -339,13 +358,24 @@ class BaseLayer {
         });
     }
 
-    private async updateSettings( settings: Settings ): Promise<Settings> {
+    private async updateSettings( settings: Settings, andCredentials = false ): Promise<Settings> {
+        settings.trustbadges    = { ...settings.trustbadges }
+        settings.widgets        = { ...settings.widgets }
+        settings.enable_invites = { ...settings.enable_invites }
+
+        const headers = {
+            'Content-Type': 'application/json;charset=UTF-8',
+        };
+
+        if ( ! andCredentials ) {
+            delete settings.client_secret;
+            delete settings.client_id;
+        }
+
         this.settings = await fetch( this.getAjaxUrl( 'update_settings' ), {
-            headers: {
-                'Content-Type': 'application/json;charset=UTF-8'
-            },
+            headers,
             method: 'POST',
-            body: JSON.stringify( settings )
+            body: JSON.stringify( { ...settings } )
         }).then(
             res => res.json()
         ).then( result => {
@@ -393,10 +423,20 @@ class BaseLayer {
         }
     }
 
-    private async getChannelById( salesRef: string ): Promise<Channel|null> {
+    private async getChannelBySalesRef( salesRef: string ): Promise<Channel|null> {
         try {
             return await this.getSettings().then( settings => {
                 return settings.channels.filter( channel => channel.salesChannelRef === salesRef )[0];
+            });
+        } catch(e) {
+            return null;
+        }
+    }
+
+    private async getChannelById( salesRef: string, etrustedRef: string ): Promise<Channel|null> {
+        try {
+            return await this.getSettings().then( settings => {
+                return settings.channels.filter( channel => channel.salesChannelRef === salesRef && channel.eTrustedChannelRef === etrustedRef )[0];
             });
         } catch(e) {
             return null;

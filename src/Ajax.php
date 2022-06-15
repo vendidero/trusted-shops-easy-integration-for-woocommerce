@@ -73,12 +73,12 @@ class Ajax {
 				if ( 'trustbadges' === $setting_name ) {
 					$value = (array) $value;
 
-					foreach ( $value as $sale_channel => $trustbadge ) {
+					foreach ( $value as $setting_key => $trustbadge ) {
 						/**
 						 * Do not allow storing invalid trustbadges.
 						 */
 						if ( ! isset( $trustbadge->id ) || ! isset( $trustbadge->children ) || ! isset( $trustbadge->children[0]->attributes ) ) {
-							unset( $value[ $sale_channel ] );
+							unset( $value[ $setting_key ] );
 
 							throw new \Exception( _x( 'Invalid trustbadge detected.', 'trusted-shops', 'trusted-shops-easy-integration' ), 'trustbadge-invalid' );
 						}

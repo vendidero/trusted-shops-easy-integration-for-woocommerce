@@ -6,6 +6,11 @@ defined( 'ABSPATH' ) || exit;
 
 class Hooks {
 
+	/**
+	 * @TODO: Needs filter/check to force-enable WooCommerce review as rating templates might not even be loaded in case reviews are disabled.
+	 *
+	 * @return void
+	 */
 	public static function init() {
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register_scripts' ) );
 		add_filter( 'script_loader_tag', array( __CLASS__, 'filter_script_loader_tag' ), 1500, 2 );
@@ -23,8 +28,13 @@ class Hooks {
 		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'register_custom_review_tab' ), 50, 1 );
 		add_action( 'ts_easy_integration_single_product_review_tab_widgets', array( __CLASS__, 'single_product_review_tab_widgets' ) );
 
-		add_action( 'woocommerce_product_after_tabs', array( __CLASS__, 'register_single_product_description' ), 20 );
-		add_action( 'ts_easy_integration_product_loop_inner_product_widgets', array( __CLASS__, 'single_product_description_widgets' ) );
+		/**
+		 * Use a tweak to register single product description widget as Woo does not support hooks while
+		 * outputting the product description. Register a filter for the_content while applying the woocommerce_product_tabs
+		 * filter which appends the widgets to the post content.
+		 */
+		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'add_single_product_description_content_filter' ) );
+		add_action( 'ts_easy_integration_single_product_description_widgets', array( __CLASS__, 'single_product_description_widgets' ) );
 
 		add_action( 'woocommerce_after_shop_loop_item', array( __CLASS__, 'register_product_loop_inner' ), 20 );
 		add_action( 'ts_easy_integration_product_loop_inner_widgets', array( __CLASS__, 'product_loop_inner_widgets' ) );
@@ -35,10 +45,10 @@ class Hooks {
 		add_action( 'woocommerce_after_shop_loop', array( __CLASS__, 'register_product_loop' ), 50 );
 		add_action( 'ts_easy_integration_product_loop_widgets', array( __CLASS__, 'product_loop_widgets' ) );
 
-		add_action( 'dynamic_sidebar_before', array( __CLASS__, 'register_sidebar' ), 500 );
+		add_action( 'dynamic_sidebar_after', array( __CLASS__, 'register_sidebar' ), 500 );
 		add_action( 'ts_easy_integration_sidebar_widgets', array( __CLASS__, 'sidebar_widgets' ) );
 
-		add_action( 'woocommerce_after_main_content', array( __CLASS__, 'register_homepage' ), 20 );
+		add_action( 'woocommerce_after_main_content', array( __CLASS__, 'register_homepage' ), 5 );
 		add_action( 'ts_easy_integration_homepage_widgets', array( __CLASS__, 'homepage_widgets' ) );
 
 		switch ( $theme->get_template() ) {
@@ -57,6 +67,16 @@ class Hooks {
 
 		add_action( 'wp_body_open', array( __CLASS__, 'register_header' ), 50 );
 		add_action( 'ts_easy_integration_header_widgets', array( __CLASS__, 'header_widgets' ) );
+
+		/**
+		 * Override default Woo single product rating function to make sure
+		 * rating.php template is rendered even though ratings are disabled.
+		 */
+		add_action( 'after_setup_theme', array( __CLASS__, 'override_rating_template_function' ), 10 );
+	}
+
+	public static function override_rating_template_function() {
+		include_once Package::get_path() . '/includes/ts-easy-integration-template-functions.php';
 	}
 
 	public static function header_widgets() {
@@ -86,7 +106,9 @@ class Hooks {
 	}
 
 	public static function register_homepage() {
-		do_action( 'ts_easy_integration_homepage_widgets' );
+		if ( is_shop() ) {
+			do_action( 'ts_easy_integration_homepage_widgets' );
+		}
 	}
 
 	public static function sidebar_widgets() {
@@ -152,6 +174,24 @@ class Hooks {
 		foreach ( Package::get_widgets_by_location( 'wdg-loc-pd' ) as $ts_widget ) {
 			self::render_single_widget( $ts_widget );
 		}
+	}
+
+	public static function add_single_product_description_content_filter( $tabs ) {
+		add_filter( 'the_content', array( __CLASS__, 'register_single_product_description_content_filter' ), 5000 );
+
+		return $tabs;
+	}
+
+	public static function register_single_product_description_content_filter( $content ) {
+		ob_start();
+		self::register_single_product_description();
+		$html = ob_get_clean();
+
+		$content = $content . $html;
+
+		remove_filter( 'the_content', array( __CLASS__, 'register_single_product_description_content_filter' ), 5000 );
+
+		return $content;
 	}
 
 	public static function register_single_product_description() {
