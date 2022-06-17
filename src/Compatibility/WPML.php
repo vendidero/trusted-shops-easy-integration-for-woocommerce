@@ -23,11 +23,7 @@ class WPML implements Compatibility {
 
 		$current_sales_channel_id = self::get_sales_channel_id_by_language( $sitepress->get_current_language() );
 
-		if ( Package::sales_channel_is_mapped( $current_sales_channel_id ) ) {
-			$current = $current_sales_channel_id;
-		}
-
-		return $current;
+		return $current_sales_channel_id;
 	}
 
 	protected static function get_sales_channel_id_by_language( $lang_code ) {

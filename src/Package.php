@@ -349,10 +349,20 @@ class Package {
 		return $channels;
 	}
 
-	public static function is_configured() {
-		$map = self::get_sales_channels_map();
+	public static function has_mapped_channel() {
+		$mapped = self::get_sales_channels_map();
 
-		return ! empty( $map );
+		return ( ! empty( $mapped ) ? true : false );
+	}
+
+	public static function is_configured( $sales_channel = '' ) {
+		$sales_channel = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
+
+		if ( self::sales_channel_is_mapped( $sales_channel ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public static function sales_channel_is_mapped( $sales_channel = '' ) {
@@ -368,9 +378,10 @@ class Package {
 	}
 
 	public static function get_trustbadge( $sales_channel = '' ) {
-		$setting_key = self::get_setting_key( $sales_channel );
-		$trustbadges = self::get_trustbadges();
-		$trustbadge  = array_key_exists( $setting_key, $trustbadges ) ? $trustbadges[ $setting_key ] : false;
+		$sales_channel = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
+		$setting_key   = self::get_setting_key( $sales_channel );
+		$trustbadges   = self::get_trustbadges();
+		$trustbadge    = ( self::is_configured( $sales_channel ) && array_key_exists( $setting_key, $trustbadges ) ) ? $trustbadges[ $setting_key ] : false;
 
 		return $trustbadge;
 	}
@@ -642,8 +653,13 @@ class Package {
 	}
 
 	public static function get_widgets( $sales_channel = '' ) {
-		$setting_key = self::get_setting_key( $sales_channel );
-		$widgets     = array_filter( (array) self::get_setting( 'widgets', array() ) );
+		$sales_channel = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
+		$setting_key   = self::get_setting_key( $sales_channel );
+		$widgets       = array_filter( (array) self::get_setting( 'widgets', array() ) );
+
+		if ( false !== $sales_channel && ! self::is_configured( $sales_channel ) ) {
+			return array();
+		}
 
 		if ( ! empty( $setting_key ) ) {
 			$widgets = array_key_exists( $setting_key, $widgets ) ? $widgets[ $setting_key ] : array();
