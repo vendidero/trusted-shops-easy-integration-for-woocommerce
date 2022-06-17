@@ -14,7 +14,7 @@
  * @version 1.0.0
  *
  * @var WC_Order $order
- * @var string $ts_sale_channel
+ * @var string $ts_sales_channel
  *
  */
 
@@ -22,7 +22,7 @@ use Vendidero\TrustedShopsEasyIntegration\Package;
 
 defined( 'ABSPATH' ) || exit;
 
-$ts_sale_channel = isset( $ts_sale_channel ) ? $ts_sale_channel : '';
+$ts_sales_channel = isset( $ts_sales_channel ) ? $ts_sales_channel : '';
 ?>
 <!-- added by Trusted Shops app: Start -->
 <div id="trustedShopsCheckout" style="display: none;">
@@ -32,7 +32,7 @@ $ts_sale_channel = isset( $ts_sale_channel ) ? $ts_sale_channel : '';
 	<span id="tsCheckoutOrderAmount"><?php echo esc_html( $order->get_total() ); ?></span>
 	<span id="tsCheckoutOrderCurrency"><?php echo esc_html( $order->get_currency() ); ?></span>
 	<span id="tsCheckoutOrderPaymentType"><?php echo esc_html( Package::get_order_payment_method( $order ) ); ?></span>
-	<?php if ( Package::enable_review_invites( $ts_sale_channel ) ) : ?>
+	<?php if ( Package::enable_review_invites( $ts_sales_channel ) ) : ?>
 		<!-- product reviews start -->
 		<?php
 		$product_parent_map = array();
@@ -46,12 +46,12 @@ $ts_sale_channel = isset( $ts_sale_channel ) ? $ts_sale_channel : '';
 			$parent_product = wc_get_product( $item->get_product_id() );
 
 			// Skip additional variations of the same parent product
-			if ( ! $parent_product || in_array( $item->get_product_id(), $product_parent_map ) ) {
+			if ( ! $parent_product || in_array( $item->get_product_id(), $product_parent_map, true ) ) {
 				continue;
 			}
 
 			$product_parent_map[] = $item->get_product_id();
-			$sku = Package::get_product_sku( $parent_product );
+			$sku                  = Package::get_product_sku( $parent_product );
 			?>
 			<span class="tsCheckoutProductItem">
 				<span class="tsCheckoutProductUrl"><?php echo esc_url( $parent_product->get_permalink() ); ?></span>

@@ -22,8 +22,6 @@ class Hooks {
 		add_action( 'ts_easy_integration_single_product_rating_widgets', array( __CLASS__, 'single_product_rating_widgets' ) );
 		add_action( 'ts_easy_integration_product_loop_rating_widgets', array( __CLASS__, 'product_loop_rating_widgets' ) );
 
-		$theme = function_exists( 'wp_get_theme' ) ? wp_get_theme() : '';
-
 		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'unregister_review_tab' ), 50, 1 );
 		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'register_custom_review_tab' ), 50, 1 );
 		add_action( 'ts_easy_integration_single_product_review_tab_widgets', array( __CLASS__, 'single_product_review_tab_widgets' ) );
@@ -36,36 +34,13 @@ class Hooks {
 		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'add_single_product_description_content_filter' ) );
 		add_action( 'ts_easy_integration_single_product_description_widgets', array( __CLASS__, 'single_product_description_widgets' ) );
 
-		add_action( 'woocommerce_after_shop_loop_item', array( __CLASS__, 'register_product_loop_inner' ), 20 );
-		add_action( 'ts_easy_integration_product_loop_inner_widgets', array( __CLASS__, 'product_loop_inner_widgets' ) );
+		add_action( 'after_setup_theme', array( __CLASS__, 'register_lazy_hooks' ), 20 );
 
-		add_action( 'woocommerce_after_single_product', array( __CLASS__, 'register_single_product' ), 10 );
 		add_action( 'ts_easy_integration_single_product_widgets', array( __CLASS__, 'single_product_widgets' ) );
-
-		add_action( 'woocommerce_after_shop_loop', array( __CLASS__, 'register_product_loop' ), 50 );
-		add_action( 'ts_easy_integration_product_loop_widgets', array( __CLASS__, 'product_loop_widgets' ) );
-
-		add_action( 'dynamic_sidebar_after', array( __CLASS__, 'register_sidebar' ), 500 );
 		add_action( 'ts_easy_integration_sidebar_widgets', array( __CLASS__, 'sidebar_widgets' ) );
-
-		add_action( 'woocommerce_after_main_content', array( __CLASS__, 'register_homepage' ), 5 );
 		add_action( 'ts_easy_integration_homepage_widgets', array( __CLASS__, 'homepage_widgets' ) );
-
-		switch ( $theme->get_template() ) {
-			case 'storefront':
-				add_action( 'storefront_footer', array( __CLASS__, 'register_footer' ), 20 );
-				break;
-			case 'astra':
-				add_action( 'astra_footer_after', array( __CLASS__, 'register_footer' ), 20 );
-				break;
-			default:
-				add_action( 'wp_footer', array( __CLASS__, 'register_footer' ), 1 );
-				break;
-		}
-
+		add_action( 'ts_easy_integration_product_loop_inner_widgets', array( __CLASS__, 'product_loop_inner_widgets' ) );
 		add_action( 'ts_easy_integration_footer_widgets', array( __CLASS__, 'footer_widgets' ) );
-
-		add_action( 'wp_body_open', array( __CLASS__, 'register_header' ), 50 );
 		add_action( 'ts_easy_integration_header_widgets', array( __CLASS__, 'header_widgets' ) );
 
 		/**
@@ -73,6 +48,42 @@ class Hooks {
 		 * rating.php template is rendered even though ratings are disabled.
 		 */
 		add_action( 'after_setup_theme', array( __CLASS__, 'override_rating_template_function' ), 10 );
+	}
+
+	public static function register_lazy_hooks() {
+		add_action( self::get_hook_name( 'woocommerce_after_single_product', 'single_product' ), array( __CLASS__, 'register_single_product' ), 10 );
+		add_action( self::get_hook_name( 'woocommerce_after_shop_loop', 'product_loop' ), array( __CLASS__, 'register_product_loop' ), 50 );
+		add_action( self::get_hook_name( 'woocommerce_after_shop_loop_item', 'product_loop_inner' ), array( __CLASS__, 'register_product_loop_inner' ), 20 );
+		add_action( self::get_hook_name( 'dynamic_sidebar_after', 'sidebar' ), array( __CLASS__, 'register_sidebar' ), 500 );
+		add_action( self::get_hook_name( 'woocommerce_after_main_content', 'homepage' ), array( __CLASS__, 'register_homepage' ), 5 );
+		add_action( self::get_hook_name( 'wp_footer', 'footer' ), array( __CLASS__, 'register_footer' ), 20 );
+		add_action( self::get_hook_name( 'wp_body_open', 'header' ), array( __CLASS__, 'register_header' ), 50 );
+	}
+
+	public static function get_hook_name( $default_name, $location = '' ) {
+		$location     = '' === $location ? $default_name : $location;
+ 		$custom_hooks = self::get_theme_custom_hook_names();
+		$theme        = function_exists( 'wp_get_theme' ) ? wp_get_theme() : '';
+		$custom_name  = $default_name;
+
+		if ( array_key_exists( $theme->get_template(), $custom_hooks ) ) {
+			$custom_theme_hooks = $custom_hooks[ $theme->get_template() ];
+			$custom_name        = isset( $custom_theme_hooks[ $location ] ) ? $custom_theme_hooks[ $location ] : $default_name;
+		}
+
+		return apply_filters( 'ts_easy_integration_hook_name', $custom_name, $default_name, $location );
+	}
+
+	public static function get_theme_custom_hook_names() {
+		return array(
+			'astra' => array(
+				'footer' => 'astra_footer_after',
+				'product_loop_inner' => 'astra_woo_shop_summary_wrap_bottom'
+			),
+			'storefront' => array(
+				'footer' => 'storefront_footer',
+			),
+		);
 	}
 
 	public static function override_rating_template_function() {
@@ -117,8 +128,10 @@ class Hooks {
 		}
 	}
 
-	public static function register_sidebar( $sidebar ) {
-		if ( apply_filters( 'ts_easy_integration_is_main_sidebar', ( strstr( $sidebar, 'sidebar' ) ), $sidebar ) ) {
+	public static function register_sidebar( $sidebar = null ) {
+		if ( is_null( $sidebar ) ) {
+			do_action( 'ts_easy_integration_sidebar_widgets' );
+		} elseif ( is_string( $sidebar ) && apply_filters( 'ts_easy_integration_is_main_sidebar', ( strstr( $sidebar, 'sidebar' ) ), $sidebar ) ) {
 			do_action( 'ts_easy_integration_sidebar_widgets' );
 		}
 	}
@@ -158,7 +171,7 @@ class Hooks {
 	}
 
 	public static function product_loop_inner_widgets() {
-		foreach ( Package::get_product_widgets_by_location( 'wdg-loc-pl' ) as $ts_widget ) {
+		foreach ( Package::get_widgets_by_location( 'wdg-loc-pl' ) as $ts_widget ) {
 			/**
 			 * Product star widget is being rendered in a separate location.
 			 */
@@ -310,8 +323,8 @@ class Hooks {
 	public static function fallback_scripts() {
 		if ( apply_filters( 'ts_easy_integration_enable_fallback_script_embed', false ) ) {
 			if ( $trustbadge = Package::get_trustbadge() ) {
-				$sale_channel = Package::get_current_sale_channel();
-				$ts_id        = $trustbadge->id;
+				$sales_channel = Package::get_current_sales_channel();
+				$ts_id         = $trustbadge->id;
 
 				if ( ! empty( $ts_id ) ) {
 					$script_data = '';
@@ -327,7 +340,7 @@ class Hooks {
 						$script_data .= ' ' . esc_attr( $attribute->attributeName ) . "='" . esc_attr( $value ) . "'"; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 					}
 
-					echo "<script src='//widgets.trustedshops.com/js/" . esc_attr( $ts_id ) . '.js?ver=' . esc_attr( Package::get_version() ) . "' id='ts-easy-integration-trustbadge-" . esc_attr( $sale_channel ) . "-js' asnyc{$script_data}></script>"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.WP.EnqueuedResources.NonEnqueuedScript
+					echo "<script src='//widgets.trustedshops.com/js/" . esc_attr( $ts_id ) . '.js?ver=' . esc_attr( Package::get_version() ) . "' id='ts-easy-integration-trustbadge-" . esc_attr( $sales_channel ) . "-js' asnyc{$script_data}></script>"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.WP.EnqueuedResources.NonEnqueuedScript
 				}
 			}
 
@@ -364,12 +377,12 @@ class Hooks {
 		wp_script_add_data( 'ts-easy-integration-widgets', 'async', true );
 
 		if ( $trustbadge = Package::get_trustbadge() ) {
-			$sale_channel = Package::get_current_sale_channel();
-			$ts_id        = $trustbadge->id;
+			$sales_channel = Package::get_current_sales_channel();
+			$ts_id         = $trustbadge->id;
 
 			if ( ! empty( $ts_id ) ) {
-				wp_register_script( "ts-easy-integration-trustbadge-{$sale_channel}", "//widgets.trustedshops.com/js/{$ts_id}.js", array(), Package::get_version(), true );
-				wp_enqueue_script( "ts-easy-integration-trustbadge-{$sale_channel}" );
+				wp_register_script( "ts-easy-integration-trustbadge-{$sales_channel}", "//widgets.trustedshops.com/js/{$ts_id}.js", array(), Package::get_version(), true );
+				wp_enqueue_script( "ts-easy-integration-trustbadge-{$sales_channel}" );
 
 				foreach ( $trustbadge->children[0]->attributes as $attribute ) {
 					if ( 'src' === $attribute->attributeName ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
@@ -379,7 +392,7 @@ class Hooks {
 					$value = isset( $attribute->value ) ? $attribute->value : true;
 					$value = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
 
-					wp_script_add_data( "ts-easy-integration-trustbadge-{$sale_channel}", $attribute->attributeName, $value ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+					wp_script_add_data( "ts-easy-integration-trustbadge-{$sales_channel}", $attribute->attributeName, $value ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 				}
 			}
 		}

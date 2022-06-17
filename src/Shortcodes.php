@@ -28,7 +28,7 @@ class Shortcodes {
 		$args = wp_parse_args(
 			$args,
 			array(
-				'sale_channel'       => '',
+				'sales_channel'      => '',
 				'id'                 => '',
 				'product_identifier' => '',
 			)

@@ -2,6 +2,7 @@
 
 namespace Vendidero\TrustedShopsEasyIntegration\Admin;
 
+use Vendidero\TrustedShopsEasyIntegration\OrderExporter;
 use Vendidero\TrustedShopsEasyIntegration\Package;
 
 defined( 'ABSPATH' ) || exit;
@@ -20,6 +21,21 @@ class Helper {
 		add_action( 'woocommerce_product_after_variable_attributes', array( __CLASS__, 'product_options_variable' ), 20, 3 );
 		add_action( 'woocommerce_admin_process_product_object', array( __CLASS__, 'save_product' ), 10, 1 );
 		add_action( 'woocommerce_admin_process_variation_object', array( __CLASS__, 'save_variation' ), 10, 2 );
+
+		add_action( 'admin_post_ts-download-order-export', array( __CLASS__, 'download_export' ) );
+	}
+
+	public static function download_export() {
+		if ( current_user_can( 'manage_woocommerce' ) && isset( $_GET['nonce'], $_GET['suffix'] ) && wp_verify_nonce( wp_unslash( $_GET['nonce'] ), 'ts-download-order-export' ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$exporter = new OrderExporter();
+			$exporter->set_filename_suffix( wc_clean( wp_unslash( $_GET['suffix'] ) ) );
+
+			if ( 'ts-order-export' === substr( $exporter->get_filename(), 0, strlen( 'ts-order-export' ) ) ) {
+				$exporter->export();
+			}
+		}
+
+		wp_die( -1 );
 	}
 
 	public static function save_variation( $variation, $i ) {
@@ -160,12 +176,13 @@ class Helper {
 					'ajax_url'              => admin_url( 'admin-ajax.php' ),
 					'update_settings_nonce' => wp_create_nonce( 'ts-update-settings' ),
 					'get_settings_nonce'    => wp_create_nonce( 'ts-get-settings' ),
+					'export_orders_nonce'   => wp_create_nonce( 'ts-export-orders' ),
 					'disconnect_nonce'      => wp_create_nonce( 'ts-disconnect' ),
 					'locale'                => self::get_current_admin_locale(),
 					'name_of_system'        => 'WooCommerce',
 					'version_of_system'     => Package::get_system_version(),
 					'version'               => Package::get_version(),
-					'sale_channels'         => array_values( Package::get_sale_channels() ),
+					'sales_channels'        => array_values( Package::get_sales_channels() ),
 					'widget_locations'      => array(),
 				)
 			);

@@ -19,6 +19,7 @@ class Ajax {
 			'update_settings',
 			'get_settings',
 			'disconnect',
+			'export_orders',
 		);
 
 		foreach ( $ajax_events as $ajax_event ) {
@@ -113,6 +114,77 @@ class Ajax {
 		}
 
 		wp_send_json( $response );
+	}
+
+	protected static function generate_file_suffix( $sales_channel ) {
+		$suffix = wp_generate_password( 6, false );
+
+		if ( ! empty( $sales_channel ) ) {
+			$suffix .= '-' . $sales_channel;
+		}
+
+		$suffix = wc_clean( $suffix );
+
+		return $suffix;
+	}
+
+	/**
+	 * Export orders.
+	 *
+	 * @return void
+	 */
+	public static function export_orders() {
+		check_ajax_referer( 'ts-export-orders', 'security' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_die( - 1 );
+		}
+
+		$request_data = self::get_request_data();
+
+		if ( ! isset( $request_data->step, $request_data->number_of_days ) ) {
+			wp_die( -1 );
+		}
+
+		$step            = absint( wp_unslash( $request_data->step ) );
+		$number_of_days  = absint( wp_unslash( $request_data->number_of_days ) );
+		$sales_channel   = ! empty( $request_data->sales_channel ) ? wc_clean( wp_unslash( $request_data->sales_channel ) ) : Package::get_current_sales_channel();
+		$filename_suffix = ! empty( $request_data->filename_suffix ) ? wc_clean( wp_unslash( $request_data->filename_suffix ) ) : self::generate_file_suffix( $sales_channel );
+
+		$exporter = new OrderExporter();
+		$exporter->set_days_to_export( $number_of_days );
+		$exporter->set_sales_channel( $sales_channel );
+		$exporter->set_page( $step );
+		$exporter->set_filename_suffix( $filename_suffix );
+
+		$exporter->generate_file();
+
+		if ( $exporter->get_percent_complete() >= 100 ) {
+			$query_args = array(
+				'nonce'  => wp_create_nonce( 'ts-download-order-export' ),
+				'action' => 'ts-download-order-export',
+				'suffix' => $filename_suffix,
+			);
+
+			$step_args = array(
+				'step'            => 'done',
+				'percentage'      => 100,
+				'url'             => add_query_arg( $query_args, admin_url( 'admin-post.php' ) ),
+				'sales_channel'   => $sales_channel,
+				'number_of_days'  => $number_of_days,
+				'filename_suffix' => $filename_suffix,
+			);
+		} else {
+			$step_args = array(
+				'step'            => ++$step,
+				'percentage'      => $exporter->get_percent_complete(),
+				'sales_channel'   => $sales_channel,
+				'number_of_days'  => $number_of_days,
+				'filename_suffix' => $filename_suffix,
+			);
+		}
+
+		wp_send_json( $step_args );
 	}
 
 	/**

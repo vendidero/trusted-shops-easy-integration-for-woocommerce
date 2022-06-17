@@ -23,8 +23,8 @@ class BaseLayer {
         this.registerEvents();
     }
 
-    private sendingNotification(event: any, status: string, type = 'save') {
-        console.log("Notification", event, status);
+    private sendingNotification( event: any, status: string, type = 'save' ) {
+        console.log( "Notification", event, status );
 
         this.eventsLib.dispatchAction({
             action: this.eventsLib.EVENTS.NOTIFICATION,
@@ -83,7 +83,7 @@ class BaseLayer {
     private getSalesChannelsCallback() {
         this.eventsLib.dispatchAction({
             action: this.eventsLib.EVENTS.SET_SALES_CHANNELS_PROVIDED,
-            payload: this.params.sale_channels,
+            payload: this.params.sales_channels,
         });
     }
 
@@ -191,8 +191,6 @@ class BaseLayer {
     }
 
     private async getHasReviewInvitesCallback( event: { payload: { eTrustedChannelRef: string; salesChannelRef: string }; } ) {
-        console.log(event.payload);
-
         await this.getChannelById( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ).then( channel => {
             if ( ! channel ) {
                 this.eventsLib.dispatchAction({
@@ -232,17 +230,36 @@ class BaseLayer {
                 this.sendingNotification( event, 'success' );
             });
         } catch(e) {
-            console.log(e);
             this.sendingNotification( event, 'error' );
         }
     }
 
-    private async activateReviewInvitesCallback(event: { payload: Channel }) {
+    private async activateReviewInvitesCallback( event: { payload: Channel } ) {
         await this.updateReviewInvitesCallback( event.payload, true );
     }
 
-    private async deactivateReviewInvitesCallback(event: { payload: Channel }) {
+    private async deactivateReviewInvitesCallback( event: { payload: Channel } ) {
         await this.updateReviewInvitesCallback( event.payload, false );
+    }
+
+    private async exportOrdersCallback( event: { payload: { id: string; numberOfDays: number, salesChannelRef: string } } ) {
+        try {
+            await this.exportOrders( 1, event.payload.numberOfDays, event.payload.salesChannelRef ).then( ( url ) => {
+                const a = document.createElement( 'a' );
+                a.href = url;
+                a.download = 'orders.csv';
+                document.body.appendChild( a );
+                a.click();
+                document.body.removeChild( a );
+
+                this.eventsLib.dispatchAction({
+                    action: this.eventsLib.EVENTS.SET_EXPORT_PREVIOUS_ORDER,
+                    payload: event.payload as { id: string; numberOfDays: number },
+                });
+            } );
+        } catch(e) {
+            this.sendingNotification( event, 'error', 'exportTimeout' );
+        }
     }
 
     private async registerEvents() {
@@ -263,14 +280,36 @@ class BaseLayer {
             [ this.eventsLib.EVENTS.GET_PRODUCT_REVIEW_FOR_CHANNEL ]: this.getHasReviewInvitesCallback.bind( this ),
             [ this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL ]: this.activateReviewInvitesCallback.bind( this ),
             [ this.eventsLib.EVENTS.DEACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL ]: this.deactivateReviewInvitesCallback.bind( this ),
-            [this.eventsLib.EVENTS.EXPORT_PREVIOUS_ORDER]: (event: { payload: any; }) => {
-                console.log('DEMO:EXPORT_PREVIOUS_ORDER', event.payload);
-            },
-        })
+            [this.eventsLib.EVENTS.EXPORT_PREVIOUS_ORDER]: this.exportOrdersCallback.bind( this ),
+        });
     }
 
-    private getAjaxUrl(action:string, security = ''): string {
-        const nonce = action + '_nonce' in this.params ? this.params[action + '_nonce'] : security;
+    private async exportOrders( step: number, numberOfDays: number, salesChannelRef = '', filenameSuffix = '' ) : Promise<string> {
+        return await fetch( this.getAjaxUrl( 'export_orders' ), {
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8'
+            },
+            method: 'POST',
+            body: JSON.stringify({ 'step': step, 'sales_channel': salesChannelRef, 'number_of_days': numberOfDays, 'filename_suffix': filenameSuffix } )
+        }).catch( () => {
+            throw new TypeError( "Error while exporting orders." );
+        }).then(
+            res => res.json()
+        ).then( result => {
+            if ( 'done' === result.step ) {
+                return result.url;
+            } else if ( result.hasOwnProperty( 'step' ) && result.step > step ) {
+                return this.exportOrders( result.step, result.number_of_days, result.sales_channel, result.filename_suffix );
+            } else {
+                throw new TypeError( "Error while exporting orders." );
+            }
+        }).catch( () => {
+            throw new TypeError( "Error while exporting orders." );
+        });
+    }
+
+    private getAjaxUrl( action:string, security = '' ): string {
+        const nonce = action + '_nonce' in this.params ? this.params[ action + '_nonce' ] : security;
         action      = 'ts_easy_integration_' + action;
 
         return this.params.ajax_url + '?action=' + action + '&security=' + nonce;

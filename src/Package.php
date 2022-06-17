@@ -16,9 +16,9 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.0.1-alpha';
+	const VERSION = '1.0.2-alpha';
 
-	protected static $sale_channels_map = null;
+	protected static $sales_channels_map = null;
 
 	public static function init() {
 		if ( ! self::has_dependencies() ) {
@@ -44,7 +44,23 @@ class Package {
 			}
 		}
 
+		self::load_compatibilities();
+
 		do_action( 'ts_easy_integration_init' );
+	}
+
+	protected static function load_compatibilities() {
+		$compatibilities = array(
+			'wpml' => '\Vendidero\TrustedShopsEasyIntegration\Compatibility\WPML',
+		);
+
+		foreach ( $compatibilities as $compatibility ) {
+			if ( is_a( $compatibility, '\Vendidero\TrustedShopsEasyIntegration\Interfaces\Compatibility', true ) ) {
+				if ( $compatibility::is_active() ) {
+					$compatibility::init();
+				}
+			}
+		}
 	}
 
 	protected static function is_frontend() {
@@ -237,9 +253,9 @@ class Package {
 	 *
 	 * @return array[]
 	 */
-	public static function get_sale_channels() {
+	public static function get_sales_channels() {
 		return apply_filters(
-			'ts_sale_channels',
+			'ts_sales_channels',
 			array(
 				'main' => array(
 					'id'     => 'main',
@@ -251,8 +267,8 @@ class Package {
 		);
 	}
 
-	public static function get_current_sale_channel() {
-		return apply_filters( 'ts_easy_integration_current_sale_channel', 'main' );
+	public static function get_current_sales_channel() {
+		return apply_filters( 'ts_easy_integration_current_sales_channel', 'main' );
 	}
 
 	/**
@@ -262,8 +278,8 @@ class Package {
 	 *
 	 * @return array|false
 	 */
-	public static function get_sale_channel( $id ) {
-		$channels = self::get_sale_channels();
+	public static function get_sales_channel( $id ) {
+		$channels = self::get_sales_channels();
 
 		if ( array_key_exists( $id, $channels ) ) {
 			return $channels[ $id ];
@@ -272,25 +288,30 @@ class Package {
 		return false;
 	}
 
-	public static function get_etrusted_channel_ref( $sale_channel = '' ) {
-		$sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
-
-		if ( is_null( self::$sale_channels_map ) ) {
+	public static function get_sales_channels_map() {
+		if ( is_null( self::$sales_channels_map ) ) {
 			self::get_channels();
 		}
 
-		if ( array_key_exists( $sale_channel, self::$sale_channels_map ) ) {
-			return self::$sale_channels_map[ $sale_channel ];
+		return self::$sales_channels_map;
+	}
+
+	public static function get_etrusted_channel_ref( $sales_channel = '' ) {
+		$sales_channel     = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
+		$sales_channel_map = self::get_sales_channels_map();
+
+		if ( array_key_exists( $sales_channel, $sales_channel_map ) ) {
+			return $sales_channel_map[ $sales_channel ];
 		} else {
 			return false;
 		}
 	}
 
-	protected static function get_setting_key( $sale_channel = '' ) {
-		$sale_channel = '' === $sale_channel ? self::get_current_sale_channel() : $sale_channel;
+	protected static function get_setting_key( $sales_channel = '' ) {
+		$sales_channel = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
 
-		if ( $etrusted_channel_ref = self::get_etrusted_channel_ref( $sale_channel ) ) {
-			$setting_key = $sale_channel . '_' . $etrusted_channel_ref;
+		if ( $etrusted_channel_ref = self::get_etrusted_channel_ref( $sales_channel ) ) {
+			$setting_key = $sales_channel . '_' . $etrusted_channel_ref;
 		} else {
 			$setting_key = '';
 		}
@@ -304,25 +325,40 @@ class Package {
 	 * @return array
 	 */
 	public static function get_channels() {
-		$channels                = array_filter( (array) self::get_setting( 'channels', array() ) );
-		self::$sale_channels_map = array();
+		$channels                 = array_filter( (array) self::get_setting( 'channels', array() ) );
+		self::$sales_channels_map = array();
 
 		if ( ! empty( $channels ) ) {
 			foreach ( $channels as $key => $channel ) {
 				/**
 				 * Merge channel data with current (subject to change) sale channel data.
+				 * Do only include channels with are currently available as a sales channel.
 				 */
-				if ( $sale_channel = self::get_sale_channel( $channel->salesChannelRef ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
-					$channels[ $key ]->salesChannelLocale = $sale_channel['locale'];
-					$channels[ $key ]->salesChannelName   = $sale_channel['name'];
-					$channels[ $key ]->salesChannelUrl    = $sale_channel['url'];
-				}
+				if ( $sales_channel = self::get_sales_channel( $channel->salesChannelRef ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+					$channels[ $key ]->salesChannelLocale = $sales_channel['locale'];
+					$channels[ $key ]->salesChannelName   = $sales_channel['name'];
+					$channels[ $key ]->salesChannelUrl    = $sales_channel['url'];
 
-				self::$sale_channels_map[ $channel->salesChannelRef ] = $channel->eTrustedChannelRef;
+					self::$sales_channels_map[ $channel->salesChannelRef ] = $channel->eTrustedChannelRef; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+				} else {
+					unset( $channels[ $key ] );
+				}
 			}
 		}
 
 		return $channels;
+	}
+
+	public static function is_configured() {
+		$map = self::get_sales_channels_map();
+
+		return ! empty( $map );
+	}
+
+	public static function sales_channel_is_mapped( $sales_channel = '' ) {
+		$sales_channel = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
+
+		return array_key_exists( $sales_channel, self::get_sales_channels_map() );
 	}
 
 	public static function get_trustbadges() {
@@ -331,24 +367,24 @@ class Package {
 		return $trustbadges;
 	}
 
-	public static function get_trustbadge( $sale_channel = '' ) {
-		$setting_key  = self::get_setting_key( $sale_channel );
-		$trustbadges  = self::get_trustbadges();
-		$trustbadge   = array_key_exists( $setting_key, $trustbadges ) ? $trustbadges[ $setting_key ] : false;
+	public static function get_trustbadge( $sales_channel = '' ) {
+		$setting_key = self::get_setting_key( $sales_channel );
+		$trustbadges = self::get_trustbadges();
+		$trustbadge  = array_key_exists( $setting_key, $trustbadges ) ? $trustbadges[ $setting_key ] : false;
 
 		return $trustbadge;
 	}
 
-	public static function get_trustbadge_id( $sale_channel = '' ) {
-		if ( $trustbadge = self::get_trustbadge( $sale_channel ) ) {
+	public static function get_trustbadge_id( $sales_channel = '' ) {
+		if ( $trustbadge = self::get_trustbadge( $sales_channel ) ) {
 			return ! empty( $trustbadge->id ) ? $trustbadge->id : false;
 		}
 
 		return false;
 	}
 
-	public static function has_valid_trustbadge( $sale_channel = '' ) {
-		if ( $trustbadge = self::get_trustbadge( $sale_channel ) ) {
+	public static function has_valid_trustbadge( $sales_channel = '' ) {
+		if ( $trustbadge = self::get_trustbadge( $sales_channel ) ) {
 			return ! empty( $trustbadge->id ) ? true : false;
 		}
 
@@ -361,9 +397,9 @@ class Package {
 		return $invites;
 	}
 
-	public static function enable_review_invites( $sale_channel = '' ) {
-		$setting_key  = self::get_setting_key( $sale_channel );
-		$invites      = self::get_enable_review_invites();
+	public static function enable_review_invites( $sales_channel = '' ) {
+		$setting_key = self::get_setting_key( $sales_channel );
+		$invites     = self::get_enable_review_invites();
 
 		return in_array( $setting_key, $invites, true ) ? true : false;
 	}
@@ -548,8 +584,8 @@ class Package {
 		return $identifier;
 	}
 
-	public static function get_widget_by_type( $type, $location = 'wdg-loc-pp', $sale_channel = '' ) {
-		$widgets = self::get_widgets( $sale_channel );
+	public static function get_widget_by_type( $type, $location = 'wdg-loc-pp', $sales_channel = '' ) {
+		$widgets = self::get_widgets( $sales_channel );
 		$widget  = false;
 
 		foreach ( $widgets as $inner_widget ) {
@@ -562,8 +598,8 @@ class Package {
 		return $widget;
 	}
 
-	public static function get_widgets_by_location( $location = 'wdg-loc-pp', $sale_channel = '' ) {
-		$widgets            = self::get_widgets( $sale_channel );
+	public static function get_widgets_by_location( $location = 'wdg-loc-pp', $sales_channel = '' ) {
+		$widgets            = self::get_widgets( $sales_channel );
 		$widgets_applicable = array();
 
 		foreach ( $widgets as $inner_widget ) {
@@ -575,8 +611,8 @@ class Package {
 		return $widgets_applicable;
 	}
 
-	public static function get_product_widgets_by_location( $location = 'wdg-loc-pp', $sale_channel = '' ) {
-		$widgets            = self::get_widgets( $sale_channel );
+	public static function get_product_widgets_by_location( $location = 'wdg-loc-pp', $sales_channel = '' ) {
+		$widgets            = self::get_widgets( $sales_channel );
 		$widgets_applicable = array();
 
 		foreach ( $widgets as $inner_widget ) {
@@ -590,8 +626,8 @@ class Package {
 		return $widgets_applicable;
 	}
 
-	public static function get_service_widgets_by_location( $location = 'wdg-loc-pp', $sale_channel = '' ) {
-		$widgets            = self::get_widgets( $sale_channel );
+	public static function get_service_widgets_by_location( $location = 'wdg-loc-pp', $sales_channel = '' ) {
+		$widgets            = self::get_widgets( $sales_channel );
 		$widgets_applicable = array();
 
 		foreach ( $widgets as $inner_widget ) {
@@ -605,9 +641,9 @@ class Package {
 		return $widgets_applicable;
 	}
 
-	public static function get_widgets( $sale_channel = '' ) {
-		$setting_key  = self::get_setting_key( $sale_channel );
-		$widgets      = array_filter( (array) self::get_setting( 'widgets', array() ) );
+	public static function get_widgets( $sales_channel = '' ) {
+		$setting_key = self::get_setting_key( $sales_channel );
+		$widgets     = array_filter( (array) self::get_setting( 'widgets', array() ) );
 
 		if ( ! empty( $setting_key ) ) {
 			$widgets = array_key_exists( $setting_key, $widgets ) ? $widgets[ $setting_key ] : array();
@@ -687,7 +723,7 @@ class Package {
 		 * Clear sale channel mapping cache.
 		 */
 		if ( 'channels' === $name ) {
-			self::$sale_channels_map = null;
+			self::$sales_channels_map = null;
 		}
 
 		return true;
