@@ -7,8 +7,6 @@ defined( 'ABSPATH' ) || exit;
 class Hooks {
 
 	/**
-	 * @TODO: Needs filter/check to force-enable WooCommerce review as rating templates might not even be loaded in case reviews are disabled.
-	 *
 	 * @return void
 	 */
 	public static function init() {
@@ -18,13 +16,20 @@ class Hooks {
 
 		add_action( 'woocommerce_thankyou', array( __CLASS__, 'thankyou' ), 10, 1 );
 
-		add_filter( 'woocommerce_locate_template', array( __CLASS__, 'locate_template_filter' ), 10, 3 );
+		/**
+		 * Execute single/loop rating hooks after the Woo core template (single-product/rating.php, loop/rating.php) is included
+		 * to display star widgets.
+		 */
+		add_action( 'woocommerce_after_template_part', array( __CLASS__, 'after_template' ), 10, 4 );
+		/**
+		 * Register a fallback filter that will be triggered in case Woo reviews are disabled which leads
+		 * to single-product/rating.php not being included.
+		 */
+		add_action( 'woocommerce_single_product_summary', array( __CLASS__, 'maybe_do_single_product_rating_hooks' ), 11 );
 		add_action( 'ts_easy_integration_single_product_rating_widgets', array( __CLASS__, 'single_product_rating_widgets' ) );
 		add_action( 'ts_easy_integration_product_loop_rating_widgets', array( __CLASS__, 'product_loop_rating_widgets' ) );
 
-		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'unregister_review_tab' ), 50, 1 );
 		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'register_custom_review_tab' ), 50, 1 );
-		add_action( 'ts_easy_integration_single_product_review_tab_widgets', array( __CLASS__, 'single_product_review_tab_widgets' ) );
 
 		/**
 		 * Use a tweak to register single product description widget as Woo does not support hooks while
@@ -42,16 +47,9 @@ class Hooks {
 		add_action( 'ts_easy_integration_product_loop_inner_widgets', array( __CLASS__, 'product_loop_inner_widgets' ) );
 		add_action( 'ts_easy_integration_footer_widgets', array( __CLASS__, 'footer_widgets' ) );
 		add_action( 'ts_easy_integration_header_widgets', array( __CLASS__, 'header_widgets' ) );
-
-		/**
-		 * Override default Woo single product rating function to make sure
-		 * rating.php template is rendered even though ratings are disabled.
-		 */
-		add_action( 'after_setup_theme', array( __CLASS__, 'override_rating_template_function' ), 10 );
 	}
 
 	public static function register_lazy_hooks() {
-		add_action( self::get_hook_name( 'woocommerce_after_single_product', 'single_product' ), array( __CLASS__, 'register_single_product' ), 10 );
 		add_action( self::get_hook_name( 'woocommerce_after_shop_loop', 'product_loop' ), array( __CLASS__, 'register_product_loop' ), 50 );
 		add_action( self::get_hook_name( 'woocommerce_after_shop_loop_item', 'product_loop_inner' ), array( __CLASS__, 'register_product_loop_inner' ), 20 );
 		add_action( self::get_hook_name( 'dynamic_sidebar_after', 'sidebar' ), array( __CLASS__, 'register_sidebar' ), 500 );
@@ -60,9 +58,21 @@ class Hooks {
 		add_action( self::get_hook_name( 'wp_body_open', 'header' ), array( __CLASS__, 'register_header' ), 50 );
 	}
 
-	public static function get_hook_name( $default_name, $location = '' ) {
+	/**
+	 * Execute the ts_easy_integration_single_product_rating_widgets as a fallback
+	 * in case WooCommerce reviews are disabled.
+	 *
+	 * @return void
+	 */
+	public static function maybe_do_single_product_rating_hooks() {
+		if ( ! post_type_supports( 'product', 'comments' ) && ! did_action( 'ts_easy_integration_single_product_rating_widgets' ) ) {
+			do_action( 'ts_easy_integration_single_product_rating_widgets' );
+		}
+	}
+
+	protected static function get_hook_name( $default_name, $location = '' ) {
 		$location     = '' === $location ? $default_name : $location;
- 		$custom_hooks = self::get_theme_custom_hook_names();
+		$custom_hooks = self::get_theme_custom_hook_names();
 		$theme        = function_exists( 'wp_get_theme' ) ? wp_get_theme() : '';
 		$custom_name  = $default_name;
 
@@ -74,20 +84,16 @@ class Hooks {
 		return apply_filters( 'ts_easy_integration_hook_name', $custom_name, $default_name, $location );
 	}
 
-	public static function get_theme_custom_hook_names() {
+	protected static function get_theme_custom_hook_names() {
 		return array(
-			'astra' => array(
-				'footer' => 'astra_footer_after',
-				'product_loop_inner' => 'astra_woo_shop_summary_wrap_bottom'
+			'astra'      => array(
+				'footer'             => 'astra_footer_after',
+				'product_loop_inner' => 'astra_woo_shop_summary_wrap_bottom',
 			),
 			'storefront' => array(
 				'footer' => 'storefront_footer',
 			),
 		);
-	}
-
-	public static function override_rating_template_function() {
-		include_once Package::get_path() . '/includes/ts-easy-integration-template-functions.php';
 	}
 
 	public static function header_widgets() {
@@ -96,8 +102,14 @@ class Hooks {
 		}
 	}
 
+	protected static function is_shop_request() {
+		return apply_filters( 'ts_easy_integration_is_shop_request', ( function_exists( 'is_woocommerce' ) && ( is_woocommerce() || is_cart() || is_checkout() ) ) );
+	}
+
 	public static function register_header() {
-		do_action( 'ts_easy_integration_header_widgets' );
+		if ( self::is_shop_request() ) {
+			do_action( 'ts_easy_integration_header_widgets' );
+		}
 	}
 
 	public static function footer_widgets() {
@@ -107,7 +119,9 @@ class Hooks {
 	}
 
 	public static function register_footer() {
-		do_action( 'ts_easy_integration_footer_widgets' );
+		if ( self::is_shop_request() ) {
+			do_action( 'ts_easy_integration_footer_widgets' );
+		}
 	}
 
 	public static function homepage_widgets() {
@@ -129,10 +143,12 @@ class Hooks {
 	}
 
 	public static function register_sidebar( $sidebar = null ) {
-		if ( is_null( $sidebar ) ) {
-			do_action( 'ts_easy_integration_sidebar_widgets' );
-		} elseif ( is_string( $sidebar ) && apply_filters( 'ts_easy_integration_is_main_sidebar', ( strstr( $sidebar, 'sidebar' ) ), $sidebar ) ) {
-			do_action( 'ts_easy_integration_sidebar_widgets' );
+		if ( self::is_shop_request() ) {
+			if ( is_null( $sidebar ) ) {
+				do_action( 'ts_easy_integration_sidebar_widgets' );
+			} elseif ( is_string( $sidebar ) && apply_filters( 'ts_easy_integration_is_main_sidebar', ( strstr( $sidebar, 'sidebar' ) ), $sidebar ) ) {
+				do_action( 'ts_easy_integration_sidebar_widgets' );
+			}
 		}
 	}
 
@@ -146,12 +162,15 @@ class Hooks {
 		}
 	}
 
-	public static function register_single_product() {
-		do_action( 'ts_easy_integration_single_product_widgets' );
-	}
-
 	public static function single_product_widgets() {
-		foreach ( Package::get_service_widgets_by_location( 'wdg-loc-pp' ) as $ts_widget ) {
+		foreach ( Package::get_widgets_by_location( 'wdg-loc-pp' ) as $ts_widget ) {
+			/**
+			 * Do not show product_star widget as it is shown beneath the product title
+			 */
+			if ( 'product_star' === $ts_widget->applicationType ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+				continue;
+			}
+
 			self::render_single_widget( $ts_widget );
 		}
 	}
@@ -211,18 +230,26 @@ class Hooks {
 		do_action( 'ts_easy_integration_single_product_description_widgets' );
 	}
 
-	public static function unregister_review_tab( $tabs ) {
-		if ( isset( $tabs['reviews'] ) ) {
-			unset( $tabs['reviews'] );
+	protected static function needs_custom_reviews_tab() {
+		$widgets   = Package::get_widgets_by_location( 'wdg-loc-pp' );
+		$needs_tab = false;
+
+		if ( count( $widgets ) > 0 ) {
+			// The product_star widget is an exempt and is only displayed under the product title.
+			if ( 1 === count( $widgets ) && 'product_star' === $widgets[0]->applicationType ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+				$needs_tab = false;
+			} else {
+				$needs_tab = true;
+			}
 		}
 
-		return $tabs;
+		return $needs_tab;
 	}
 
 	public static function register_custom_review_tab( $tabs ) {
-		if ( Package::get_widget_by_type( 'product_review_list' ) ) {
+		if ( self::needs_custom_reviews_tab() ) {
 			$tabs['ts_reviews'] = array(
-				'title'    => _x( 'Reviews', 'trusted-shops', 'trusted-shops-easy-integration' ),
+				'title'    => _x( 'Trusted Shops Reviews', 'trusted-shops', 'trusted-shops-easy-integration' ),
 				'priority' => 30,
 				'callback' => array( __CLASS__, 'register_review_tab' ),
 			);
@@ -231,36 +258,33 @@ class Hooks {
 		return $tabs;
 	}
 
-	public static function single_product_review_tab_widgets() {
-		if ( $ts_widget = Package::get_widget_by_type( 'product_review_list' ) ) {
-			self::render_single_widget( $ts_widget );
-		}
-	}
-
 	public static function register_review_tab() {
 		do_action( 'ts_easy_integration_single_product_review_tab_widgets' );
+		do_action( 'ts_easy_integration_single_product_widgets' );
 	}
 
 	public static function product_loop_rating_widgets() {
-		$product_star          = Package::get_widget_by_type( 'product_star', 'wdg-loc-pl' );
-		$product_review_list   = Package::get_widget_by_type( 'product_review_list', 'wdg-loc-pl' );
-		$product_rating_widget = false;
+		$product_star        = Package::get_widget_by_type( 'product_star', 'wdg-loc-pl' );
+		$product_review_list = Package::get_widget_by_type( 'product_review_list', 'wdg-loc-pl' );
+		$widgets             = array();
 
-		if ( $product_review_list && isset( $product_review_list->extensions->product_star ) ) {
-			$product_rating_widget = $product_review_list->extensions->product_star;
-		} elseif ( $product_star ) {
-			$product_rating_widget = $product_star;
+		if ( $product_star ) {
+			$widgets[] = $product_star;
 		}
 
-		if ( $product_rating_widget ) {
-			self::render_single_widget( $product_rating_widget );
+		if ( $product_review_list && isset( $product_review_list->extensions->product_star ) ) {
+			$widgets[] = $product_review_list->extensions->product_star;
+		}
+
+		foreach ( $widgets as $widget ) {
+			self::render_single_widget( $widget );
 		}
 	}
 
 	public static function single_product_rating_widgets() {
-		$product_star          = Package::get_widget_by_type( 'product_star' );
-		$product_review_list   = Package::get_widget_by_type( 'product_review_list' );
-		$product_rating_widget = false;
+		$product_star        = Package::get_widget_by_type( 'product_star' );
+		$product_review_list = Package::get_widget_by_type( 'product_review_list' );
+		$widgets             = array();
 
 		/**
 		 * On single product pages, do support anchors in product description too.
@@ -269,49 +293,28 @@ class Hooks {
 			$product_review_list = Package::get_widget_by_type( 'product_review_list', 'wdg-loc-pd' );
 		}
 
-		if ( $product_review_list && isset( $product_review_list->extensions->product_star ) ) {
-			$product_rating_widget = $product_review_list->extensions->product_star;
-		} elseif ( $product_star ) {
-			$product_rating_widget = $product_star;
+		if ( $product_star ) {
+			$widgets[] = $product_star;
 		}
 
-		if ( $product_rating_widget ) {
-			self::render_single_widget( $product_rating_widget );
+		if ( $product_review_list && isset( $product_review_list->extensions->product_star ) ) {
+			$widgets[] = $product_review_list->extensions->product_star;
+		}
+
+		foreach ( $widgets as $widget ) {
+			self::render_single_widget( $widget );
 		}
 	}
 
-	public static function locate_template_filter( $template, $template_name, $template_path ) {
+	public static function after_template( $template_name, $template_path, $located, $args ) {
 		$is_loop   = 'loop/rating.php' === $template_name;
 		$is_single = 'single-product/rating.php' === $template_name;
 
-		if ( $is_single || $is_loop ) {
-			$product_star          = Package::get_widget_by_type( 'product_star', $is_single ? 'wdg-loc-pp' : 'wdg-loc-pl' );
-			$product_review_list   = Package::get_widget_by_type( 'product_review_list', $is_single ? 'wdg-loc-pp' : 'wdg-loc-pl' );
-			$product_rating_widget = false;
-
-			/**
-			 * On single product pages, do support anchors in product description too.
-			 */
-			if ( $is_single && ! $product_review_list ) {
-				$product_review_list = Package::get_widget_by_type( 'product_review_list', 'wdg-loc-pd' );
-			}
-
-			if ( $product_review_list && isset( $product_review_list->extensions->product_star ) ) {
-				$product_rating_widget = $product_review_list->extensions->product_star;
-			} elseif ( $product_star ) {
-				$product_rating_widget = $product_star;
-			}
-
-			if ( $product_rating_widget ) {
-				if ( $is_single ) {
-					$template = Package::get_path() . '/templates/widgets/single-product-rating.php';
-				} else {
-					$template = Package::get_path() . '/templates/widgets/product-loop-rating.php';
-				}
-			}
+		if ( $is_single ) {
+			do_action( 'ts_easy_integration_single_product_rating_widgets' );
+		} elseif ( $is_loop ) {
+			do_action( 'ts_easy_integration_product_loop_rating_widgets' );
 		}
-
-		return $template;
 	}
 
 	public static function thankyou( $order_id ) {

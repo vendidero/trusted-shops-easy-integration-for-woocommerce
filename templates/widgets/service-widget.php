@@ -17,5 +17,7 @@ if ( ! $ts_widget ) {
 }
 ?>
 <!-- added by Trusted Shops app: Start -->
-<etrusted-widget data-etrusted-widget-id="<?php echo esc_attr( $ts_widget->attributes->id->value ); ?>"></etrusted-widget>
+<div class="trustedShopsWidget trustedShopsServiceWidget">
+	<etrusted-widget data-etrusted-widget-id="<?php echo esc_attr( $ts_widget->attributes->id->value ); ?>"></etrusted-widget>
+</div>
 <!-- End -->
