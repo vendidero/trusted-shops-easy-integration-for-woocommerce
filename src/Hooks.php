@@ -103,7 +103,7 @@ class Hooks {
 	}
 
 	protected static function is_shop_request() {
-		return apply_filters( 'ts_easy_integration_is_shop_request', ( function_exists( 'is_woocommerce' ) && ( is_woocommerce() || is_cart() || is_checkout() ) ) );
+		return apply_filters( 'ts_easy_integration_is_shop_request', ( function_exists( 'is_woocommerce' ) && ( is_woocommerce() || is_cart() || is_checkout() || is_account_page() ) ) );
 	}
 
 	public static function register_header() {
