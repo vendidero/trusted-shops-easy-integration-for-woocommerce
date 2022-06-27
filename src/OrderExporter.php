@@ -52,6 +52,10 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 		$this->set_filename( sanitize_file_name( 'ts-order-export-' . $suffix . '.csv' ) );
 	}
 
+	public function get_sales_channel() {
+		return $this->sales_channel;
+	}
+
 	/**
 	 * Tweak: Temporarily adjust the filename to allow custom naming for the filename to be downloaded.
 	 *
@@ -160,8 +164,12 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 			'date_after' => $date->format( 'Y-m-d' ),
 		);
 
-		$query            = wc_get_orders( $args );
+		do_action( 'ts_easy_integration_before_get_orders_for_export', $this );
+
+		$query            = wc_get_orders( apply_filters( 'ts_easy_integration_order_export_args', $args, $this ) );
 		$this->total_rows = $query->total;
+
+		do_action( 'ts_easy_integration_after_get_orders_for_export', $this );
 
 		return $query->orders;
 	}

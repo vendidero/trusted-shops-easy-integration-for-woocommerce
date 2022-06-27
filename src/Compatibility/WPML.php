@@ -3,6 +3,7 @@
 namespace Vendidero\TrustedShopsEasyIntegration\Compatibility;
 
 use Vendidero\TrustedShopsEasyIntegration\Interfaces\Compatibility;
+use Vendidero\TrustedShopsEasyIntegration\OrderExporter;
 use Vendidero\TrustedShopsEasyIntegration\Package;
 
 defined( 'ABSPATH' ) || exit;
@@ -16,6 +17,77 @@ class WPML implements Compatibility {
 	public static function init() {
 		add_filter( 'ts_sales_channels', array( __CLASS__, 'register_sales_channels' ) );
 		add_filter( 'ts_easy_integration_current_sales_channel', array( __CLASS__, 'set_current_sales_channel' ) );
+		add_action( 'ts_easy_integration_before_get_orders_for_export', array( __CLASS__, 'register_lang_meta_query' ) );
+		add_action( 'ts_easy_integration_after_get_orders_for_export', array( __CLASS__, 'unregister_lang_meta_query' ) );
+		add_filter( 'ts_easy_integration_order_export_args', array( __CLASS__, 'export_args' ), 10, 2 );
+	}
+
+	/**
+	 * @param mixed $args
+	 * @param OrderExporter $exporter
+	 *
+	 * @return mixed
+	 */
+	public static function export_args( $args, $exporter ) {
+		global $sitepress;
+
+		$sales_channel = $exporter->get_sales_channel();
+		$wpml_lang     = '';
+
+		if ( 'main' === $sales_channel ) {
+			$wpml_lang = $sitepress->get_default_language();
+		} else {
+			$parts = explode( '-', $sales_channel );
+
+			if ( count( $parts ) > 1 && 'wpml' === $parts[0] && ! empty( $parts[1] ) ) {
+				$wpml_lang = $parts[1];
+			}
+		}
+
+		if ( ! empty( $wpml_lang ) ) {
+			$args['wpml_language'] = strtolower( $wpml_lang );
+		}
+
+		return $args;
+	}
+
+	public static function unregister_lang_meta_query() {
+		remove_filter( 'woocommerce_order_data_store_cpt_get_orders_query', array( __CLASS__, 'wpml_lang_query' ), 10 );
+	}
+
+	public static function register_lang_meta_query() {
+		add_filter( 'woocommerce_order_data_store_cpt_get_orders_query', array( __CLASS__, 'wpml_lang_query' ), 10, 2 );
+	}
+
+	public static function wpml_lang_query( $query, $query_vars ) {
+		global $sitepress;
+
+		if ( isset( $query_vars['wpml_language'] ) && ! empty( $query_vars['wpml_language'] ) ) {
+			if ( $query_vars['wpml_language'] === $sitepress->get_default_language() ) {
+				$query['meta_query'][] = array(
+					'relation' => 'OR',
+					array(
+						'key'     => 'wpml_language',
+						'compare' => 'NOT EXISTS',
+					),
+					array(
+						'key'     => 'wpml_language',
+						'compare' => '=',
+						'value'   => esc_html( $query_vars['wpml_language'] )
+					),
+				);
+			} else {
+				$query['meta_query'][] = array(
+					array(
+						'key'     => 'wpml_language',
+						'compare' => '=',
+						'value'   => esc_html( $query_vars['wpml_language'] )
+					),
+				);
+			}
+		}
+
+		return $query;
 	}
 
 	public static function set_current_sales_channel( $current ) {
