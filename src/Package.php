@@ -16,7 +16,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.0.0-beta';
+	const VERSION = '1.0.1-beta';
 
 	protected static $sales_channels_map = null;
 
@@ -288,8 +288,8 @@ class Package {
 		return false;
 	}
 
-	public static function get_sales_channels_map() {
-		if ( is_null( self::$sales_channels_map ) ) {
+	public static function get_sales_channels_map( $force_refresh = false ) {
+		if ( is_null( self::$sales_channels_map ) || $force_refresh ) {
 			self::get_channels();
 		}
 
@@ -750,13 +750,24 @@ class Package {
 	 *
 	 * @return bool
 	 */
-	public static function delete_settings() {
-		delete_option( 'ts_easy_integration_client_id' );
-		delete_option( 'ts_easy_integration_client_secret' );
+	public static function delete_settings( $channel_key = '' ) {
+		if ( empty( $channel_key ) ) {
+			delete_option( 'ts_easy_integration_client_id' );
+			delete_option( 'ts_easy_integration_client_secret' );
 
-		foreach ( self::get_settings() as $name => $value ) {
-			$option_name = "ts_easy_integration_{$name}";
-			delete_option( $option_name );
+			foreach ( self::get_settings() as $name => $value ) {
+				$option_name = "ts_easy_integration_{$name}";
+				delete_option( $option_name );
+			}
+		} else {
+			foreach ( self::get_settings() as $name => $value ) {
+				$option_value = get_option( "ts_easy_integration_{$name}", array() );
+
+				if ( $option_value && is_array( $option_value ) && array_key_exists( $channel_key, $option_value ) ) {
+					unset( $option_value[ $channel_key ] );
+					update_option( "ts_easy_integration_{$name}", $option_value );
+				}
+			}
 		}
 
 		return true;

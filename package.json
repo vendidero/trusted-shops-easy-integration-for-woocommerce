@@ -1,6 +1,6 @@
 {
   "name": "trusted-shops-easy-integration-for-woocommerce",
-  "version": "1.0.0-beta",
+  "version": "1.0.1-beta",
   "description": "TS Easy Integration for WooCommerce",
   "scripts": {
     "dev": "webpack --env development --watch",
