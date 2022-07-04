@@ -14,6 +14,7 @@ class Helper {
 	 */
 	public static function init() {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_scripts' ), 15 );
+		add_filter( 'script_loader_tag', array( __CLASS__, 'async_script_support' ), 1500, 2 );
 
 		add_filter( 'woocommerce_get_settings_pages', array( __CLASS__, 'register_settings' ) );
 
@@ -23,6 +24,25 @@ class Helper {
 		add_action( 'woocommerce_admin_process_variation_object', array( __CLASS__, 'save_variation' ), 10, 2 );
 
 		add_action( 'admin_post_ts-download-order-export', array( __CLASS__, 'download_export' ) );
+	}
+
+	public static function async_script_support( $tag, $handle ) {
+		if ( strstr( $handle, 'ts-easy-integration-' ) ) {
+			if ( wp_script_is( $handle, 'registered' ) ) {
+				foreach ( wp_scripts()->registered[ $handle ]->extra as $attr => $value ) {
+					if ( in_array( $attr, array( 'async', 'defer' ), true ) ) {
+						$replacement = " $attr";
+
+						// Prevent adding attribute when already added.
+						if ( ! preg_match( ":\s$attr(=|>|\s):", $tag ) ) {
+							$tag = preg_replace( ':(?=></script>):', $replacement, $tag, 1 );
+						}
+					}
+				}
+			}
+		}
+
+		return $tag;
 	}
 
 	public static function download_export() {
@@ -165,6 +185,7 @@ class Helper {
 		wp_register_script( 'ts-easy-integration-admin-events-external', Package::get_lib_assets_url() . '/events/eventsLib.js', array(), Package::get_version(), true );
 		wp_register_script( 'ts-easy-integration-admin', Package::get_assets_url() . '/base-layer.js', array( 'ts-easy-integration-admin-events-external' ), Package::get_version(), true );
 		wp_register_script( 'ts-easy-integration-admin-connector-external', Package::get_lib_assets_url() . '/connector/connector.umd.js', array( 'ts-easy-integration-admin' ), Package::get_version(), true );
+		wp_script_add_data( 'ts-easy-integration-admin-connector-external', 'async', true );
 
 		if ( self::is_settings_request() ) {
 			wp_enqueue_script( 'ts-easy-integration-admin-connector-external' );

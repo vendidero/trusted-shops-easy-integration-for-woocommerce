@@ -28,7 +28,6 @@ $ts_sales_channel = isset( $ts_sales_channel ) ? $ts_sales_channel : '';
 <div id="trustedShopsCheckout" style="display: none;">
 	<span id="tsCheckoutOrderNr"><?php echo esc_html( $order->get_order_number() ); ?></span>
 	<span id="tsCheckoutBuyerEmail"><?php echo esc_html( $order->get_billing_email() ); ?></span>
-	<span id="tsCheckoutBuyerId"><?php echo esc_html( $order->get_customer_id() ); ?></span>
 	<span id="tsCheckoutOrderAmount"><?php echo esc_html( $order->get_total() ); ?></span>
 	<span id="tsCheckoutOrderCurrency"><?php echo esc_html( $order->get_currency() ); ?></span>
 	<span id="tsCheckoutOrderPaymentType"><?php echo esc_html( Package::get_order_payment_method( $order ) ); ?></span>

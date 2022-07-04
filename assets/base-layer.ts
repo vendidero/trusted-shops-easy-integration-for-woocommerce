@@ -45,7 +45,7 @@ class BaseLayer {
 
     private getInformationOfSystemCallback() {
         this.eventsLib.dispatchAction({
-            action: this.eventsLib.EVENTS.SET_INFORMATION_OF_SYSTEAM,
+            action: this.eventsLib.EVENTS.SET_INFORMATION_OF_SYSTEM,
             payload: {
                 nameOfSystem: this.params.name_of_system,
                 versionNumberOfSystem: this.params.version_of_system,
@@ -264,7 +264,7 @@ class BaseLayer {
 
     private async registerEvents() {
         this.eventsLib.registerEvents({
-            [ this.eventsLib.EVENTS.GET_INFORMATION_OF_SYSTEAM ]: this.getInformationOfSystemCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_INFORMATION_OF_SYSTEM ]: this.getInformationOfSystemCallback.bind( this ),
             [ this.eventsLib.EVENTS.GET_LOCALE ]: this.getLocaleCallback.bind( this ),
             [ this.eventsLib.EVENTS.SAVE_CREDENTIALS ]: this.saveCredentialsCallback.bind( this ),
             [ this.eventsLib.EVENTS.GET_CREDENTIALS_PROVIDED ]: this.getCredentialsCallback.bind( this ),
