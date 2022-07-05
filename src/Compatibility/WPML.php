@@ -73,7 +73,7 @@ class WPML implements Compatibility {
 					array(
 						'key'     => 'wpml_language',
 						'compare' => '=',
-						'value'   => esc_html( $query_vars['wpml_language'] )
+						'value'   => esc_html( $query_vars['wpml_language'] ),
 					),
 				);
 			} else {
@@ -81,7 +81,7 @@ class WPML implements Compatibility {
 					array(
 						'key'     => 'wpml_language',
 						'compare' => '=',
-						'value'   => esc_html( $query_vars['wpml_language'] )
+						'value'   => esc_html( $query_vars['wpml_language'] ),
 					),
 				);
 			}

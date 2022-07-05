@@ -48,6 +48,7 @@ class BaseLayer {
                 nameOfSystem: this.params.name_of_system,
                 versionNumberOfSystem: this.params.version_of_system,
                 versionNumberOfPlugin: this.params.version,
+                allowsEstimatedDeliveryDate: this.params.supports_estimated_delivery_date,
             },
         });
     }
@@ -278,7 +279,7 @@ class BaseLayer {
             [ this.eventsLib.EVENTS.GET_PRODUCT_REVIEW_FOR_CHANNEL ]: this.getHasReviewInvitesCallback.bind( this ),
             [ this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL ]: this.activateReviewInvitesCallback.bind( this ),
             [ this.eventsLib.EVENTS.DEACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL ]: this.deactivateReviewInvitesCallback.bind( this ),
-            [this.eventsLib.EVENTS.EXPORT_PREVIOUS_ORDER]: this.exportOrdersCallback.bind( this ),
+            [ this.eventsLib.EVENTS.EXPORT_PREVIOUS_ORDER ]: this.exportOrdersCallback.bind( this ),
         });
     }
 

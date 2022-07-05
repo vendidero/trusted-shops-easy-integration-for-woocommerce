@@ -10,6 +10,7 @@ export interface Params {
     locale: string;
     name_of_system: string;
     version_of_system: string;
+    supports_estimated_delivery_date: boolean;
     version: string;
     widget_locations: [],
     sales_channels: WidgetLocation[];

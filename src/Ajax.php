@@ -89,10 +89,10 @@ class Ajax {
 				} elseif ( 'channels' === $setting_name && isset( $settings->allow_reset ) && true === $settings->allow_reset ) {
 					$value = (array) $value;
 
-					foreach( $value as $setting_key => $channel ) {
+					foreach ( $value as $setting_key => $channel ) {
 						// Channel mapping has changed - remove settings
-						if ( array_key_exists( $channel->salesChannelRef, $current_map ) && (string) $channel->eTrustedChannelRef !== $current_map[ $channel->salesChannelRef ] ) {
-							$channels_to_remove[] = $channel->salesChannelRef . '_' . $current_map[ $channel->salesChannelRef ];
+						if ( array_key_exists( $channel->salesChannelRef, $current_map ) && (string) $channel->eTrustedChannelRef !== $current_map[ $channel->salesChannelRef ] ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+							$channels_to_remove[] = $channel->salesChannelRef . '_' . $current_map[ $channel->salesChannelRef ]; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 						}
 					}
 				}
@@ -121,7 +121,7 @@ class Ajax {
 			 * Remove re-mapped channel settings.
 			 */
 			if ( ! empty( $channels_to_remove ) ) {
-				foreach( $channels_to_remove as $setting_key_to_remove ) {
+				foreach ( $channels_to_remove as $setting_key_to_remove ) {
 					Package::delete_settings( $setting_key_to_remove );
 				}
 			}

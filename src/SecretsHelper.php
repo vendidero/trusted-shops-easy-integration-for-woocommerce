@@ -188,7 +188,7 @@ class SecretsHelper {
 	 * @return bool
 	 */
 	public static function supports_auto_insert() {
-		$supports          = false;
+		$supports = false;
 		/**
 		 * Determine the path to wp-config.php to check whether auto-inserting the encryption key is possible or not.
 		 * Plugin review team: This path is NOT used to include the wp-config.php file.

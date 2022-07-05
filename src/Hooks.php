@@ -131,7 +131,7 @@ class Hooks {
 	}
 
 	public static function register_homepage() {
-		if ( is_shop() ) {
+		if ( apply_filters( 'ts_easy_integration_is_shop_home', is_shop() ) ) {
 			do_action( 'ts_easy_integration_homepage_widgets' );
 		}
 	}
