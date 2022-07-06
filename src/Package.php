@@ -425,7 +425,7 @@ class Package {
 	}
 
 	/**
-	 * @param \WC_Product $product
+	 * @param \WC_Product|integer $product
 	 * @param string $attribute
 	 *
 	 * @return string
@@ -461,7 +461,7 @@ class Package {
 	}
 
 	/**
-	 * @param \WC_Product $product
+	 * @param \WC_Product|integer $product
 	 *
 	 * @return string
 	 */
@@ -476,7 +476,7 @@ class Package {
 	}
 
 	/**
-	 * @param \WC_Product $product
+	 * @param \WC_Product|integer $product
 	 *
 	 * @return string
 	 */
@@ -485,7 +485,7 @@ class Package {
 	}
 
 	/**
-	 * @param \WC_Product $product
+	 * @param \WC_Product|integer $product
 	 *
 	 * @return string
 	 */
@@ -494,7 +494,7 @@ class Package {
 	}
 
 	/**
-	 * @param \WC_Product $product
+	 * @param \WC_Product|integer $product
 	 *
 	 * @return string
 	 */
@@ -526,7 +526,7 @@ class Package {
 	}
 
 	/**
-	 * @param \WC_Product $product
+	 * @param \WC_Product|integer $product
 	 *
 	 * @return string
 	 */
@@ -542,7 +542,7 @@ class Package {
 			return '';
 		}
 
-		$brand_attribute_name = apply_filters( 'ts_easy_integration_product_brand_attribute_name', '', $product );
+		$brand_attribute_name = apply_filters( 'ts_easy_integration_product_brand_attribute_name', _x( 'Brand', 'trusted-shops-brand-attribute', 'trusted-shops-easy-integration' ), $product );
 		$brand                = '';
 
 		if ( ! empty( $brand_attribute_name ) ) {

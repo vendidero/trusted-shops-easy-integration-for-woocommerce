@@ -58,7 +58,7 @@ $ts_sales_channel = isset( $ts_sales_channel ) ? $ts_sales_channel : '';
 				<span class="tsCheckoutProductName"><?php echo esc_html( $parent_product->get_title() ); ?></span>
 				<span class="tsCheckoutProductSKU"><?php echo esc_html( $sku ); ?></span>
 				<span class="tsCheckoutProductGTIN"><?php echo esc_html( Package::get_product_gtin( $parent_product ) ? Package::get_product_gtin( $parent_product ) : $sku ); ?></span>
-				<span class="tsCheckoutProductBrand"><?php echo esc_html( Package::get_product_brand( $parent_product ) ? Package::get_product_brand( $parent_product ) : $sku ); ?></span>
+				<span class="tsCheckoutProductBrand"><?php echo esc_html( Package::get_product_brand( $parent_product ) ? Package::get_product_brand( $parent_product ) : '' ); ?></span>
 				<span class="tsCheckoutProductMPN"><?php echo esc_html( Package::get_product_mpn( $parent_product ) ? Package::get_product_mpn( $parent_product ) : $sku ); ?></span>
 			</span>
 		<?php endforeach; ?>
