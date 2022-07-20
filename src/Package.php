@@ -733,7 +733,14 @@ class Package {
 			}
 		}
 
+		/**
+		 * Somehow there seems to be a bug/issue with the cache (tested at least for the channels option)
+         * which might lead to wrong serialized data being returned.
+         * Delete the option before updating to overcome the issue.
+		 */
+        delete_option( $option_name );
 		update_option( $option_name, $value );
+		wp_cache_delete( $option_name, 'options' );
 
 		/**
 		 * Clear sale channel mapping cache.
@@ -763,8 +770,13 @@ class Package {
 			foreach ( self::get_settings() as $name => $value ) {
 				$option_value = get_option( "ts_easy_integration_{$name}", array() );
 
-				if ( $option_value && is_array( $option_value ) && array_key_exists( $channel_key, $option_value ) ) {
-					unset( $option_value[ $channel_key ] );
+				if ( $option_value && is_array( $option_value ) ) {
+                    if ( array_key_exists( $channel_key, $option_value ) ) {
+	                    unset( $option_value[ $channel_key ] );
+                    } elseif ( in_array( $channel_key, $option_value ) ) {
+                        $option_value = array_diff( $channel_key, $option_value );
+                    }
+
 					update_option( "ts_easy_integration_{$name}", $option_value );
 				}
 			}

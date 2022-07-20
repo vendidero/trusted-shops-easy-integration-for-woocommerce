@@ -50,16 +50,15 @@ $ts_sales_channel = isset( $ts_sales_channel ) ? $ts_sales_channel : '';
 			}
 
 			$product_parent_map[] = $item->get_product_id();
-			$sku                  = Package::get_product_sku( $parent_product );
 			?>
 			<span class="tsCheckoutProductItem">
 				<span class="tsCheckoutProductUrl"><?php echo esc_url( $parent_product->get_permalink() ); ?></span>
 				<span class="tsCheckoutProductImageUrl"><?php echo esc_url( Package::get_product_image_src( $parent_product ) ); ?></span>
 				<span class="tsCheckoutProductName"><?php echo esc_html( $parent_product->get_title() ); ?></span>
-				<span class="tsCheckoutProductSKU"><?php echo esc_html( $sku ); ?></span>
-				<span class="tsCheckoutProductGTIN"><?php echo esc_html( Package::get_product_gtin( $parent_product ) ? Package::get_product_gtin( $parent_product ) : $sku ); ?></span>
-				<span class="tsCheckoutProductBrand"><?php echo esc_html( Package::get_product_brand( $parent_product ) ? Package::get_product_brand( $parent_product ) : '' ); ?></span>
-				<span class="tsCheckoutProductMPN"><?php echo esc_html( Package::get_product_mpn( $parent_product ) ? Package::get_product_mpn( $parent_product ) : $sku ); ?></span>
+				<span class="tsCheckoutProductSKU"><?php echo esc_html( Package::get_product_sku( $parent_product ) ); ?></span>
+				<span class="tsCheckoutProductGTIN"><?php echo esc_html( Package::get_product_gtin( $parent_product ) ); ?></span>
+				<span class="tsCheckoutProductBrand"><?php echo esc_html( Package::get_product_brand( $parent_product ) ); ?></span>
+				<span class="tsCheckoutProductMPN"><?php echo esc_html( Package::get_product_mpn( $parent_product ) ); ?></span>
 			</span>
 		<?php endforeach; ?>
 		<!-- product reviews end -->

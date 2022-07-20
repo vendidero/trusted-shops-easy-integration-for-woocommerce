@@ -64,13 +64,18 @@ class Ajax {
 			wp_die( -1 );
 		}
 
-		$current_map        = Package::get_sales_channels_map();
 		$channels_to_remove = array();
 		$settings           = self::get_request_data();
+		$original_settings  = Package::get_settings();
 		$result             = true;
+		$settings_allowed   = array_merge( array( 'client_id', 'client_secret' ), array_keys( $original_settings ) );
 
 		foreach ( $settings as $setting_name => $value ) {
 			$value = wc_clean( $value );
+
+			if ( ! in_array( $setting_name, $settings_allowed ) ) {
+				continue;
+			}
 
 			try {
 				if ( 'trustbadges' === $setting_name ) {
@@ -86,13 +91,17 @@ class Ajax {
 							throw new \Exception( _x( 'Invalid trustbadge detected.', 'trusted-shops', 'trusted-shops-easy-integration' ), 'trustbadge-invalid' );
 						}
 					}
-				} elseif ( 'channels' === $setting_name && isset( $settings->allow_reset ) && true === $settings->allow_reset ) {
+				} elseif ( 'channels' === $setting_name ) {
 					$value = (array) $value;
 
-					foreach ( $value as $setting_key => $channel ) {
-						// Channel mapping has changed - remove settings
-						if ( array_key_exists( $channel->salesChannelRef, $current_map ) && (string) $channel->eTrustedChannelRef !== $current_map[ $channel->salesChannelRef ] ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
-							$channels_to_remove[] = $channel->salesChannelRef . '_' . $current_map[ $channel->salesChannelRef ]; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+					if ( isset( $settings->allow_reset ) && true === $settings->allow_reset ) {
+						$current_map = Package::get_sales_channels_map( true );
+
+						foreach ( $value as $setting_key => $channel ) {
+							// Channel mapping has changed - remove settings
+							if ( array_key_exists( $channel->salesChannelRef, $current_map ) && (string) $channel->eTrustedChannelRef !== $current_map[ $channel->salesChannelRef ] ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+								$channels_to_remove[] = $channel->salesChannelRef . '_' . $current_map[ $channel->salesChannelRef ]; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+							}
 						}
 					}
 				}

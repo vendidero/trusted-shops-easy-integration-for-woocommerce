@@ -71,9 +71,9 @@ class BaseLayer {
                 return settings;
             }).then( settings => {
                 return this.updateSettings( settings, true );
+            }).then( () => {
+                this.sendingNotification( this.eventsLib.EVENTS.SAVE_CREDENTIALS, 'success' );
             });
-
-            this.sendingNotification( this.eventsLib.EVENTS.SAVE_CREDENTIALS, 'success' );
         } catch(e) {
             this.sendingNotification( this.eventsLib.EVENTS.SAVE_CREDENTIALS, 'error' );
         }
@@ -98,16 +98,37 @@ class BaseLayer {
     private async saveMappedChannelsCallback(event: { payload: Channel[]; }) {
         try {
             const settings = await this.getSettings().then( settings => {
+                const currentChannels = settings.channels.map( (obj) => {
+                    return obj.salesChannelRef + '_' + obj.eTrustedChannelRef;
+                });
+
+                const newChannels = event.payload.map( (obj) => {
+                    return obj.salesChannelRef + '_' + obj.eTrustedChannelRef;
+                });
+
+                const orphantChannels = currentChannels.filter( item => newChannels.indexOf( item ) < 0 );
+
+                orphantChannels.map( ( channelKey ) => {
+                    delete settings.trustbadges[ channelKey ];
+                    delete settings.widgets[ channelKey ];
+
+                    const index = settings.enable_invites.indexOf( channelKey, 0 );
+
+                    if ( index > -1 ) {
+                        settings.enable_invites.splice( index, 1 );
+                    }
+                });
+
                 settings.channels = event.payload;
 
                 return settings;
             }).then( settings => {
                 return this.updateSettings( settings, false, true );
-            });
-
-            await this.getMappedChannelsCallback().then( () => {
-                this.sendingNotification( this.eventsLib.EVENTS.SET_MAPPED_CHANNELS, 'success' );
-            });
+            }).then( () => {
+                this.getMappedChannelsCallback().then( () => {
+                    this.sendingNotification( this.eventsLib.EVENTS.SET_MAPPED_CHANNELS, 'success' );
+                });
+            } );
         } catch(e) {
             this.sendingNotification( this.eventsLib.EVENTS.SET_MAPPED_CHANNELS, 'error' );
         }
@@ -143,12 +164,12 @@ class BaseLayer {
                 settings.trustbadges[ this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ] = event.payload;
 
                 return settings;
-            }).then(settings => {
+            }).then( settings => {
                 return this.updateSettings( settings );
-            });
-
-            await this.getTrustbadgeCallback( { payload: event.payload } ).then( () => {
-                this.sendingNotification( this.eventsLib.EVENTS.SAVE_TRUSTBADGE_CONFIGURATION, 'success' );
+            }).then( () => {
+                this.getTrustbadgeCallback( { payload: event.payload } ).then( () => {
+                    this.sendingNotification( this.eventsLib.EVENTS.SAVE_TRUSTBADGE_CONFIGURATION, 'success' );
+                });
             });
         } catch(e) {
             this.sendingNotification( this.eventsLib.EVENTS.SAVE_TRUSTBADGE_CONFIGURATION, 'error' );
@@ -179,10 +200,10 @@ class BaseLayer {
                 return settings;
             }).then(settings => {
                 return this.updateSettings( settings );
-            });
-
-            await this.getWidgetsCallback( { payload: event.payload } ).then( () => {
-                this.sendingNotification( this.eventsLib.EVENTS.SAVE_WIDGET_CHANGES, 'success' );
+            }).then( () => {
+                this.getWidgetsCallback( { payload: event.payload } ).then( () => {
+                    this.sendingNotification( this.eventsLib.EVENTS.SAVE_WIDGET_CHANGES, 'success' );
+                });
             });
         } catch(e) {
             this.sendingNotification( this.eventsLib.EVENTS.SAVE_WIDGET_CHANGES, 'error' );
@@ -221,12 +242,12 @@ class BaseLayer {
                 }
 
                 return settings;
-            }).then(settings => {
+            }).then( settings => {
                 return this.updateSettings( settings );
-            });
-
-            await this.getHasReviewInvitesCallback( { payload: { eTrustedChannelRef: channel.eTrustedChannelRef, salesChannelRef: channel.salesChannelRef } } ).then( () => {
-                this.sendingNotification( event, 'success' );
+            }).then( () => {
+                this.getHasReviewInvitesCallback( { payload: { eTrustedChannelRef: channel.eTrustedChannelRef, salesChannelRef: channel.salesChannelRef } } ).then( () => {
+                    this.sendingNotification( event, 'success' );
+                });
             });
         } catch(e) {
             this.sendingNotification( event, 'error' );
@@ -326,20 +347,23 @@ class BaseLayer {
                 throw new TypeError("Error message");
             });
 
-            this.settings = await response.json().then( data => {
-                return data.settings as Settings;
+            return await response.json().then( data => {
+                this.settings = data.settings as Settings;
+
+                const client_id     = response.headers.get('Client-Id');
+                const client_secret = response.headers.get('Client-Secret');
+
+                this.settings.client_id     = client_id !== null ? atob( client_id ) : '';
+                this.settings.client_secret = client_secret !== null ? atob( client_secret ) : '';
+
+                // Force parsing index signatures as objects to make sure JSON.stringify works as expected
+                this.settings.trustbadges    = { ...this.settings.trustbadges }
+                this.settings.widgets        = { ...this.settings.widgets }
+
+                return this.settings;
             } ).catch( () => {
                 throw new TypeError("Error message");
             });
-
-            const client_id     = response.headers.get('Client-Id');
-            const client_secret = response.headers.get('Client-Secret');
-
-            this.settings.client_id     = client_id !== null ? atob( client_id ) : '';
-            this.settings.client_secret = client_secret !== null ? atob( client_secret ) : '';
-            // Force parsing index signatures as objects to make sure JSON.stringify works as expected
-            this.settings.trustbadges    = { ...this.settings.trustbadges }
-            this.settings.widgets        = { ...this.settings.widgets }
         }
 
         if ( ! this.settings ) {
@@ -397,11 +421,7 @@ class BaseLayer {
             delete settings.client_id;
         }
 
-        if ( allowResetMappings ) {
-            additionalOptions['allow_reset'] = true;
-        }
-
-        this.settings = await fetch( this.getAjaxUrl( 'update_settings' ), {
+        return await fetch( this.getAjaxUrl( 'update_settings' ), {
             headers,
             method: 'POST',
             body: JSON.stringify( { ...settings, ...additionalOptions } )
@@ -412,16 +432,16 @@ class BaseLayer {
                 throw new TypeError( result.message );
             }
 
-            return this.updateSettingsData( result.settings );
+            this.settings = this.updateSettingsData( result.settings );
+
+            if ( ! this.settings ) {
+                throw new TypeError( "Error while updating settings." );
+            }
+
+            return this.settings;
         }).catch( () => {
             throw new TypeError( "Error while updating settings." );
         });
-
-        if ( ! this.settings ) {
-            throw new TypeError( "Error while updating settings." );
-        }
-
-        return this.settings;
     }
 
     private async getCredentials() {
