@@ -80,6 +80,9 @@ jobs:
           git add vendor/. --force
           git add .
           git commit -m "Adding /vendor directory to release" --no-verify
+          git add dist/. --force
+          git add .
+          git commit -m "Adding /dist directory to release" --no-verify
           git add assets/. --force
           git add .
           git diff-index --quiet HEAD || git commit -m 'Adding /assets directory with compiled and minified files to release' --no-verify
