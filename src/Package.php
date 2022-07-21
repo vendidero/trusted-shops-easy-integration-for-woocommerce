@@ -16,7 +16,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.0.1-beta';
+	const VERSION = '1.0.2-beta';
 
 	protected static $sales_channels_map = null;
 
