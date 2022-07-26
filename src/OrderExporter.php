@@ -76,20 +76,27 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 	 * @return array
 	 */
 	public function get_default_column_names() {
-		return array(
+		$columns = array(
 			'email'             => 'email',
 			'reference'         => 'reference',
 			'first_name'        => 'firstName',
 			'last_name'         => 'lastName',
 			'transaction_date'  => 'transactionDate',
-			'product_name'      => 'productName',
-			'product_url'       => 'productUrl',
-			'product_sku'       => 'productSku',
-			'product_gtin'      => 'productGtin',
-			'product_mpn'       => 'productMpn',
-			'product_image_url' => 'productImageUrl',
-			'product_brand'     => 'productBrand',
 		);
+
+		if ( Package::enable_review_invites( $this->get_sales_channel() ) ) {
+			$columns += array(
+				'product_name'      => 'productName',
+				'product_url'       => 'productUrl',
+				'product_sku'       => 'productSku',
+				'product_gtin'      => 'productGtin',
+				'product_mpn'       => 'productMpn',
+				'product_image_url' => 'productImageUrl',
+				'product_brand'     => 'productBrand',
+			);
+		}
+
+		return $columns;
 	}
 
 	/**
@@ -120,30 +127,34 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 			$order_data_row[ $column_id ] = $value;
 		}
 
-		$order_product_map = array();
+		if ( Package::enable_review_invites( $this->get_sales_channel() ) ) {
+			$order_product_map = array();
 
-		foreach ( $order->get_items() as $line_item ) {
-			$row = $order_data_row;
+			foreach ( $order->get_items() as $line_item ) {
+				$row = $order_data_row;
 
-			if ( is_callable( array( $line_item, 'get_product_id' ) ) ) {
-				if ( in_array( $line_item->get_product_id(), $order_product_map, true ) ) {
-					continue;
-				}
+				if ( is_callable( array( $line_item, 'get_product_id' ) ) ) {
+					if ( in_array( $line_item->get_product_id(), $order_product_map, true ) ) {
+						continue;
+					}
 
-				$order_product_map[] = $line_item->get_product_id();
+					$order_product_map[] = $line_item->get_product_id();
 
-				if ( $product = wc_get_product( $line_item->get_product_id() ) ) {
-					$row['product_name']      = $product->get_title();
-					$row['product_url']       = $product->get_permalink();
-					$row['product_sku']       = Package::get_product_sku( $product );
-					$row['product_gtin']      = Package::get_product_gtin( $product ) !== $row['product_sku'] ? Package::get_product_gtin( $product ) : '';
-					$row['product_mpn']       = Package::get_product_mpn( $product ) !== $row['product_sku'] ? Package::get_product_mpn( $product ) : '';
-					$row['product_image_url'] = Package::get_product_image_src( $product );
-					$row['product_brand']     = Package::get_product_brand( $product );
+					if ( $product = wc_get_product( $line_item->get_product_id() ) ) {
+						$row['product_name']      = $product->get_title();
+						$row['product_url']       = $product->get_permalink();
+						$row['product_sku']       = Package::get_product_sku( $product );
+						$row['product_gtin']      = Package::get_product_gtin( $product ) !== $row['product_sku'] ? Package::get_product_gtin( $product ) : '';
+						$row['product_mpn']       = Package::get_product_mpn( $product ) !== $row['product_sku'] ? Package::get_product_mpn( $product ) : '';
+						$row['product_image_url'] = Package::get_product_image_src( $product );
+						$row['product_brand']     = Package::get_product_brand( $product );
 
-					$rows[] = $row;
+						$rows[] = $row;
+					}
 				}
 			}
+		} else {
+			$rows[] = $order_data_row;
 		}
 
 		return $rows;
