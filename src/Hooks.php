@@ -47,6 +47,20 @@ class Hooks {
 		add_action( 'ts_easy_integration_product_loop_inner_widgets', array( __CLASS__, 'product_loop_inner_widgets' ) );
 		add_action( 'ts_easy_integration_footer_widgets', array( __CLASS__, 'footer_widgets' ) );
 		add_action( 'ts_easy_integration_header_widgets', array( __CLASS__, 'header_widgets' ) );
+
+		add_action( 'wp_footer', array( __CLASS__, 'maybe_enqueue_widget_script' ), 0 );
+	}
+
+	/**
+	 * Fallback widget script enqueue. Make sure to enqueue the widget script before
+	 * outputting footer widget html which may get rendered via a later hook priority (wp_footer 20).
+	 *
+	 * @return void
+	 */
+	public static function maybe_enqueue_widget_script() {
+		if ( self::is_shop_request() && Package::get_widgets_by_location( 'wdg-loc-ft' ) ) {
+			wp_enqueue_script( 'ts-easy-integration-widgets' );
+		}
 	}
 
 	public static function register_lazy_hooks() {
