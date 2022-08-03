@@ -33,6 +33,12 @@ class Install {
 		}
 	}
 
+	public static function uninstall() {
+		Package::delete_settings();
+
+		delete_option( 'ts_easy_integration_version' );
+	}
+
 	private static function update() {
 
 	}

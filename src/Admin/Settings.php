@@ -23,8 +23,8 @@ class Settings {
 	public static function output() {
 		$GLOBALS['hide_save_button'] = true;
 		?>
-		<div id="app">
-			<div id="eTrusted-connector"></div>
+		<div id="app" style="overflow-x: scroll">
+			<div id="eTrusted-connector" style="min-width: 1100px;"></div>
 		</div>
 		<?php
 	}

@@ -116,6 +116,11 @@ class Package {
 		Install::install();
 	}
 
+    public static function uninstall() {
+        self::init();
+        Install::uninstall();
+    }
+
 	/**
 	 * Whether debug mode is enabled or not.
 	 *
