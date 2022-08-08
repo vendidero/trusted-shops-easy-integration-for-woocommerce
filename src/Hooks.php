@@ -25,8 +25,8 @@ class Hooks {
 		 * Register a fallback filter that will be triggered in case Woo reviews are disabled which leads
 		 * to single-product/rating.php not being included.
 		 */
-		add_action( 'woocommerce_single_product_summary', array( __CLASS__, 'maybe_do_single_product_rating_hooks' ), 11 );
-		add_action( 'ts_easy_integration_single_product_rating_widgets', array( __CLASS__, 'single_product_rating_widgets' ) );
+		add_action( 'woocommerce_single_product_summary', array( __CLASS__, 'maybe_do_single_product_title_hooks' ), 9 );
+		add_action( 'ts_easy_integration_single_product_title_widgets', array( __CLASS__, 'single_product_title_widgets' ) );
 		add_action( 'ts_easy_integration_product_loop_rating_widgets', array( __CLASS__, 'product_loop_rating_widgets' ) );
 
 		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'register_custom_review_tab' ), 50, 1 );
@@ -73,14 +73,14 @@ class Hooks {
 	}
 
 	/**
-	 * Execute the ts_easy_integration_single_product_rating_widgets as a fallback
+	 * Execute the ts_easy_integration_single_product_title_widgets as a fallback
 	 * in case WooCommerce reviews are disabled.
 	 *
 	 * @return void
 	 */
-	public static function maybe_do_single_product_rating_hooks() {
-		if ( ! post_type_supports( 'product', 'comments' ) && ! did_action( 'ts_easy_integration_single_product_rating_widgets' ) ) {
-			do_action( 'ts_easy_integration_single_product_rating_widgets' );
+	public static function maybe_do_single_product_title_hooks() {
+		if ( ! post_type_supports( 'product', 'comments' ) && ! did_action( 'ts_easy_integration_single_product_title_widgets' ) ) {
+			do_action( 'ts_easy_integration_single_product_title_widgets' );
 		}
 	}
 
@@ -178,13 +178,6 @@ class Hooks {
 
 	public static function single_product_widgets() {
 		foreach ( Package::get_widgets_by_location( 'wdg-loc-pp' ) as $ts_widget ) {
-			/**
-			 * Do not show product_star widget as it is shown beneath the product title
-			 */
-			if ( 'product_star' === $ts_widget->applicationType ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
-				continue;
-			}
-
 			self::render_single_widget( $ts_widget );
 		}
 	}
@@ -249,12 +242,7 @@ class Hooks {
 		$needs_tab = false;
 
 		if ( count( $widgets ) > 0 ) {
-			// The product_star widget is an exempt and is only displayed under the product title.
-			if ( 1 === count( $widgets ) && 'product_star' === $widgets[0]->applicationType ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
-				$needs_tab = false;
-			} else {
-				$needs_tab = true;
-			}
+			$needs_tab = true;
 		}
 
 		return $needs_tab;
@@ -295,10 +283,10 @@ class Hooks {
 		}
 	}
 
-	public static function single_product_rating_widgets() {
-		$product_star        = Package::get_widget_by_type( 'product_star' );
+	public static function single_product_title_widgets() {
 		$product_review_list = Package::get_widget_by_type( 'product_review_list' );
 		$widgets             = array();
+		$added_anchor        = false;
 
 		/**
 		 * On single product pages, do support anchors in product description too.
@@ -307,12 +295,22 @@ class Hooks {
 			$product_review_list = Package::get_widget_by_type( 'product_review_list', 'wdg-loc-pd' );
 		}
 
-		if ( $product_star ) {
-			$widgets[] = $product_star;
+		/**
+		 * Product name (title) widgets
+		 */
+		foreach ( Package::get_widgets_by_location( 'wdg-loc-pn' ) as $ts_widget ) {
+			if ( isset( $ts_widget->extensions, $ts_widget->extensions->product_star ) ) {
+				$widgets[] = $ts_widget->extensions->product_star;
+
+				$added_anchor = true;
+			}
+
+			$widgets[] = $ts_widget;
 		}
 
-		if ( $product_review_list && isset( $product_review_list->extensions->product_star ) ) {
-			$widgets[] = $product_review_list->extensions->product_star;
+		if ( ! $added_anchor && $product_review_list && isset( $product_review_list->extensions->product_star ) ) {
+			$widgets[]    = $product_review_list->extensions->product_star;
+			$added_anchor = true;
 		}
 
 		foreach ( $widgets as $widget ) {
@@ -325,7 +323,7 @@ class Hooks {
 		$is_single = 'single-product/rating.php' === $template_name;
 
 		if ( $is_single ) {
-			do_action( 'ts_easy_integration_single_product_rating_widgets' );
+			do_action( 'ts_easy_integration_single_product_title_widgets' );
 		} elseif ( $is_loop ) {
 			do_action( 'ts_easy_integration_product_loop_rating_widgets' );
 		}

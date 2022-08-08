@@ -73,7 +73,7 @@ class Ajax {
 		foreach ( $settings as $setting_name => $value ) {
 			$value = wc_clean( $value );
 
-			if ( ! in_array( $setting_name, $settings_allowed ) ) {
+			if ( ! in_array( $setting_name, $settings_allowed, true ) ) {
 				continue;
 			}
 

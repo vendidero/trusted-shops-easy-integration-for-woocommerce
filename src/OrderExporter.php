@@ -77,11 +77,11 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 	 */
 	public function get_default_column_names() {
 		$columns = array(
-			'email'             => 'email',
-			'reference'         => 'reference',
-			'first_name'        => 'firstName',
-			'last_name'         => 'lastName',
-			'transaction_date'  => 'transactionDate',
+			'email'            => 'email',
+			'reference'        => 'reference',
+			'first_name'       => 'firstName',
+			'last_name'        => 'lastName',
+			'transaction_date' => 'transactionDate',
 		);
 
 		if ( Package::enable_review_invites( $this->get_sales_channel() ) ) {
