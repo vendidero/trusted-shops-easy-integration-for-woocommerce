@@ -4,6 +4,7 @@ namespace Vendidero\TrustedShopsEasyIntegration\Admin;
 
 use Vendidero\TrustedShopsEasyIntegration\OrderExporter;
 use Vendidero\TrustedShopsEasyIntegration\Package;
+use Vendidero\TrustedShopsEasyIntegration\SecretsHelper;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -16,14 +17,33 @@ class Helper {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_scripts' ), 15 );
 		add_filter( 'script_loader_tag', array( __CLASS__, 'async_script_support' ), 1500, 2 );
 
-		add_filter( 'woocommerce_get_settings_pages', array( __CLASS__, 'register_settings' ) );
+		if ( ! Package::is_integration() ) {
+			add_filter( 'woocommerce_get_settings_pages', array( __CLASS__, 'register_settings' ) );
 
-		add_action( 'woocommerce_product_options_general_product_data', array( __CLASS__, 'product_options' ), 9 );
-		add_action( 'woocommerce_product_after_variable_attributes', array( __CLASS__, 'product_options_variable' ), 20, 3 );
-		add_action( 'woocommerce_admin_process_product_object', array( __CLASS__, 'save_product' ), 10, 1 );
-		add_action( 'woocommerce_admin_process_variation_object', array( __CLASS__, 'save_variation' ), 10, 2 );
+			add_action( 'woocommerce_product_options_general_product_data', array( __CLASS__, 'product_options' ), 9 );
+			add_action( 'woocommerce_product_after_variable_attributes', array( __CLASS__, 'product_options_variable' ), 20, 3 );
+			add_action( 'woocommerce_admin_process_product_object', array( __CLASS__, 'save_product' ), 10, 1 );
+			add_action( 'woocommerce_admin_process_variation_object', array( __CLASS__, 'save_variation' ), 10, 2 );
+
+			if ( ! SecretsHelper::has_valid_encryption_key() ) {
+				add_action( 'admin_notices', array( __CLASS__, 'encryption_key_missing_notice' ) );
+			}
+		}
 
 		add_action( 'admin_post_ts-download-order-export', array( __CLASS__, 'download_export' ) );
+	}
+
+	public static function encryption_key_missing_notice() {
+		$notice = SecretsHelper::get_encryption_key_notice();
+
+		if ( ! empty( $notice ) ) { ?>
+			<div class="notice error fade">
+				<h3><?php echo esc_html_x( 'Encryption key missing', 'trusted-shops', 'trusted-shops-easy-integration' ); ?></h3>
+
+				<?php echo wp_kses_post( wpautop( $notice ) ); ?>
+			</div>
+			<?php
+		}
 	}
 
 	public static function async_script_support( $tag, $handle ) {
@@ -59,10 +79,6 @@ class Helper {
 	}
 
 	public static function save_variation( $variation, $i ) {
-		if ( Package::is_integration() ) {
-			return;
-		}
-
 		if ( $variation ) {
 			if ( isset( $_POST['variable_ts_gtin'][ $i ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
 				$variation->update_meta_data( '_ts_gtin', trim( wc_clean( wp_unslash( $_POST['variable_ts_gtin'][ $i ] ) ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -75,10 +91,6 @@ class Helper {
 	}
 
 	public static function save_product( $product ) {
-		if ( Package::is_integration() ) {
-			return;
-		}
-
 		if ( is_numeric( $product ) ) {
 			$product = wc_get_product( $product );
 		}
@@ -93,10 +105,6 @@ class Helper {
 	}
 
 	public static function product_options_variable( $loop, $variation_data, $variation ) {
-		if ( Package::is_integration() ) {
-			return;
-		}
-
 		$_product = wc_get_product( $variation );
 		$_parent  = wc_get_product( $_product->get_parent_id() );
 
@@ -134,10 +142,6 @@ class Helper {
 	}
 
 	public static function product_options() {
-		if ( Package::is_integration() ) {
-			return;
-		}
-
 		echo '<div class="options_group show_if_simple show_if_external show_if_variable">';
 
 		woocommerce_wp_text_input(
@@ -164,9 +168,7 @@ class Helper {
 	}
 
 	public static function register_settings( $settings ) {
-		if ( ! Package::is_integration() ) {
-			$settings[] = new SettingsPage();
-		}
+		$settings[] = new SettingsPage();
 
 		return $settings;
 	}

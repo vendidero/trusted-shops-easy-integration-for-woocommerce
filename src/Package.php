@@ -135,13 +135,9 @@ class Package {
 	/**
 	 * Whether this installation is an integration (e.g. bundled within Germanized) or standalone.
 	 *
-	 * @TODO Need to check for Germanized existence.
-	 *
 	 * @return false
 	 */
 	public static function is_integration() {
-		return false;
-
 		return class_exists( 'WooCommerce_Germanized' ) ? true : false;
 	}
 
