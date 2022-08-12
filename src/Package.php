@@ -123,13 +123,11 @@ class Package {
 
 	/**
 	 * Whether debug mode is enabled or not.
-	 *
-	 * @TODO Disable before release.
-	 *
+     *
 	 * @return bool
 	 */
 	public static function is_debug_mode() {
-		return true;
+		return defined( 'TS_EASY_INTEGRATION_IS_DEBUG_MODE' ) ? TS_EASY_INTEGRATION_IS_DEBUG_MODE : false;
 	}
 
 	/**
@@ -138,8 +136,6 @@ class Package {
 	 * @return false
 	 */
 	public static function is_integration() {
-        return false;
-
 		return class_exists( 'WooCommerce_Germanized' ) ? true : false;
 	}
 
