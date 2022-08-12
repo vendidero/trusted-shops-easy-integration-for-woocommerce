@@ -4,8 +4,8 @@ Tags: trusted shops, woocommerce
 Requires at least: 5.4
 Tested up to: 6.0
 WC requires at least: 3.9
-WC tested up to: 6.5
-Stable tag: 0.0.1-alpha
+WC tested up to: 6.6
+Stable tag: 1.0.0
 Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -14,9 +14,11 @@ Easily integrate Trusted Shops with WooCommerce.
 
 == Description ==
 
-.
+This plugin adds a trustbadge and Trusted Shops widgets to your WooCommerce pages.
 
 == Installation ==
+
+Install this plugin via WP-Admin > Plugins and connect your site via WooCommerce > Settings > Trusted Shops.
 
 = Minimal Requirements =
 
@@ -26,19 +28,14 @@ Easily integrate Trusted Shops with WooCommerce.
 
 == Frequently Asked Questions ==
 
-= Where can I find the documentation? =
-.
-
 = Need help? =
 .
 
 == Screenshots ==
 
-1.
-
 == Changelog ==
 = 1.0.0 =
-*
+* First release
 
 == Upgrade Notice ==
 

@@ -206,7 +206,32 @@ class Helper {
 					'version_of_system'                => Package::get_system_version(),
 					'version'                          => Package::get_version(),
 					'sales_channels'                   => array_values( Package::get_sales_channels() ),
-					'widget_locations'                 => array(),
+					'widget_locations'                 => array(
+                        array(
+	                        'id' => 'wdg-loc-hp'
+                        ),
+                        array(
+                            'id' => 'wdg-loc-lrm',
+                        ),
+						array(
+							'id' => 'wdg-loc-pl',
+						),
+						array(
+							'id' => 'wdg-loc-pp',
+						),
+						array(
+							'id' => 'wdg-loc-ft',
+						),
+						array(
+							'id' => 'wdg-loc-hd',
+						),
+						array(
+							'id' => 'wdg-loc-pd',
+						),
+						array(
+							'id' => 'wdg-loc-pn',
+						),
+                    ),
 					'supports_estimated_delivery_date' => false,
 				)
 			);

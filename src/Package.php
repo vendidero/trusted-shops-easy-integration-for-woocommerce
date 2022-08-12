@@ -16,7 +16,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.0.5-beta';
+	const VERSION = '1.0.0';
 
 	protected static $sales_channels_map = null;
 
@@ -138,6 +138,8 @@ class Package {
 	 * @return false
 	 */
 	public static function is_integration() {
+        return false;
+
 		return class_exists( 'WooCommerce_Germanized' ) ? true : false;
 	}
 
