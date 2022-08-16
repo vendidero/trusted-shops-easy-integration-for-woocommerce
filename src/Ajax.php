@@ -64,7 +64,6 @@ class Ajax {
 			wp_die( -1 );
 		}
 
-		$channels_to_remove = array();
 		$settings           = self::get_request_data();
 		$original_settings  = Package::get_settings();
 		$result             = true;
@@ -93,17 +92,6 @@ class Ajax {
 					}
 				} elseif ( 'channels' === $setting_name ) {
 					$value = (array) $value;
-
-					if ( isset( $settings->allow_reset ) && true === $settings->allow_reset ) {
-						$current_map = Package::get_sales_channels_map( true );
-
-						foreach ( $value as $setting_key => $channel ) {
-							// Channel mapping has changed - remove settings
-							if ( array_key_exists( $channel->salesChannelRef, $current_map ) && (string) $channel->eTrustedChannelRef !== $current_map[ $channel->salesChannelRef ] ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
-								$channels_to_remove[] = $channel->salesChannelRef . '_' . $current_map[ $channel->salesChannelRef ]; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
-							}
-						}
-					}
 				}
 
 				$result = Package::update_setting( $setting_name, $value );
@@ -126,15 +114,6 @@ class Ajax {
 				'settings' => Package::get_settings(),
 			);
 		} else {
-			/**
-			 * Remove re-mapped channel settings.
-			 */
-			if ( ! empty( $channels_to_remove ) ) {
-				foreach ( $channels_to_remove as $setting_key_to_remove ) {
-					Package::delete_settings( $setting_key_to_remove );
-				}
-			}
-
 			$response = array(
 				'success'  => true,
 				'message'  => '',

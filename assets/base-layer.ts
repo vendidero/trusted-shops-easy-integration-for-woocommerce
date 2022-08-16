@@ -123,7 +123,7 @@ class BaseLayer {
 
                 return settings;
             }).then( settings => {
-                return this.updateSettings( settings, false, true );
+                return this.updateSettings( settings );
             }).then( () => {
                 this.getMappedChannelsCallback().then( () => {
                     this.sendingNotification( this.eventsLib.EVENTS.SET_MAPPED_CHANNELS, 'success' );
@@ -404,27 +404,24 @@ class BaseLayer {
         });
     }
 
-    private async updateSettings( settings: Settings, andCredentials = false, allowResetMappings = false ): Promise<Settings> {
-        settings.trustbadges    = { ...settings.trustbadges }
-        settings.widgets        = { ...settings.widgets }
-
-        const additionalOptions = {
-            'allow_reset': false
-        };
+    private async updateSettings( settings: Settings, andCredentials = false ): Promise<Settings> {
+        const settingsToUpdate       = { ...settings };
+        settingsToUpdate.trustbadges = { ...settings.trustbadges }
+        settingsToUpdate.widgets     = { ...settings.widgets }
 
         const headers = {
             'Content-Type': 'application/json;charset=UTF-8',
         };
 
         if ( ! andCredentials ) {
-            delete settings.client_secret;
-            delete settings.client_id;
+            delete settingsToUpdate.client_secret;
+            delete settingsToUpdate.client_id;
         }
 
         return await fetch( this.getAjaxUrl( 'update_settings' ), {
             headers,
             method: 'POST',
-            body: JSON.stringify( { ...settings, ...additionalOptions } )
+            body: JSON.stringify( { ...settingsToUpdate } )
         }).then(
             res => res.json()
         ).then( result => {
