@@ -136,7 +136,7 @@ class Package {
 	 * @return false
 	 */
 	public static function is_integration() {
-		return class_exists( 'WooCommerce_Germanized' ) ? true : false;
+		return class_exists( 'WooCommerce_Germanized' ) && version_compare( get_option( 'woocommerce_gzd_version', '1.0.0' ), '3.11.0', '>=' ) ? true : false;
 	}
 
 	/**
