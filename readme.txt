@@ -4,7 +4,7 @@ Tags: trusted shops, woocommerce
 Requires at least: 5.4
 Tested up to: 6.0
 WC requires at least: 3.9
-WC tested up to: 6.6
+WC tested up to: 6.8
 Stable tag: 1.0.0
 Requires PHP: 5.6
 License: GPLv3
@@ -23,9 +23,9 @@ Your benefit: With just a few clicks, visitors to your online shop can see trust
 = All features at a glance: =
 
 * Show Trustbadge, integrate Buyer Protection & collect shop reviews
-* Show Shop Review Sticker with rating comments
+* Present your collected reviews in an appealing and sales-boosting way
 * Collect and display Product Reviews
-* Configure multi-shops with multiple Trusted Shops IDs
+* Configure multiple shops within the same plugin
 
 Please note: To use the extension Trusted Shops Easy Integration, you need an existing Trusted Shops membership. You can find out more about the products and benefits of Trusted Shops on our [website](https://business.trustedshops.com/) or by calling: +44 23364 5906
 
