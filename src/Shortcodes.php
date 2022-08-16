@@ -38,6 +38,12 @@ class Shortcodes {
 			if ( ! strstr( $args['product_identifier'], 'data-' ) ) {
 				$args['product_identifier'] = 'data-' . $args['product_identifier'];
 			}
+
+			$args['product_identifier'] = strtolower( $args['product_identifier'] );
+
+			if ( ! in_array( $args['product_identifier'], array( 'data-sku', 'data-gtin', 'data-mpn' ) ) ) {
+				$args['product_identifier'] = 'data-sku';
+			}
 		}
 
 		$ts_widget = array(
@@ -58,7 +64,13 @@ class Shortcodes {
 		$ts_widget = json_decode( wp_json_encode( $ts_widget ), false );
 
 		if ( ! empty( $ts_widget->attributes->id->value ) ) {
+			ob_start();
 			Hooks::render_single_widget( $ts_widget );
+			$widget = ob_get_clean();
+
+			return $widget;
+		} else {
+			return '';
 		}
 	}
 }
