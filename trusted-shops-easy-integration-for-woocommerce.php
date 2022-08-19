@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Trusted Shops Easy Integration for WooCommerce
- * Plugin URI: https://github.com/vendidero/trusted-shops-easy-integration-for-woocommerce
+ * Plugin URI: https://wordpress.org/plugins/trusted-shops-easy-integration-for-woocommerce
  * Description: Trusted Shops Easy Integration for WooCommerce.
  * Author: vendidero
  * Author URI: https://vendidero.de
@@ -38,8 +38,7 @@ if ( is_readable( $autoloader ) ) {
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 		error_log(  // phpcs:ignore
 			sprintf(
-			/* translators: 1: composer command. 2: plugin directory */
-				esc_html_x( 'Your installation of the Trusted Shops Easy Integration for WooCommerce plugin is incomplete. Please run %1$s within the %2$s directory.', 'trusted-shops', 'trusted-shops-easy-integration' ),
+				esc_html( 'Your installation of the Trusted Shops Easy Integration for WooCommerce plugin is incomplete. Please run %1$s within the %2$s directory.' ),
 				'`composer install`',
 				'`' . esc_html( str_replace( ABSPATH, '', __DIR__ ) ) . '`'
 			)
@@ -57,7 +56,7 @@ if ( is_readable( $autoloader ) ) {
 					<?php
 					printf(
 					/* translators: 1: composer command. 2: plugin directory */
-						esc_html_x( 'Your installation of the Trusted Shops Easy Integration for WooCommerce plugin is incomplete. Please run %1$s within the %2$s directory.', 'trusted-shops', 'trusted-shops-easy-integration' ),
+						esc_html( 'Your installation of the Trusted Shops Easy Integration for WooCommerce plugin is incomplete. Please run %1$s within the %2$s directory.' ),
 						'<code>composer install</code>',
 						'<code>' . esc_html( str_replace( ABSPATH, '', __DIR__ ) ) . '</code>'
 					);
@@ -72,4 +71,6 @@ if ( is_readable( $autoloader ) ) {
 
 register_activation_hook( __FILE__, array( '\Vendidero\TrustedShopsEasyIntegration\Package', 'install' ) );
 register_uninstall_hook( __FILE__, array( '\Vendidero\TrustedShopsEasyIntegration\Package', 'uninstall' ) );
+
+add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( '\Vendidero\TrustedShopsEasyIntegration\Package', 'action_links' ) );
 add_action( 'plugins_loaded', array( '\Vendidero\TrustedShopsEasyIntegration\Package', 'init' ) );

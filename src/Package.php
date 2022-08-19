@@ -49,6 +49,15 @@ class Package {
 		do_action( 'ts_easy_integration_init' );
 	}
 
+    public static function action_links( $links ) {
+	    return array_merge(
+		    array(
+			    '<a href="' . esc_url( self::is_integration() ? admin_url( 'admin.php?page=wc-settings&tab=germanized-trusted_shops_easy_integration' ) : admin_url( 'admin.php?page=wc-settings&tab=trusted_shops_easy_integration' ) ) . '">' . _x( 'Settings', 'trusted-shops', 'trusted-shops-easy-integration' ) . '</a>',
+		    ),
+		    $links
+	    );
+    }
+
 	protected static function load_compatibilities() {
 		$compatibilities = array(
 			'wpml' => '\Vendidero\TrustedShopsEasyIntegration\Compatibility\WPML',
