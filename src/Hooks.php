@@ -274,10 +274,6 @@ class Hooks {
 			$widgets[] = $product_star;
 		}
 
-		if ( $product_review_list && isset( $product_review_list->extensions->product_star ) ) {
-			$widgets[] = $product_review_list->extensions->product_star;
-		}
-
 		foreach ( $widgets as $widget ) {
 			self::render_single_widget( $widget );
 		}
