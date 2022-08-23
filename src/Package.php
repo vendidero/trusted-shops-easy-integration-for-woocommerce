@@ -262,7 +262,7 @@ class Package {
 	 * @return array[]
 	 */
 	public static function get_sales_channels() {
-		return apply_filters(
+		$sales_channels = apply_filters(
 			'ts_sales_channels',
 			array(
 				'main' => array(
@@ -273,6 +273,8 @@ class Package {
 				),
 			)
 		);
+
+        return $sales_channels;
 	}
 
 	public static function get_current_sales_channel() {
@@ -296,6 +298,11 @@ class Package {
 		return false;
 	}
 
+	/**
+	 * @param $force_refresh
+	 *
+	 * @return array
+	 */
 	public static function get_sales_channels_map( $force_refresh = false ) {
 		if ( is_null( self::$sales_channels_map ) || $force_refresh ) {
 			self::get_channels();
@@ -739,6 +746,8 @@ class Package {
 			if ( is_wp_error( $value ) ) {
 				return $value;
 			}
+
+            do_action( 'ts_easy_integration_connected' );
 		}
 
 		/**
@@ -774,6 +783,8 @@ class Package {
 				$option_name = "ts_easy_integration_{$name}";
 				delete_option( $option_name );
 			}
+
+			do_action( 'ts_easy_integration_disconnected' );
 		} else {
 			foreach ( self::get_settings() as $name => $value ) {
 				$option_value = get_option( "ts_easy_integration_{$name}", array() );

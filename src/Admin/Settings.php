@@ -7,9 +7,7 @@ defined( 'ABSPATH' ) || exit;
 class Settings {
 
 	public static function get_sections() {
-		return array(
-			'' => _x( 'General', 'trusted-shops', 'trusted-shops-easy-integration' ),
-		);
+		return array();
 	}
 
 	public static function get_description() {

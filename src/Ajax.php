@@ -64,10 +64,10 @@ class Ajax {
 			wp_die( -1 );
 		}
 
-		$settings           = self::get_request_data();
-		$original_settings  = Package::get_settings();
-		$result             = true;
-		$settings_allowed   = array_merge( array( 'client_id', 'client_secret' ), array_keys( $original_settings ) );
+		$settings          = self::get_request_data();
+		$original_settings = Package::get_settings();
+		$result            = true;
+		$settings_allowed  = array_merge( array( 'client_id', 'client_secret' ), array_keys( $original_settings ) );
 
 		foreach ( $settings as $setting_name => $value ) {
 			$value = wc_clean( $value );
@@ -87,7 +87,7 @@ class Ajax {
 						if ( ! isset( $trustbadge->id ) || ! isset( $trustbadge->children ) || ! isset( $trustbadge->children[0]->attributes ) ) {
 							unset( $value[ $setting_key ] );
 
-							throw new \Exception( _x( 'Invalid trustbadge detected.', 'trusted-shops', 'trusted-shops-easy-integration' ), 'trustbadge-invalid' );
+							throw new \Exception( 'Invalid trustbadge detected.', 'trustbadge-invalid' );
 						}
 					}
 				} elseif ( 'channels' === $setting_name ) {

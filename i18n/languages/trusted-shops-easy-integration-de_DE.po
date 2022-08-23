@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Trusted Shops Easy Integration for WooCommerce\n"
-"POT-Creation-Date: 2022-08-09 12:41+0200\n"
-"PO-Revision-Date: 2022-08-09 12:41+0200\n"
+"POT-Creation-Date: 2022-08-23 13:57+0200\n"
+"PO-Revision-Date: 2022-08-23 13:57+0200\n"
 "Last-Translator: Dennis Nissle <info@vendidero.de>\n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -55,19 +55,9 @@ msgid ""
 "the MPN on to Google to use the Trusted Shops Google Integration."
 msgstr ""
 
-#: src/Admin/Settings.php:11
-msgctxt "trusted-shops"
-msgid "General"
-msgstr ""
-
 #: src/Admin/SettingsPage.php:17
 msgctxt "trusted-shops"
 msgid "Trusted Shops"
-msgstr ""
-
-#: src/Ajax.php:91
-msgctxt "trusted-shops"
-msgid "Invalid trustbadge detected."
 msgstr ""
 
 #: src/Hooks.php:254
@@ -75,14 +65,19 @@ msgctxt "trusted-shops"
 msgid "Trusted Shops Reviews"
 msgstr ""
 
-#: src/Package.php:84
+#: src/Package.php:55
+msgctxt "trusted-shops"
+msgid "Settings"
+msgstr ""
+
+#: src/Package.php:93
 msgctxt "trusted-shops"
 msgid ""
 "To use the Trusted Shops Easy Integration for WooCommerce plugin please make "
 "sure that WooCommerce is installed and activated."
 msgstr ""
 
-#: src/Package.php:546
+#: src/Package.php:560
 msgctxt "trusted-shops-brand-attribute"
 msgid "Brand"
 msgstr ""
@@ -103,23 +98,13 @@ msgid ""
 "\" target=\"_blank\">wp-config.php</a> file:"
 msgstr ""
 
-#. translators: 1: composer command. 2: plugin directory
-#: trusted-shops-easy-integration-for-woocommerce.php:42
-#: trusted-shops-easy-integration-for-woocommerce.php:60
-#, php-format
-msgctxt "trusted-shops"
-msgid ""
-"Your installation of the Trusted Shops Easy Integration for WooCommerce "
-"plugin is incomplete. Please run %1$s within the %2$s directory."
-msgstr ""
-
 #. Plugin Name of the plugin/theme
 msgid "Trusted Shops Easy Integration for WooCommerce"
 msgstr ""
 
 #. Plugin URI of the plugin/theme
 msgid ""
-"https://github.com/vendidero/trusted-shops-easy-integration-for-woocommerce"
+"https://wordpress.org/plugins/trusted-shops-easy-integration-for-woocommerce"
 msgstr ""
 
 #. Description of the plugin/theme
