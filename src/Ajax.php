@@ -159,11 +159,12 @@ class Ajax {
 		$sales_channel   = ! empty( $request_data->sales_channel ) ? wc_clean( wp_unslash( $request_data->sales_channel ) ) : Package::get_current_sales_channel();
 		$filename_suffix = ! empty( $request_data->filename_suffix ) ? wc_clean( wp_unslash( $request_data->filename_suffix ) ) : self::generate_file_suffix( $sales_channel );
 
-		$exporter = new OrderExporter();
-		$exporter->set_days_to_export( $number_of_days );
-		$exporter->set_sales_channel( $sales_channel );
-		$exporter->set_page( $step );
-		$exporter->set_filename_suffix( $filename_suffix );
+		$exporter = new OrderExporter( array(
+			'days_to_export'  => $number_of_days,
+			'sales_channel'   => $sales_channel,
+			'filename_suffix' => $filename_suffix,
+			'page'            => $step,
+		) );
 
 		$exporter->generate_file();
 

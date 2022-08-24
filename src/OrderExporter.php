@@ -36,6 +36,25 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 
 	protected $sales_channel = '';
 
+	public function __construct( $args = array() ) {
+		$args = wp_parse_args( $args, array(
+			'days_to_export'  => 10,
+			'sales_channel'   => '',
+			'limit'           => 10,
+			'page'            => 1,
+			'filename_suffix' => '',
+		) );
+
+		$this->limit = absint( $args['limit'] );
+
+		$this->set_sales_channel( $args['sales_channel'] );
+		$this->set_days_to_export( $args['days_to_export'] );
+		$this->set_page( $args['page'] );
+		$this->set_filename_suffix( $args['filename_suffix'] );
+
+		parent::__construct();
+	}
+
 	public function set_days_to_export( $days ) {
 		$this->days_to_export = absint( $days );
 
