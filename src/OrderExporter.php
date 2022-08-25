@@ -37,13 +37,16 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 	protected $sales_channel = '';
 
 	public function __construct( $args = array() ) {
-		$args = wp_parse_args( $args, array(
-			'days_to_export'  => 10,
-			'sales_channel'   => '',
-			'limit'           => 10,
-			'page'            => 1,
-			'filename_suffix' => '',
-		) );
+		$args = wp_parse_args(
+			$args,
+			array(
+				'days_to_export'  => 10,
+				'sales_channel'   => '',
+				'limit'           => 10,
+				'page'            => 1,
+				'filename_suffix' => '',
+			)
+		);
 
 		$this->limit = absint( $args['limit'] );
 

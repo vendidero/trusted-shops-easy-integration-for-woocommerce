@@ -207,12 +207,12 @@ class Helper {
 					'version'                          => Package::get_version(),
 					'sales_channels'                   => array_values( Package::get_sales_channels() ),
 					'widget_locations'                 => array(
-                        array(
-	                        'id' => 'wdg-loc-hp'
-                        ),
-                        array(
-                            'id' => 'wdg-loc-lrm',
-                        ),
+						array(
+							'id' => 'wdg-loc-hp',
+						),
+						array(
+							'id' => 'wdg-loc-lrm',
+						),
 						array(
 							'id' => 'wdg-loc-pl',
 						),
@@ -231,7 +231,7 @@ class Helper {
 						array(
 							'id' => 'wdg-loc-pn',
 						),
-                    ),
+					),
 					'supports_estimated_delivery_date' => false,
 				)
 			);

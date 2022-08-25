@@ -41,7 +41,7 @@ class Shortcodes {
 
 			$args['product_identifier'] = strtolower( $args['product_identifier'] );
 
-			if ( ! in_array( $args['product_identifier'], array( 'data-sku', 'data-gtin', 'data-mpn' ) ) ) {
+			if ( ! in_array( $args['product_identifier'], array( 'data-sku', 'data-gtin', 'data-mpn' ), true ) ) {
 				$args['product_identifier'] = 'data-sku';
 			}
 		}

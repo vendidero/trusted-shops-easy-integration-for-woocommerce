@@ -49,14 +49,14 @@ class Package {
 		do_action( 'ts_easy_integration_init' );
 	}
 
-    public static function action_links( $links ) {
-	    return array_merge(
-		    array(
-			    '<a href="' . esc_url( self::is_integration() ? admin_url( 'admin.php?page=wc-settings&tab=germanized-trusted_shops_easy_integration' ) : admin_url( 'admin.php?page=wc-settings&tab=trusted_shops_easy_integration' ) ) . '">' . _x( 'Settings', 'trusted-shops', 'trusted-shops-easy-integration' ) . '</a>',
-		    ),
-		    $links
-	    );
-    }
+	public static function action_links( $links ) {
+		return array_merge(
+			array(
+				'<a href="' . esc_url( self::is_integration() ? admin_url( 'admin.php?page=wc-settings&tab=germanized-trusted_shops_easy_integration' ) : admin_url( 'admin.php?page=wc-settings&tab=trusted_shops_easy_integration' ) ) . '">' . _x( 'Settings', 'trusted-shops', 'trusted-shops-easy-integration' ) . '</a>',
+			),
+			$links
+		);
+	}
 
 	protected static function load_compatibilities() {
 		$compatibilities = array(
@@ -132,7 +132,7 @@ class Package {
 
 	/**
 	 * Whether debug mode is enabled or not.
-     *
+	 *
 	 * @return bool
 	 */
 	public static function is_debug_mode() {
@@ -274,7 +274,17 @@ class Package {
 			)
 		);
 
-        return $sales_channels;
+		return $sales_channels;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public static function is_connected() {
+		$client_id     = self::get_setting( 'client_id', '' );
+		$client_secret = self::get_setting( 'client_secret', '' );
+
+		return ! empty( $client_id ) && ! empty( $client_secret );
 	}
 
 	public static function get_current_sales_channel() {
@@ -747,7 +757,7 @@ class Package {
 				return $value;
 			}
 
-            do_action( 'ts_easy_integration_connected' );
+			do_action( 'ts_easy_integration_connected' );
 		}
 
 		/**
