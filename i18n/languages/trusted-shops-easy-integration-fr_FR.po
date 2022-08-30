@@ -1,0 +1,120 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Trusted Shops Easy Integration for WooCommerce\n"
+"POT-Creation-Date: 2022-08-30 12:12+0200\n"
+"PO-Revision-Date: 2022-08-30 12:12+0200\n"
+"Last-Translator: Dennis Nissle <info@vendidero.de>\n"
+"Language-Team: \n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.1.1\n"
+"X-Poedit-Basepath: ../..\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
+"X-Poedit-WPHeader: trusted-shops-easy-integration-for-woocommerce.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.min.js\n"
+"X-Poedit-SearchPathExcluded-1: vendor\n"
+"X-Poedit-SearchPathExcluded-2: node_modules\n"
+"X-Poedit-SearchPathExcluded-3: build\n"
+"X-Poedit-SearchPathExcluded-4: dist\n"
+
+#: src/Admin/Helper.php:41
+msgctxt "trusted-shops"
+msgid "Encryption key missing"
+msgstr ""
+
+#: src/Admin/Helper.php:120 src/Admin/Helper.php:150
+msgctxt "trusted-shops"
+msgid "GTIN"
+msgstr ""
+
+#: src/Admin/Helper.php:123 src/Admin/Helper.php:153
+msgctxt "trusted-shops"
+msgid ""
+"ID that allows your products to be identified worldwide. If you want to "
+"display your Trusted Shops Product Reviews in Google Shopping and paid "
+"Google adverts, Google needs the GTIN."
+msgstr ""
+
+#: src/Admin/Helper.php:134 src/Admin/Helper.php:160
+msgctxt "trusted-shops"
+msgid "MPN"
+msgstr ""
+
+#: src/Admin/Helper.php:137 src/Admin/Helper.php:163
+msgctxt "trusted-shops"
+msgid ""
+"If you don't have a GTIN for your products, you can pass the brand name and "
+"the MPN on to Google to use the Trusted Shops Google Integration."
+msgstr ""
+
+#: src/Admin/SettingsPage.php:17
+msgctxt "trusted-shops"
+msgid "Trusted Shops"
+msgstr ""
+
+#: src/Hooks.php:254
+msgctxt "trusted-shops"
+msgid "Trusted Shops Reviews"
+msgstr ""
+
+#: src/Package.php:55
+msgctxt "trusted-shops"
+msgid "Settings"
+msgstr ""
+
+#: src/Package.php:93
+msgctxt "trusted-shops"
+msgid ""
+"To use the Trusted Shops Easy Integration for WooCommerce plugin please make "
+"sure that WooCommerce is installed and activated."
+msgstr ""
+
+#: src/Package.php:570
+msgctxt "trusted-shops-brand-attribute"
+msgid "Brand"
+msgstr ""
+
+#: src/SecretsHelper.php:21
+msgctxt "trusted-shops"
+msgid "Encrypt your Client ID and Client Secret"
+msgstr ""
+
+#: src/SecretsHelper.php:24
+#, php-format
+msgctxt "trusted-shops"
+msgid ""
+"Attention! The <em>%1$s</em> (%2$s) constant is missing. Trusted Shops Easy "
+"Integration uses a derived key based on the <em>LOGGED_IN_KEY</em> constant "
+"instead. This constant might change under certain circumstances. To prevent "
+"data losses, please insert the following snippet within your <a href=\"%3$s"
+"\" target=\"_blank\">wp-config.php</a> file:"
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "Trusted Shops Easy Integration for WooCommerce"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid ""
+"https://wordpress.org/plugins/trusted-shops-easy-integration-for-woocommerce"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "Trusted Shops Easy Integration for WooCommerce."
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "vendidero"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://vendidero.de"
+msgstr ""
