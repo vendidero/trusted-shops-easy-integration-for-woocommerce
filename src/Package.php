@@ -497,7 +497,7 @@ class Package {
 			$sku = $product->get_id();
 		}
 
-		return $sku;
+		return apply_filters( "ts_easy_integration_product_sku", $sku, $product, $force_parent );
 	}
 
 	/**
@@ -506,7 +506,7 @@ class Package {
 	 * @return string
 	 */
 	public static function get_product_gtin( $product, $force_parent = true ) {
-		return self::get_product_data( $product, '_ts_gtin', $force_parent );
+		return apply_filters( "ts_easy_integration_product_gtin", self::get_product_data( $product, '_ts_gtin', $force_parent ), $product, $force_parent );
 	}
 
 	/**
@@ -515,7 +515,7 @@ class Package {
 	 * @return string
 	 */
 	public static function get_product_mpn( $product, $force_parent = true ) {
-		return self::get_product_data( $product, '_ts_mpn', $force_parent );
+		return apply_filters( "ts_easy_integration_product_mpn", self::get_product_data( $product, '_ts_mpn', $force_parent ), $product, $force_parent );
 	}
 
 	/**
