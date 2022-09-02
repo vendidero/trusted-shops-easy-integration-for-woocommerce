@@ -83,7 +83,7 @@ msgid ""
 "sure that WooCommerce is installed and activated."
 msgstr ""
 "Um die Trusted Shops Easy Integration für das WooCommerce Plugin zu verwenden," 
-"stellen Sie bitte sicher, dass WooCommerce installiert und aktiviert ist."
+"stelle bitte sicher, dass WooCommerce installiert und aktiviert ist."
 
 #: src/Package.php:560
 msgctxt "trusted-shops-brand-attribute"
@@ -93,7 +93,7 @@ msgstr "Marke"
 #: src/SecretsHelper.php:21
 msgctxt "trusted-shops"
 msgid "Encrypt your Client ID and Client Secret"
-msgstr "Entschlüsseln Sie Ihre Client ID und Ihr Client Secret"
+msgstr "Verschlüssel Client ID und Client Secret"
 
 #: src/SecretsHelper.php:24
 #, php-format
@@ -105,11 +105,11 @@ msgid ""
 "data losses, please insert the following snippet within your <a href=\"%3$s"
 "\" target=\"_blank\">wp-config.php</a> file:"
 msgstr ""
-"Achtung! Es fehlt die Konstante <em>%1$s</em> (%2$s) . Trusted Shops Easy "
+"Achtung! Es fehlt die Konstante <em>%1$s</em> (%2$s). Trusted Shops Easy "
 "Integration verwendet stattdessen einen abgeleiteten Schlüssel, der " 
 "auf der Konstante <em>LOGGED_IN_KEY</em> basiert. Diese Konstante kann sich "
-"unter bestimmten Umständen verändern. Um Datenverluste zu verhindern, fügen "
-"sie bitte den folgenden Code-Schnipsel in ihre <a href=\"%3$s"
+"unter bestimmten Umständen verändern. Um Datenverluste zu verhindern, füge "
+"bitte den folgenden Code-Schnipsel in ihre <a href=\"%3$s"
 "\" target=\"_blank\">wp-config.php</a> Datei."
 
 #. Plugin Name of the plugin/theme
@@ -124,7 +124,7 @@ msgstr ""
 
 #. Description of the plugin/theme
 msgid "Trusted Shops Easy Integration for WooCommerce."
-msgstr "Trusted Shops Easy Integration for WooCommerce"
+msgstr "Trusted Shops Easy Integration for WooCommerce."
 
 #. Author of the plugin/theme
 msgid "vendidero"
