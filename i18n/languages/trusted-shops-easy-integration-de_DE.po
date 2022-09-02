@@ -28,12 +28,12 @@ msgstr ""
 #: src/Admin/Helper.php:41
 msgctxt "trusted-shops"
 msgid "Encryption key missing"
-msgstr ""
+msgstr "Der Verschlüsselungscode fehlt"
 
 #: src/Admin/Helper.php:120 src/Admin/Helper.php:150
 msgctxt "trusted-shops"
 msgid "GTIN"
-msgstr ""
+msgstr "GTIN"
 
 #: src/Admin/Helper.php:123 src/Admin/Helper.php:153
 msgctxt "trusted-shops"
@@ -42,11 +42,15 @@ msgid ""
 "display your Trusted Shops Product Reviews in Google Shopping and paid "
 "Google adverts, Google needs the GTIN."
 msgstr ""
-
+"Identifikationsnummer, mit der Produkte weltweit eindeutig identifiziert " 
+"werden können. Wenn du deine Trusted Shops Produktbewertungen in Google " 
+"Shopping und bezahlten Google Produktanzeigen ausspielen möchtest, benötigt " 
+"Google die GTIN."
+ 
 #: src/Admin/Helper.php:134 src/Admin/Helper.php:160
 msgctxt "trusted-shops"
 msgid "MPN"
-msgstr ""
+msgstr "MPN"
 
 #: src/Admin/Helper.php:137 src/Admin/Helper.php:163
 msgctxt "trusted-shops"
@@ -54,38 +58,42 @@ msgid ""
 "If you don't have a GTIN for your products, you can pass the brand name and "
 "the MPN on to Google to use the Trusted Shops Google Integration."
 msgstr ""
+"Wenn deine Produkte keine GTIN haben, kannst du den Markennamen zusammen mit " 
+"der MPN übergeben, um die Trusted Shops Google Integration zu nutzen." 
 
 #: src/Admin/SettingsPage.php:17
 msgctxt "trusted-shops"
 msgid "Trusted Shops"
-msgstr ""
+msgstr "Trusted Shops"
 
 #: src/Hooks.php:254
 msgctxt "trusted-shops"
 msgid "Trusted Shops Reviews"
-msgstr ""
+msgstr "Trusted Shops Bewertungen"
 
 #: src/Package.php:55
 msgctxt "trusted-shops"
 msgid "Settings"
-msgstr ""
+msgstr "Einstellungen"
 
 #: src/Package.php:93
 msgctxt "trusted-shops"
 msgid ""
-"To use the Trusted Shops Easy Integration for WooCommerce plugin please make "
+"To use the Trusted Shops Easy Integration for WooCommerce plugin please make"
 "sure that WooCommerce is installed and activated."
 msgstr ""
+"Um die Trusted Shops Easy Integration für das WooCommerce Plugin zu verwenden," 
+"stellen Sie bitte sicher, dass WooCommerce installiert und aktiviert ist."
 
 #: src/Package.php:560
 msgctxt "trusted-shops-brand-attribute"
 msgid "Brand"
-msgstr ""
+msgstr "Marke"
 
 #: src/SecretsHelper.php:21
 msgctxt "trusted-shops"
 msgid "Encrypt your Client ID and Client Secret"
-msgstr ""
+msgstr "Entschlüsseln Sie Ihre Client ID und Ihr Client Secret"
 
 #: src/SecretsHelper.php:24
 #, php-format
@@ -97,24 +105,31 @@ msgid ""
 "data losses, please insert the following snippet within your <a href=\"%3$s"
 "\" target=\"_blank\">wp-config.php</a> file:"
 msgstr ""
+"Achtung! Es fehlt die Konstante <em>%1$s</em> (%2$s) . Trusted Shops Easy "
+"Integration verwendet stattdessen einen abgeleiteten Schlüssel, der " 
+"auf der Konstante <em>LOGGED_IN_KEY</em> basiert. Diese Konstante kann sich "
+"unter bestimmten Umständen verändern. Um Datenverluste zu verhindern, fügen "
+"sie bitte den folgenden Code-Schnipsel in ihre <a href=\"%3$s"
+"\" target=\"_blank\">wp-config.php</a> Datei."
 
 #. Plugin Name of the plugin/theme
 msgid "Trusted Shops Easy Integration for WooCommerce"
-msgstr ""
+msgstr "Trusted Shops Easy Integration for WooCommerce"
 
 #. Plugin URI of the plugin/theme
 msgid ""
 "https://wordpress.org/plugins/trusted-shops-easy-integration-for-woocommerce"
 msgstr ""
+"https://wordpress.org/plugins/trusted-shops-easy-integration-for-woocommerce"
 
 #. Description of the plugin/theme
 msgid "Trusted Shops Easy Integration for WooCommerce."
-msgstr ""
+msgstr "Trusted Shops Easy Integration for WooCommerce"
 
 #. Author of the plugin/theme
 msgid "vendidero"
-msgstr ""
+msgstr "vendidero"
 
 #. Author URI of the plugin/theme
 msgid "https://vendidero.de"
-msgstr ""
+msgstr "https://vendidero.de"
