@@ -64,7 +64,7 @@ msgstr ""
 #: src/Admin/SettingsPage.php:17
 msgctxt "trusted-shops"
 msgid "Trusted Shops"
-msgstr "Trusted Shops"
+msgstr "Trusted Shops Easy Integration"
 
 #: src/Hooks.php:254
 msgctxt "trusted-shops"
