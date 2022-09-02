@@ -64,7 +64,7 @@ msgstr ""
 #: src/Admin/SettingsPage.php:17
 msgctxt "trusted-shops"
 msgid "Trusted Shops"
-msgstr "Trusted Shops Easy Integration"
+msgstr "Trusted Shops New"
 
 #: src/Hooks.php:254
 msgctxt "trusted-shops"
@@ -109,7 +109,7 @@ msgstr ""
 "Integration verwendet stattdessen einen abgeleiteten Schlüssel, der " 
 "auf der Konstante <em>LOGGED_IN_KEY</em> basiert. Diese Konstante kann sich "
 "unter bestimmten Umständen verändern. Um Datenverluste zu verhindern, füge "
-"bitte den folgenden Code-Schnipsel in ihre <a href=\"%3$s"
+"bitte den folgenden Code-Schnipsel in die <a href=\"%3$s"
 "\" target=\"_blank\">wp-config.php</a> Datei."
 
 #. Plugin Name of the plugin/theme
