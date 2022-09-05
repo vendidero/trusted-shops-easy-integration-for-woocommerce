@@ -16,7 +16,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.0.2';
+	const VERSION = '1.0.3';
 
 	protected static $sales_channels_map = null;
 
@@ -145,7 +145,7 @@ class Package {
 	 * @return false
 	 */
 	public static function is_integration() {
-		return class_exists( 'WooCommerce_Germanized' ) && version_compare( get_option( 'woocommerce_gzd_version', '1.0.0' ), '3.11.0', '>=' ) ? true : false;
+		return class_exists( 'WooCommerce_Germanized' ) && version_compare( get_option( 'woocommerce_gzd_version', '1.0.0' ), '3.10.4', '>=' ) ? true : false;
 	}
 
 	/**
@@ -497,7 +497,7 @@ class Package {
 			$sku = $product->get_id();
 		}
 
-		return apply_filters( "ts_easy_integration_product_sku", $sku, $product, $force_parent );
+		return apply_filters( 'ts_easy_integration_product_sku', $sku, $product, $force_parent );
 	}
 
 	/**
@@ -506,7 +506,7 @@ class Package {
 	 * @return string
 	 */
 	public static function get_product_gtin( $product, $force_parent = true ) {
-		return apply_filters( "ts_easy_integration_product_gtin", self::get_product_data( $product, '_ts_gtin', $force_parent ), $product, $force_parent );
+		return apply_filters( 'ts_easy_integration_product_gtin', self::get_product_data( $product, '_ts_gtin', $force_parent ), $product, $force_parent );
 	}
 
 	/**
@@ -515,7 +515,7 @@ class Package {
 	 * @return string
 	 */
 	public static function get_product_mpn( $product, $force_parent = true ) {
-		return apply_filters( "ts_easy_integration_product_mpn", self::get_product_data( $product, '_ts_mpn', $force_parent ), $product, $force_parent );
+		return apply_filters( 'ts_easy_integration_product_mpn', self::get_product_data( $product, '_ts_mpn', $force_parent ), $product, $force_parent );
 	}
 
 	/**
