@@ -72,6 +72,7 @@ copy_dest_files() {
     --exclude=phpcs.xml \
     --exclude=phpcs.ruleset.xml \
     --exclude=docker-compose.yml \
+    --exclude=webpack.config.js \
     --exclude=phpunit.xml \
     --exclude=phpunit.xml.dist \
     --exclude=README.md \
