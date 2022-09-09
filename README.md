@@ -120,6 +120,14 @@ The plugin is compatible with WPML. In case WPML is activate, one sales channels
 is located at `src/Compatibility/WPML.php`. The script uses the available filter `ts_sales_channels` to register sales channels. Furthermore the compatibility
 script filters the orders to be exported by the order export feature based on the order language.
 
+### Enable QA-mode
+
+To enable QA-mode (loads assets from QA instead of live servers), define the constant `TS_EASY_INTEGRATION_IS_DEBUG_MODE` and set it to `true` in your wp-config.php:
+
+```php
+define( 'TS_EASY_INTEGRATION_IS_DEBUG_MODE', true );
+```
+
 ### Deployment
 
 Deploying a new version of the plugin works as follows:
