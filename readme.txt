@@ -1,6 +1,6 @@
 === Trusted Shops Easy Integration for WooCommerce ===
 Contributors: vendidero
-Tags: trusted shops, woocommerce
+Tags: trusted shops, woocommerce, badge, trust, business ratings, business reviews, trustbadge, integration
 Requires at least: 5.4
 Tested up to: 6.0
 WC requires at least: 3.9
