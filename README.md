@@ -45,8 +45,7 @@ The Trustcard is placed by using the `woocommerce_thankyou` hook. The template `
 #### Brand
 
 WooCommerce does by default not provide a global brand attribute/setting for products. The `Package::get_product_brand()` method determines 
-the brand for a certain product. By default, the logic searches for an attribute stored within the product data matching the keyword `Brand` (or a translated version of it).
-
+the brand for a certain product. By default, the logic searches for an attribute stored within the product data matching the keyword `Brand` (or a translated version of it). 
 One might easily adjust the brand attribute name by using the filter `ts_easy_integration_product_brand_attribute_name`. E.g.:
 
 ```php
