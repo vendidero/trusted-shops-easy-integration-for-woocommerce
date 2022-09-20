@@ -90,10 +90,9 @@ add_filter( 'ts_easy_integration_product_gtin', function( $gtin, $product ) {
 This plugins registers the `ts_widget` [shortcode](https://codex.wordpress.org/Shortcode_API) which may be used to
 output a certain widget (with an ID) at a custom location, e.g. in a page, post etc. E.g.:
 
-`[ts_widget id="{widget_id}" sales_channel="{sales_channel}" product_identifier="{product_identifier}"]`
+`[ts_widget id="{widget_id}" product_identifier="{product_identifier}"]`
 
 * `{widget_id}` The ID of the widget, see the widgets panel for details.
-* `{sales_channel}` Allows providing a custom sales channel, by default, the current sales channel is used.
 * `{product_identifier}` Product identifier type (e.g. sku, mpn, gtin) in case this is a product-related widget.
 
 Please be aware that product-related widgets will only work if the global `$product` variable is set and valid, e.g. on single product pages.
