@@ -35,7 +35,7 @@ Install this plugin via WP-Admin > Plugins and connect your site via WooCommerce
 
 = Shortcodes =
 
-`[ts_widget id="{widget_id}" sales_channel="{sales_channel}" product_identifier="{identifier}"]`
+`[ts_widget id="{widget_id}" product_identifier="{identifier}"]`
 Use this shortcode to embed a specific widget, e.g.: `[ts_widget id="wdg-d6dc1e38-d43b-46aa-123e-232441"]`. Please mind that
 embedding product-specific widgets by passing an identifier (e.g. sku, gtin, mpn) will only work on product-specific pages.
 
