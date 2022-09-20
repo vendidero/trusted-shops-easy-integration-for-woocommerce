@@ -1,0 +1,11 @@
+<wpml-config>
+    <shortcodes>
+        <shortcode>
+            <tag>ts_widget</tag>
+            <attributes>
+                <attribute>id</attribute>
+                <attribute>sales_channel</attribute>
+            </attributes>
+        </shortcode>
+    </shortcodes>
+</wpml-config>

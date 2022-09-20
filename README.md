@@ -1,6 +1,6 @@
 # Trusted Shops Easy Integration for WooCommerce
 
-The Trusted Shops Easy Integration Plugin offers a smooth integration of the Trusted Shops product in WooCommerce.
+The Trusted Shops Easy Integration Plugin offers a smooth integration of the Trusted Shops products in WooCommerce.
 
 ### Plugin architecture
 
