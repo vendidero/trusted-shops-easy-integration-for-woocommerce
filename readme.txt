@@ -2,9 +2,9 @@
 Contributors: vendidero
 Tags: trusted shops, woocommerce, badge, trust, business ratings, business reviews, trustbadge, integration
 Requires at least: 5.4
-Tested up to: 6.0
+Tested up to: 6.1
 WC requires at least: 3.9
-WC tested up to: 6.8
+WC tested up to: 6.9
 Stable tag: 1.0.3
 Requires PHP: 5.6
 License: GPLv3
@@ -59,6 +59,9 @@ embedding product-specific widgets by passing an identifier (e.g. sku, gtin, mpn
 5. Screenshot 5
 
 == Changelog ==
+
+= 1.0.4 =
+* Fix: PHP warning for PHP <= 7.4
 
 = 1.0.3 =
 * First release

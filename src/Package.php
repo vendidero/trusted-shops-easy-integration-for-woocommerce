@@ -16,7 +16,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.0.3';
+	const VERSION = '1.0.4';
 
 	protected static $sales_channels_map = null;
 
@@ -301,8 +301,8 @@ class Package {
 	public static function get_sales_channel( $id ) {
 		$channels = self::get_sales_channels();
 
-		if ( array_key_exists( $id, $channels ) ) {
-			return $channels[ $id ];
+		if ( array_key_exists( (string) $id, $channels ) ) {
+			return $channels[ (string) $id ];
 		}
 
 		return false;
@@ -324,6 +324,7 @@ class Package {
 	public static function get_etrusted_channel_ref( $sales_channel = '' ) {
 		$sales_channel     = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
 		$sales_channel_map = self::get_sales_channels_map();
+        $sales_channel     = (string) $sales_channel;
 
 		if ( array_key_exists( $sales_channel, $sales_channel_map ) ) {
 			return $sales_channel_map[ $sales_channel ];
@@ -393,7 +394,7 @@ class Package {
 	public static function sales_channel_is_mapped( $sales_channel = '' ) {
 		$sales_channel = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
 
-		return array_key_exists( $sales_channel, self::get_sales_channels_map() );
+		return array_key_exists( (string) $sales_channel, self::get_sales_channels_map() );
 	}
 
 	public static function get_trustbadges() {

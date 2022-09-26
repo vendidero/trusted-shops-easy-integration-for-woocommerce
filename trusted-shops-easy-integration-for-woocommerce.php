@@ -5,11 +5,13 @@
  * Description: Trusted Shops Easy Integration for WooCommerce.
  * Author: vendidero
  * Author URI: https://vendidero.de
- * Version: 1.0.3
+ * Version: 1.0.4
  * Requires PHP: 5.6
  * License: GPLv3
+ * Requires at least: 5.4
+ * Tested up to: 6.1
  * WC requires at least: 3.9
- * WC tested up to: 6.8
+ * WC tested up to: 6.9
  *
  * Text Domain: trusted-shops-easy-integration
  * Domain Path: /i18n/languages/
