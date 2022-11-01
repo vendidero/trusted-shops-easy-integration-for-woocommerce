@@ -37,6 +37,8 @@ class Hooks {
 		 * filter which appends the widgets to the post content.
 		 */
 		add_filter( 'woocommerce_product_tabs', array( __CLASS__, 'add_single_product_description_content_filter' ) );
+		add_action( 'woocommerce_product_after_tabs', array( __CLASS__, 'remove_single_product_description_content_filter' ) );
+
 		add_action( 'ts_easy_integration_single_product_description_widgets', array( __CLASS__, 'single_product_description_widgets' ) );
 
 		add_action( 'after_setup_theme', array( __CLASS__, 'register_lazy_hooks' ), 20 );
@@ -221,14 +223,16 @@ class Hooks {
 		return $tabs;
 	}
 
+	public static function remove_single_product_description_content_filter() {
+		remove_filter( 'the_content', array( __CLASS__, 'register_single_product_description_content_filter' ), 5000 );
+	}
+
 	public static function register_single_product_description_content_filter( $content ) {
 		ob_start();
 		self::register_single_product_description();
 		$html = ob_get_clean();
 
 		$content = $content . $html;
-
-		remove_filter( 'the_content', array( __CLASS__, 'register_single_product_description_content_filter' ), 5000 );
 
 		return $content;
 	}
