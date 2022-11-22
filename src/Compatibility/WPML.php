@@ -134,7 +134,7 @@ class WPML implements Compatibility {
 
 				$sales_channels[ $sales_channel_id ] = array(
 					'id'     => $sales_channel_id,
-					'name'   => sprintf( '%1$s (%2$s)', get_bloginfo( 'name' ), $language_data['native_name'] ),
+					'name'   => sprintf( '%1$s (%2$s)', html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES ), $language_data['native_name'] ),
 					'url'    => empty( $language_data['url'] ) ? get_bloginfo( 'url' ) : $language_data['url'],
 					'locale' => Package::get_ts_locale( $language_data['default_locale'] ),
 				);

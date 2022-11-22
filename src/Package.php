@@ -267,7 +267,7 @@ class Package {
 			array(
 				'main' => array(
 					'id'     => 'main',
-					'name'   => get_bloginfo( 'name' ),
+					'name'   => html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
 					'url'    => get_bloginfo( 'url' ),
 					'locale' => self::get_ts_locale( get_locale() ),
 				),
