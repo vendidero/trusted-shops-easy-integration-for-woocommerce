@@ -38,7 +38,7 @@ class Helper {
 
 		if ( ! empty( $notice ) ) { ?>
 			<div class="notice error fade">
-				<h3><?php echo esc_html_x( 'Encryption key missing', 'trusted-shops', 'trusted-shops-easy-integration' ); ?></h3>
+				<h3><?php echo esc_html_x( 'Encryption key missing', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ); ?></h3>
 
 				<?php echo wp_kses_post( wpautop( $notice ) ); ?>
 			</div>
@@ -117,10 +117,10 @@ class Helper {
 				'name'          => "variable_ts_gtin[{$loop}]",
 				'placeholder'   => $_parent->get_meta( '_ts_gtin' ) ? $_parent->get_meta( '_ts_gtin' ) : '',
 				'value'         => $_product->get_meta( '_ts_gtin' ) ? $_product->get_meta( '_ts_gtin' ) : '',
-				'label'         => _x( 'GTIN', 'trusted-shops', 'trusted-shops-easy-integration' ),
+				'label'         => _x( 'GTIN', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
 				'data_type'     => 'text',
 				'desc_tip'      => true,
-				'description'   => _x( 'ID that allows your products to be identified worldwide. If you want to display your Trusted Shops Product Reviews in Google Shopping and paid Google adverts, Google needs the GTIN.', 'trusted-shops', 'trusted-shops-easy-integration' ),
+				'description'   => _x( 'ID that allows your products to be identified worldwide. If you want to display your Trusted Shops Product Reviews in Google Shopping and paid Google adverts, Google needs the GTIN.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
 			)
 		);
 
@@ -131,10 +131,10 @@ class Helper {
 				'name'          => "variable_ts_mpn[{$loop}]",
 				'placeholder'   => $_parent->get_meta( '_ts_mpn' ) ? $_parent->get_meta( '_ts_mpn' ) : '',
 				'value'         => $_product->get_meta( '_ts_mpn' ) ? $_product->get_meta( '_ts_mpn' ) : '',
-				'label'         => _x( 'MPN', 'trusted-shops', 'trusted-shops-easy-integration' ),
+				'label'         => _x( 'MPN', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
 				'data_type'     => 'text',
 				'desc_tip'      => true,
-				'description'   => _x( 'If you don\'t have a GTIN for your products, you can pass the brand name and the MPN on to Google to use the Trusted Shops Google Integration.', 'trusted-shops', 'trusted-shops-easy-integration' ),
+				'description'   => _x( 'If you don\'t have a GTIN for your products, you can pass the brand name and the MPN on to Google to use the Trusted Shops Google Integration.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
 			)
 		);
 
@@ -147,20 +147,20 @@ class Helper {
 		woocommerce_wp_text_input(
 			array(
 				'id'          => '_ts_gtin',
-				'label'       => _x( 'GTIN', 'trusted-shops', 'trusted-shops-easy-integration' ),
+				'label'       => _x( 'GTIN', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
 				'data_type'   => 'text',
 				'desc_tip'    => true,
-				'description' => _x( 'ID that allows your products to be identified worldwide. If you want to display your Trusted Shops Product Reviews in Google Shopping and paid Google adverts, Google needs the GTIN.', 'trusted-shops', 'trusted-shops-easy-integration' ),
+				'description' => _x( 'ID that allows your products to be identified worldwide. If you want to display your Trusted Shops Product Reviews in Google Shopping and paid Google adverts, Google needs the GTIN.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
 			)
 		);
 
 		woocommerce_wp_text_input(
 			array(
 				'id'          => '_ts_mpn',
-				'label'       => _x( 'MPN', 'trusted-shops', 'trusted-shops-easy-integration' ),
+				'label'       => _x( 'MPN', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
 				'data_type'   => 'text',
 				'desc_tip'    => true,
-				'description' => _x( 'If you don\'t have a GTIN for your products, you can pass the brand name and the MPN on to Google to use the Trusted Shops Google Integration.', 'trusted-shops', 'trusted-shops-easy-integration' ),
+				'description' => _x( 'If you don\'t have a GTIN for your products, you can pass the brand name and the MPN on to Google to use the Trusted Shops Google Integration.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
 			)
 		);
 

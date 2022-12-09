@@ -14,7 +14,7 @@ class SettingsPage extends \WC_Settings_Page {
 	 */
 	public function __construct() {
 		$this->id    = 'trusted_shops_easy_integration';
-		$this->label = _x( 'Trusted Shops New', 'trusted-shops', 'trusted-shops-easy-integration' );
+		$this->label = _x( 'Trusted Shops New', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' );
 
 		parent::__construct();
 	}

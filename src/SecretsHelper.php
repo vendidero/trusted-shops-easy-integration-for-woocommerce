@@ -18,10 +18,10 @@ class SecretsHelper {
 			}
 
 			if ( empty( $explanation ) ) {
-				$explanation = esc_html_x( 'Encrypt your Client ID and Client Secret', 'trusted-shops', 'trusted-shops-easy-integration' );
+				$explanation = esc_html_x( 'Encrypt your Client ID and Client Secret', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' );
 			}
 
-			$notice  = '<p>' . sprintf( _x( 'Attention! The <em>%1$s</em> (%2$s) constant is missing. Trusted Shops Easy Integration uses a derived key based on the <em>LOGGED_IN_KEY</em> constant instead. This constant might change under certain circumstances. To prevent data losses, please insert the following snippet within your <a href="%3$s" target="_blank">wp-config.php</a> file:', 'trusted-shops', 'trusted-shops-easy-integration' ), $constant, $explanation, 'https://wordpress.org/support/article/editing-wp-config-php/' ) . '</p>';
+			$notice  = '<p>' . sprintf( _x( 'Attention! The <em>%1$s</em> (%2$s) constant is missing. Trusted Shops Easy Integration uses a derived key based on the <em>LOGGED_IN_KEY</em> constant instead. This constant might change under certain circumstances. To prevent data losses, please insert the following snippet within your <a href="%3$s" target="_blank">wp-config.php</a> file:', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ), $constant, $explanation, 'https://wordpress.org/support/article/editing-wp-config-php/' ) . '</p>';
 			$notice .= '<p style="overflow: scroll">' . "<code>define( '" . $constant . "', '" . $new_key . "' );</code></p>";
 		}
 

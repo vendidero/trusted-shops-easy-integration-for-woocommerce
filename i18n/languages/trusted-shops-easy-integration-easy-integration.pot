@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Trusted Shops Easy Integration for WooCommerce\n"
-"POT-Creation-Date: 2022-09-02 16:54+0200\n"
+"POT-Creation-Date: 2022-12-09 11:53+0100\n"
 "PO-Revision-Date: 2021-05-10 09:48+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -60,7 +60,7 @@ msgctxt "trusted-shops"
 msgid "Trusted Shops New"
 msgstr ""
 
-#: src/Hooks.php:254
+#: src/Hooks.php:258
 msgctxt "trusted-shops"
 msgid "Trusted Shops Reviews"
 msgstr ""
@@ -77,7 +77,7 @@ msgid ""
 "make sure that WooCommerce is installed and activated."
 msgstr ""
 
-#: src/Package.php:570
+#: src/Package.php:581
 msgctxt "trusted-shops-brand-attribute"
 msgid "Brand"
 msgstr ""

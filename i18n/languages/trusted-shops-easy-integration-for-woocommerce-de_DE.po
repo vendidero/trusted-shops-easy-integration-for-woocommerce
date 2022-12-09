@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Trusted Shops Easy Integration for WooCommerce\n"
-"POT-Creation-Date: 2022-09-02 16:53+0200\n"
-"PO-Revision-Date: 2022-09-02 16:53+0200\n"
+"POT-Creation-Date: 2022-12-09 11:53+0100\n"
+"PO-Revision-Date: 2022-12-09 11:53+0100\n"
 "Last-Translator: Dennis Nissle <info@vendidero.de>\n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -66,7 +66,7 @@ msgctxt "trusted-shops"
 msgid "Trusted Shops New"
 msgstr "Trusted Shops New"
 
-#: src/Hooks.php:254
+#: src/Hooks.php:258
 msgctxt "trusted-shops"
 msgid "Trusted Shops Reviews"
 msgstr "Trusted Shops Bewertungen"
@@ -86,7 +86,7 @@ msgstr ""
 "verwenden, stelle bitte sicher, dass WooCommerce installiert und aktiviert "
 "ist."
 
-#: src/Package.php:570
+#: src/Package.php:581
 msgctxt "trusted-shops-brand-attribute"
 msgid "Brand"
 msgstr "Marke"

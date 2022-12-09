@@ -52,7 +52,7 @@ class Package {
 	public static function action_links( $links ) {
 		return array_merge(
 			array(
-				'<a href="' . esc_url( self::is_integration() ? admin_url( 'admin.php?page=wc-settings&tab=germanized-trusted_shops_easy_integration' ) : admin_url( 'admin.php?page=wc-settings&tab=trusted_shops_easy_integration' ) ) . '">' . _x( 'Settings', 'trusted-shops', 'trusted-shops-easy-integration' ) . '</a>',
+				'<a href="' . esc_url( self::is_integration() ? admin_url( 'admin.php?page=wc-settings&tab=germanized-trusted_shops_easy_integration' ) : admin_url( 'admin.php?page=wc-settings&tab=trusted_shops_easy_integration' ) ) . '">' . _x( 'Settings', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ) . '</a>',
 			),
 			$links
 		);
@@ -90,7 +90,7 @@ class Package {
 
 	public static function dependency_notice() {
 		?>
-		<div class="error notice notice-error"><p><?php echo esc_html_x( 'To use the Trusted Shops Easy Integration for WooCommerce plugin please make sure that WooCommerce is installed and activated.', 'trusted-shops', 'trusted-shops-easy-integration' ); ?></p></div>
+		<div class="error notice notice-error"><p><?php echo esc_html_x( 'To use the Trusted Shops Easy Integration for WooCommerce plugin please make sure that WooCommerce is installed and activated.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ); ?></p></div>
 		<?php
 	}
 
@@ -107,17 +107,27 @@ class Package {
 	}
 
 	public static function load_plugin_textdomain() {
+		add_filter( 'plugin_locale', array( __CLASS__, 'support_german_language_variants' ), 10, 2 );
+
 		if ( function_exists( 'determine_locale' ) ) {
 			$locale = determine_locale();
 		} else {
 			$locale = is_admin() ? get_user_locale() : get_locale();
 		}
 
-		$locale = apply_filters( 'plugin_locale', $locale, 'trusted-shops-easy-integration' );
+		$locale = apply_filters( 'plugin_locale', $locale, 'trusted-shops-easy-integration-for-woocommerce' );
 
-		unload_textdomain( 'trusted-shops-easy-integration' );
-		load_textdomain( 'trusted-shops-easy-integration', trailingslashit( WP_LANG_DIR ) . 'trusted-shops-easy-integration/trusted-shops-easy-integration-' . $locale . '.mo' );
-		load_plugin_textdomain( 'trusted-shops-easy-integration', false, plugin_basename( dirname( __FILE__ ) ) . '/i18n/languages/' );
+		unload_textdomain( 'trusted-shops-easy-integration-for-woocommerce' );
+		load_textdomain( 'trusted-shops-easy-integration-for-woocommerce', trailingslashit( WP_LANG_DIR ) . 'trusted-shops-easy-integration-for-woocommerce/trusted-shops-easy-integration-for-woocommerce-' . $locale . '.mo' );
+        load_plugin_textdomain( 'trusted-shops-easy-integration-for-woocommerce', false, plugin_basename( self::get_path() ) . '/i18n/languages/' );
+	}
+
+	public static function support_german_language_variants( $locale, $domain ) {
+		if ( 'trusted-shops-easy-integration-for-woocommerce' === $domain && apply_filters( 'ts_easy_integration_force_de_language', in_array( $locale, array( 'de_CH', 'de_AT' ), true ) ) ) {
+			$locale = 'de_DE';
+		}
+
+		return $locale;
 	}
 
 	public static function install() {
@@ -568,7 +578,7 @@ class Package {
 			return '';
 		}
 
-		$brand_attribute_name = apply_filters( 'ts_easy_integration_product_brand_attribute_name', _x( 'Brand', 'trusted-shops-brand-attribute', 'trusted-shops-easy-integration' ), $product );
+		$brand_attribute_name = apply_filters( 'ts_easy_integration_product_brand_attribute_name', _x( 'Brand', 'trusted-shops-brand-attribute', 'trusted-shops-easy-integration-for-woocommerce' ), $product );
 		$brand                = '';
 
 		if ( ! empty( $brand_attribute_name ) ) {

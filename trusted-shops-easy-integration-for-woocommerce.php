@@ -12,7 +12,7 @@
  * WC requires at least: 3.9
  * WC tested up to: 6.9
  *
- * Text Domain: trusted-shops-easy-integration
+ * Text Domain: trusted-shops-easy-integration-for-woocommerce
  * Domain Path: /i18n/languages/
  */
 

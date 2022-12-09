@@ -255,7 +255,7 @@ class Hooks {
 	public static function register_custom_review_tab( $tabs ) {
 		if ( self::needs_custom_reviews_tab() ) {
 			$tabs['ts_reviews'] = array(
-				'title'    => _x( 'Trusted Shops Reviews', 'trusted-shops', 'trusted-shops-easy-integration' ),
+				'title'    => _x( 'Trusted Shops Reviews', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
 				'priority' => 30,
 				'callback' => array( __CLASS__, 'register_review_tab' ),
 			);
