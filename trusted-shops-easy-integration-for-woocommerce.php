@@ -8,9 +8,9 @@
  * Version: 1.0.6
  * Requires PHP: 5.6
  * License: GPLv3
- * Requires at least: 5.4
+ * Requires at least: 4.9
  * WC requires at least: 3.9
- * WC tested up to: 6.9
+ * WC tested up to: 7.3
  *
  * Text Domain: trusted-shops-easy-integration-for-woocommerce
  * Domain Path: /i18n/languages/
