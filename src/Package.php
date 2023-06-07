@@ -119,7 +119,7 @@ class Package {
 
 		unload_textdomain( 'trusted-shops-easy-integration-for-woocommerce' );
 		load_textdomain( 'trusted-shops-easy-integration-for-woocommerce', trailingslashit( WP_LANG_DIR ) . 'trusted-shops-easy-integration-for-woocommerce/trusted-shops-easy-integration-for-woocommerce-' . $locale . '.mo' );
-        load_plugin_textdomain( 'trusted-shops-easy-integration-for-woocommerce', false, plugin_basename( self::get_path() ) . '/i18n/languages/' );
+		load_plugin_textdomain( 'trusted-shops-easy-integration-for-woocommerce', false, plugin_basename( self::get_path() ) . '/i18n/languages/' );
 	}
 
 	public static function support_german_language_variants( $locale, $domain ) {
@@ -334,7 +334,7 @@ class Package {
 	public static function get_etrusted_channel_ref( $sales_channel = '' ) {
 		$sales_channel     = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
 		$sales_channel_map = self::get_sales_channels_map();
-        $sales_channel     = (string) $sales_channel;
+		$sales_channel     = (string) $sales_channel;
 
 		if ( array_key_exists( $sales_channel, $sales_channel_map ) ) {
 			return $sales_channel_map[ $sales_channel ];

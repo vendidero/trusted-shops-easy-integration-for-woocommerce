@@ -396,18 +396,25 @@ class Hooks {
 			$ts_id         = $trustbadge->id;
 
 			if ( ! empty( $ts_id ) ) {
-				wp_register_script( "ts-easy-integration-trustbadge-{$sales_channel}", "//widgets.trustedshops.com/js/{$ts_id}.js", array(), Package::get_version(), true );
-				wp_enqueue_script( "ts-easy-integration-trustbadge-{$sales_channel}" );
+				$script_src  = "//widgets.trustedshops.com/js/{$ts_id}.js";
+				$script_data = array();
 
 				foreach ( $trustbadge->children[0]->attributes as $attribute ) {
 					if ( 'src' === $attribute->attributeName ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
-						continue;
+						$script_src = isset( $attribute->value ) ? $attribute->value : "//widgets.trustedshops.com/js/{$ts_id}.js";
+					} else {
+						$value = isset( $attribute->value ) ? $attribute->value : true;
+						$value = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
+
+						$script_data[ $attribute->attributeName ] = $value; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 					}
+				}
 
-					$value = isset( $attribute->value ) ? $attribute->value : true;
-					$value = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
+				wp_register_script( "ts-easy-integration-trustbadge-{$sales_channel}", $script_src, array(), Package::get_version(), true );
+				wp_enqueue_script( "ts-easy-integration-trustbadge-{$sales_channel}" );
 
-					wp_script_add_data( "ts-easy-integration-trustbadge-{$sales_channel}", $attribute->attributeName, $value ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+				foreach ( $script_data as $attribute => $value ) {
+					wp_script_add_data( "ts-easy-integration-trustbadge-{$sales_channel}", $attribute, $value );
 				}
 			}
 		}
