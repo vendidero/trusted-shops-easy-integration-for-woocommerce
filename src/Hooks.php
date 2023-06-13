@@ -331,7 +331,15 @@ class Hooks {
 
 	public static function thankyou( $order_id ) {
 		if ( Package::get_trustbadge_id() && ( $order = wc_get_order( $order_id ) ) ) {
-			Package::get_template( 'checkout/trustcard.php', array( 'order' => $order ) );
+			/**
+			 * Prevent the trustcard from showing multiple times.
+			 */
+			if ( ! $order->get_meta( '_ts_tb_shown' ) ) {
+				Package::get_template( 'checkout/trustcard.php', array( 'order' => $order ) );
+
+				$order->update_meta_data( '_ts_tb_shown', 'yes' );
+				$order->save();
+			}
 		}
 	}
 

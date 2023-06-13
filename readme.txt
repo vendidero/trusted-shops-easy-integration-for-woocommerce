@@ -2,10 +2,10 @@
 Contributors: vendidero
 Tags: trusted shops, woocommerce, badge, trust, business ratings, business reviews, trustbadge, integration
 Requires at least: 4.9
-Tested up to: 6.1
+Tested up to: 6.2
 WC requires at least: 3.9
-WC tested up to: 7.3
-Stable tag: 1.0.6
+WC tested up to: 7.8
+Stable tag: 1.0.7
 Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -125,6 +125,10 @@ More technical insights in the [Github Repository](https://github.com/vendidero/
 5. Screenshot 5
 
 == Changelog ==
+= 1.0.7 =
+* Improvement: Prevent trustcard from displaying multiple times
+* Improvement: Readme dev hints
+
 = 1.0.6 =
 * Fix: Update textdomain to reflect plugin slug
 * Fix: Fallback language file path

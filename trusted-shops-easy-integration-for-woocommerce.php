@@ -10,7 +10,7 @@
  * License: GPLv3
  * Requires at least: 4.9
  * WC requires at least: 3.9
- * WC tested up to: 7.3
+ * WC tested up to: 7.8
  *
  * Text Domain: trusted-shops-easy-integration-for-woocommerce
  * Domain Path: /i18n/languages/
