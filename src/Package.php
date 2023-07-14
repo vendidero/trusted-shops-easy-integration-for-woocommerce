@@ -46,7 +46,15 @@ class Package {
 
 		self::load_compatibilities();
 
+        add_action( 'before_woocommerce_init', array( __CLASS__, 'declare_feature_compatibility' ) );
+
 		do_action( 'ts_easy_integration_init' );
+	}
+
+	public static function declare_feature_compatibility() {
+		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', trailingslashit( self::get_path() ) . 'trusted-shops-easy-integration-for-woocommerce.php', true );
+		}
 	}
 
 	public static function action_links( $links ) {
