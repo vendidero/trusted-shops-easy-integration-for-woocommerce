@@ -17,6 +17,9 @@ class WPML implements Compatibility {
 	public static function init() {
 		add_filter( 'ts_sales_channels', array( __CLASS__, 'register_sales_channels' ) );
 		add_filter( 'ts_easy_integration_current_sales_channel', array( __CLASS__, 'set_current_sales_channel' ) );
+		add_filter( 'ts_easy_integration_sales_channel_by_order', array( __CLASS__, 'sales_channel_by_order' ), 10, 2 );
+		add_filter( 'ts_easy_integration_order_locale', array( __CLASS__, 'order_locale' ), 10, 2 );
+
 		add_action( 'ts_easy_integration_before_get_orders_for_export', array( __CLASS__, 'register_lang_meta_query' ) );
 		add_action( 'ts_easy_integration_after_get_orders_for_export', array( __CLASS__, 'unregister_lang_meta_query' ) );
 		add_filter( 'ts_easy_integration_order_export_args', array( __CLASS__, 'export_args' ), 10, 2 );
@@ -96,6 +99,34 @@ class WPML implements Compatibility {
 		$current_sales_channel_id = self::get_sales_channel_id_by_language( $sitepress->get_current_language() );
 
 		return $current_sales_channel_id;
+	}
+
+	/**
+	 * @param string $sales_channel
+	 * @param \WC_Order $order
+	 *
+	 * @return string
+	 */
+	public static function sales_channel_by_order( $sales_channel, $order ) {
+		if ( $wpml_lang = $order->get_meta( 'wpml_language' ) ) {
+			$sales_channel = self::get_sales_channel_id_by_language( $wpml_lang );
+		}
+
+		return $sales_channel;
+	}
+
+	/**
+	 * @param string $locale
+	 * @param \WC_Order $order
+	 *
+	 * @return string
+	 */
+	public static function order_locale( $locale, $order ) {
+		if ( $wpml_lang = $order->get_meta( 'wpml_language' ) ) {
+			return $wpml_lang;
+		}
+
+		return $locale;
 	}
 
 	protected static function get_sales_channel_id_by_language( $lang_code ) {

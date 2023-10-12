@@ -36,15 +36,18 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 
 	protected $sales_channel = '';
 
+	protected $include_product_data = false;
+
 	public function __construct( $args = array() ) {
 		$args = wp_parse_args(
 			$args,
 			array(
-				'days_to_export'  => 10,
-				'sales_channel'   => '',
-				'limit'           => 10,
-				'page'            => 1,
-				'filename_suffix' => '',
+				'days_to_export'       => 10,
+				'sales_channel'        => '',
+				'limit'                => 10,
+				'page'                 => 1,
+				'filename_suffix'      => '',
+				'include_product_data' => false,
 			)
 		);
 
@@ -53,6 +56,7 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 		$this->set_sales_channel( $args['sales_channel'] );
 		$this->set_days_to_export( $args['days_to_export'] );
 		$this->set_page( $args['page'] );
+		$this->set_include_product_data( $args['include_product_data'] );
 		$this->set_filename_suffix( $args['filename_suffix'] );
 
 		parent::__construct();
@@ -66,6 +70,10 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 		}
 	}
 
+	public function set_include_product_data( $include ) {
+		$this->include_product_data = (bool) $include;
+	}
+
 	public function set_sales_channel( $channel ) {
 		$this->sales_channel = $channel;
 	}
@@ -76,6 +84,10 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 
 	public function get_sales_channel() {
 		return $this->sales_channel;
+	}
+
+	public function include_product_data() {
+		return $this->include_product_data;
 	}
 
 	/**
@@ -106,7 +118,7 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 			'transaction_date' => 'transactionDate',
 		);
 
-		if ( Package::enable_review_invites( $this->get_sales_channel() ) ) {
+		if ( $this->include_product_data() ) {
 			$columns += array(
 				'product_name'      => 'productName',
 				'product_url'       => 'productUrl',
@@ -149,7 +161,7 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 			$order_data_row[ $column_id ] = $value;
 		}
 
-		if ( Package::enable_review_invites( $this->get_sales_channel() ) ) {
+		if ( $this->include_product_data() ) {
 			$order_product_map = array();
 
 			foreach ( $order->get_items() as $line_item ) {

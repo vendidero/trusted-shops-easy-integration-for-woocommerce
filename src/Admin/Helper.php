@@ -206,6 +206,7 @@ class Helper {
 					'version_of_system'                => Package::get_system_version(),
 					'version'                          => Package::get_version(),
 					'sales_channels'                   => array_values( Package::get_sales_channels() ),
+					'order_statuses'                   => self::get_order_statuses(),
 					'widget_locations'                 => array(
 						array(
 							'id' => 'wdg-loc-hp',
@@ -236,6 +237,16 @@ class Helper {
 				)
 			);
 		}
+	}
+
+	protected static function get_order_statuses() {
+		$order_statuses = array();
+
+		foreach ( Package::get_sales_channels() as $sales_channel_name => $sales_channel ) {
+			$order_statuses[ $sales_channel_name ] = Package::get_available_order_statuses( $sales_channel_name );
+		}
+
+		return $order_statuses;
 	}
 
 	protected static function is_settings_request() {

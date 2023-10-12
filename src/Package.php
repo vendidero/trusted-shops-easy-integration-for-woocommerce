@@ -3,6 +3,7 @@
 namespace Vendidero\TrustedShopsEasyIntegration;
 
 use Vendidero\TrustedShopsEasyIntegration\Admin\Helper;
+use Vendidero\TrustedShopsEasyIntegration\API\Events;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -16,7 +17,9 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '1.0.8';
+	const VERSION = '2.0.0';
+
+	protected static $events_api = null;
 
 	protected static $sales_channels_map = null;
 
@@ -45,8 +48,9 @@ class Package {
 		}
 
 		self::load_compatibilities();
+		self::register_order_hooks();
 
-        add_action( 'before_woocommerce_init', array( __CLASS__, 'declare_feature_compatibility' ) );
+		add_action( 'before_woocommerce_init', array( __CLASS__, 'declare_feature_compatibility' ) );
 
 		do_action( 'ts_easy_integration_init' );
 	}
@@ -57,12 +61,57 @@ class Package {
 		}
 	}
 
+	/**
+	 * @return Events
+	 */
+	public static function get_events_api() {
+		if ( is_null( self::$events_api ) ) {
+			self::$events_api = new Events();
+		}
+
+		return self::$events_api;
+	}
+
 	public static function action_links( $links ) {
 		return array_merge(
 			array(
 				'<a href="' . esc_url( self::is_integration() ? admin_url( 'admin.php?page=wc-settings&tab=germanized-trusted_shops_easy_integration' ) : admin_url( 'admin.php?page=wc-settings&tab=trusted_shops_easy_integration' ) ) . '">' . _x( 'Settings', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ) . '</a>',
 			),
 			$links
+		);
+	}
+
+	protected static function register_order_hooks() {
+		add_action(
+			'woocommerce_order_status_changed',
+			function( $order_id, $old_status, $new_status ) {
+				if ( $order = wc_get_order( $order_id ) ) {
+					if ( $order->get_meta( '_ts_event_posted' ) ) {
+						return;
+					}
+
+					$sales_channel  = self::get_sales_channel_by_order( $order );
+					$order_statuses = self::get_woo_order_statuses( $sales_channel );
+					$channel_ref    = self::get_etrusted_channel_ref( $sales_channel );
+
+					if ( $order_statuses ) {
+						if ( array_key_exists( $new_status, $order_statuses ) ) {
+							$event_type = $order_statuses[ $new_status ];
+
+							self::log( sprintf( 'Starting event trigger for order #%1$s as it transitioned from %2$s to %3$s. Sale channel detected: %4$s.', $order->get_order_number(), $old_status, $new_status, $sales_channel ) );
+
+							$result = self::get_events_api()->trigger( $order, $channel_ref, $event_type );
+
+							if ( ! is_wp_error( $result ) ) {
+								$order->update_meta_data( '_ts_event_posted', 'yes' );
+								$order->save();
+							}
+						}
+					}
+				}
+			},
+			10,
+			3
 		);
 	}
 
@@ -251,6 +300,17 @@ class Package {
 		return 'https://integrations.etrusted.' . ( self::is_debug_mode() ? 'site' : 'com' ) . '/applications/widget.js/v2';
 	}
 
+	/**
+	 * @param \WC_Order $order
+	 *
+	 * @return string
+	 */
+	public static function get_order_locale( $order ) {
+		$locale = self::get_ts_locale( apply_filters( 'ts_easy_integration_order_locale', get_locale(), $order ) );
+
+		return $locale;
+	}
+
 	public static function get_ts_locale( $locale ) {
 		$ts_locale = strtolower( substr( $locale, 0, 2 ) );
 
@@ -307,6 +367,15 @@ class Package {
 
 	public static function get_current_sales_channel() {
 		return apply_filters( 'ts_easy_integration_current_sales_channel', 'main' );
+	}
+
+	/**
+	 * @param \WC_Order $order
+	 *
+	 * @return string
+	 */
+	public static function get_sales_channel_by_order( $order ) {
+		return apply_filters( 'ts_easy_integration_sales_channel_by_order', 'main', $order );
 	}
 
 	/**
@@ -421,6 +490,20 @@ class Package {
 		return $trustbadges;
 	}
 
+	public static function get_available_order_statuses( $sales_channel = '' ) {
+		$sales_channel  = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
+		$order_statuses = array();
+
+		foreach ( wc_get_order_statuses() as $order_status_id => $order_status_name ) {
+			$order_statuses[] = array(
+				'ID'   => $order_status_id,
+				'name' => $order_status_name,
+			);
+		}
+
+		return $order_statuses;
+	}
+
 	public static function get_trustbadge( $sales_channel = '' ) {
 		$sales_channel = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
 		$setting_key   = self::get_setting_key( $sales_channel );
@@ -446,17 +529,63 @@ class Package {
 		return false;
 	}
 
-	public static function get_enable_review_invites() {
-		$invites = array_filter( (array) self::get_setting( 'enable_invites', array() ) );
+	public static function get_used_order_statuses() {
+		$used_order_statuses = array_filter( (array) self::get_setting( 'used_order_statuses', array() ) );
 
-		return $invites;
+		return $used_order_statuses;
 	}
 
-	public static function enable_review_invites( $sales_channel = '' ) {
-		$setting_key = self::get_setting_key( $sales_channel );
-		$invites     = self::get_enable_review_invites();
+	public static function get_woo_order_statuses( $sales_channel = '' ) {
+		$sales_channel       = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
+		$setting_key         = self::get_setting_key( $sales_channel );
+		$used_order_statuses = self::get_used_order_statuses();
 
-		return in_array( $setting_key, $invites, true ) ? true : false;
+		if ( array_key_exists( $setting_key, $used_order_statuses ) ) {
+			$used_order_status = wp_parse_args(
+				$used_order_statuses[ $setting_key ],
+				array(
+					'product' => array(),
+					'service' => array(),
+				)
+			);
+
+			$default = array(
+				'name'       => '',
+				'ID'         => '',
+				'event_type' => '',
+			);
+
+			$used_order_status['product'] = wp_parse_args( $used_order_status['product'], $default );
+			$used_order_status['service'] = wp_parse_args( $used_order_status['service'], $default );
+
+			$used_order_status['product']['ID'] = 'wc-' === substr( $used_order_status['product']['ID'], 0, 3 ) ? substr( $used_order_status['product']['ID'], 3 ) : $used_order_status['product']['ID'];
+			$used_order_status['service']['ID'] = 'wc-' === substr( $used_order_status['service']['ID'], 0, 3 ) ? substr( $used_order_status['service']['ID'], 3 ) : $used_order_status['service']['ID'];
+
+			$order_statuses = array_unique(
+				array(
+					$used_order_status['product']['ID'] => $used_order_status['product']['event_type'],
+					$used_order_status['service']['ID'] => $used_order_status['product']['event_type'],
+				)
+			);
+
+			$order_statuses = array_filter(
+				$order_statuses,
+				function( $status ) {
+					if ( 'checkout' === $status ) {
+						return false;
+					}
+
+					return true;
+				},
+				ARRAY_FILTER_USE_KEY
+			);
+			$order_statuses = array_filter( $order_statuses );
+			$order_statuses = array_filter( $order_statuses );
+
+			return empty( $order_statuses ) ? false : $order_statuses;
+		} else {
+			return false;
+		}
 	}
 
 	/**
@@ -513,7 +642,7 @@ class Package {
 		$sku = self::get_product_data( $product, 'sku', $force_parent );
 
 		if ( empty( $sku ) ) {
-			$sku = $product->get_id();
+			$sku = self::get_product_data( $product, 'id', $force_parent );
 		}
 
 		return apply_filters( 'ts_easy_integration_product_sku', $sku, $product, $force_parent );
@@ -728,7 +857,7 @@ class Package {
 		$option_name  = "ts_easy_integration_{$name}";
 		$option_value = get_option( $option_name, $default );
 
-		if ( ! empty( $option_value ) && in_array( $name, array( 'client_id', 'client_secret' ), true ) ) {
+		if ( ! empty( $option_value ) && in_array( $name, array( 'client_id', 'client_secret', 'access_token' ), true ) ) {
 			$option_value = SecretsHelper::decrypt( $option_value );
 
 			if ( is_wp_error( $option_value ) ) {
@@ -746,10 +875,10 @@ class Package {
 	 */
 	public static function get_settings() {
 		$settings = array(
-			'channels'       => self::get_channels(),
-			'trustbadges'    => self::get_trustbadges(),
-			'widgets'        => self::get_widgets( false ),
-			'enable_invites' => self::get_enable_review_invites(),
+			'channels'            => self::get_channels(),
+			'trustbadges'         => self::get_trustbadges(),
+			'widgets'             => self::get_widgets( false ),
+			'used_order_statuses' => self::get_used_order_statuses(),
 		);
 
 		return $settings;
@@ -766,7 +895,7 @@ class Package {
 	public static function update_setting( $name, $value ) {
 		$option_name = "ts_easy_integration_{$name}";
 
-		if ( ! empty( $value ) && in_array( $name, array( 'client_id', 'client_secret' ), true ) ) {
+		if ( ! empty( $value ) && in_array( $name, array( 'client_id', 'client_secret', 'access_token' ), true ) ) {
 			$value = SecretsHelper::encrypt( $value );
 
 			/**
@@ -807,6 +936,7 @@ class Package {
 		if ( empty( $channel_key ) ) {
 			delete_option( 'ts_easy_integration_client_id' );
 			delete_option( 'ts_easy_integration_client_secret' );
+			delete_option( 'ts_easy_integration_access_token' );
 
 			foreach ( self::get_settings() as $name => $value ) {
 				$option_name = "ts_easy_integration_{$name}";

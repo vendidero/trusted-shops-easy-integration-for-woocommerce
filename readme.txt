@@ -2,10 +2,10 @@
 Contributors: vendidero
 Tags: trusted shops, woocommerce, badge, trust, business ratings, business reviews, trustbadge, integration
 Requires at least: 4.9
-Tested up to: 6.3
+Tested up to: 6.4
 WC requires at least: 3.9
-WC tested up to: 8.0
-Stable tag: 1.0.8
+WC tested up to: 8.2
+Stable tag: 2.0.0
 Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -125,6 +125,9 @@ More technical insights in the [Github Repository](https://github.com/vendidero/
 5. Screenshot 5
 
 == Changelog ==
+= 2.0.0 =
+* New: Send review invites based on custom order status
+
 = 1.0.8 =
 * Improvement: Indicate HPOS compatibility
 

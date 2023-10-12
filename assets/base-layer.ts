@@ -1,10 +1,10 @@
 import type { Settings } from './interfaces/settings'
 import type { EventsLib } from './interfaces/events-lib'
 import type { Params } from './interfaces/params'
-import type { SaleChannel } from './interfaces/sale-channel'
 import type { Trustbadge } from "./interfaces/trustbadge";
 import type { Channel } from './interfaces/channel'
 import type { Widgets } from './interfaces/widgets'
+import type { OrderStatus } from './interfaces/order-status'
 
 class BaseLayer {
     private static _instance: BaseLayer;
@@ -48,7 +48,13 @@ class BaseLayer {
                 nameOfSystem: this.params.name_of_system,
                 versionNumberOfSystem: this.params.version_of_system,
                 versionNumberOfPlugin: this.params.version,
-                allowsEstimatedDeliveryDate: this.params.supports_estimated_delivery_date,
+                allowsEstimatedDeliveryDate: true,
+                allowsEventsByOrderStatus: false,
+                allowsSendReviewInvitesForPreviousOrders: true,
+                allowsSendReviewInvitesForProduct: true,
+                allowsEditIntegrationCode: true,
+                allowsSupportWidgets: true,
+                useVersionNumberOfConnector: '2.0',
             },
         });
     }
@@ -58,7 +64,7 @@ class BaseLayer {
             this.eventsLib.dispatchAction({
                 action: this.eventsLib.EVENTS.SET_CREDENTIALS_PROVIDED,
                 payload: credentials,
-            })
+            });
         });
     }
 
@@ -83,6 +89,13 @@ class BaseLayer {
         this.eventsLib.dispatchAction({
             action: this.eventsLib.EVENTS.SET_SALES_CHANNELS_PROVIDED,
             payload: this.params.sales_channels,
+        });
+    }
+
+    private getOrderStatusesCallback( event: { payload: { id: string; salesChannelRef: string; eTrustedChannelRef: string; }; } ) {
+        this.eventsLib.dispatchAction({
+            action: this.eventsLib.EVENTS.SET_AVAILABLE_ORDER_STATUSES,
+            payload: this.params.order_statuses.hasOwnProperty( event.payload.salesChannelRef ) ? this.params.order_statuses[ event.payload.salesChannelRef ] : [],
         });
     }
 
@@ -111,12 +124,7 @@ class BaseLayer {
                 orphantChannels.map( ( channelKey ) => {
                     delete settings.trustbadges[ channelKey ];
                     delete settings.widgets[ channelKey ];
-
-                    const index = settings.enable_invites.indexOf( channelKey, 0 );
-
-                    if ( index > -1 ) {
-                        settings.enable_invites.splice( index, 1 );
-                    }
+                    delete settings.used_order_statuses[ channelKey ];
                 });
 
                 settings.channels = event.payload;
@@ -192,6 +200,59 @@ class BaseLayer {
         });
     }
 
+    private async getUsedOrderStatusesCallback( event: { payload: { id: string, eTrustedChannelRef: string; salesChannelRef: string }; } ) {
+        await this.getUsedOrderStatuses( this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ).then( usedOrderStatuses => {
+            if ( usedOrderStatuses ) {
+                this.eventsLib.dispatchAction({
+                    action: this.eventsLib.EVENTS.SET_USED_ORDER_STATUSES,
+                    payload: {
+                        activeStatus: usedOrderStatuses,
+                        id: event.payload.id,
+                        eTrustedChannelRef: event.payload.eTrustedChannelRef,
+                        salesChannelRef: event.payload.salesChannelRef
+                    },
+                });
+            } else {
+                const defaultStatus = {
+                    'name': 'checkout',
+                    'ID': 'checkout',
+                    'event_type': 'checkout',
+                };
+
+                this.eventsLib.dispatchAction({
+                    action: this.eventsLib.EVENTS.SET_USED_ORDER_STATUSES,
+                    payload: {
+                        activeStatus: {
+                            'service': defaultStatus,
+                            'product': defaultStatus,
+                        },
+                        id: event.payload.id,
+                        eTrustedChannelRef: event.payload.eTrustedChannelRef,
+                        salesChannelRef: event.payload.salesChannelRef
+                    },
+                });
+            }
+        });
+    }
+
+    private async saveUsedOrderStatusesCallback(event: { payload: { id: string, eTrustedChannelRef: string, salesChannelRef: string, activeStatus: { product: OrderStatus, service: OrderStatus } } }) {
+        try {
+            const settings = await this.getSettings().then( settings => {
+                settings.used_order_statuses[ this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ] = event.payload.activeStatus;
+
+                return settings;
+            }).then(settings => {
+                return this.updateSettings( settings );
+            }).then( () => {
+                this.getUsedOrderStatusesCallback( { payload: event.payload } ).then( () => {
+                    this.sendingNotification( this.eventsLib.EVENTS.SAVE_USED_ORDER_STATUSES, 'success' );
+                });
+            });
+        } catch(e) {
+            this.sendingNotification( this.eventsLib.EVENTS.SAVE_USED_ORDER_STATUSES, 'error' );
+        }
+    }
+
     private async saveWidgetsCallback(event: { payload: Widgets }) {
         try {
             const settings = await this.getSettings().then( settings => {
@@ -210,61 +271,9 @@ class BaseLayer {
         }
     }
 
-    private async getHasReviewInvitesCallback( event: { payload: { eTrustedChannelRef: string; salesChannelRef: string }; } ) {
-        await this.getChannelById( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ).then( channel => {
-            if ( ! channel ) {
-                this.eventsLib.dispatchAction({
-                    action: this.eventsLib.EVENTS.SET_PRODUCT_REVIEW_FOR_CHANNEL,
-                    payload: null,
-                });
-            } else {
-                this.hasEnabledReviewInvites( this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ).then( hasEnabled => {
-                    this.eventsLib.dispatchAction({
-                        action: this.eventsLib.EVENTS.SET_PRODUCT_REVIEW_FOR_CHANNEL,
-                        payload: hasEnabled ? channel : null,
-                    })
-                });
-            }
-        });
-    }
-
-    private async updateReviewInvitesCallback( channel: Channel, isActivated = false ) {
-        const event = isActivated ? this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL : this.eventsLib.EVENTS.DEACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL;
-
+    private async exportOrdersCallback( event: { payload: { id: string; numberOfDays: number, salesChannelRef: string, includeProductData: boolean } } ) {
         try {
-            const refId = this.getUniqueId( channel.salesChannelRef, channel.eTrustedChannelRef );
-
-            const settings = await this.getSettings().then( settings => {
-                if ( isActivated && ! settings.enable_invites.includes( refId ) ) {
-                    settings.enable_invites.push( refId );
-                } else if ( ! isActivated && settings.enable_invites.includes( refId ) ) {
-                    settings.enable_invites = settings.enable_invites.filter( item => item !== refId );
-                }
-
-                return settings;
-            }).then( settings => {
-                return this.updateSettings( settings );
-            }).then( () => {
-                this.getHasReviewInvitesCallback( { payload: { eTrustedChannelRef: channel.eTrustedChannelRef, salesChannelRef: channel.salesChannelRef } } ).then( () => {
-                    this.sendingNotification( event, 'success' );
-                });
-            });
-        } catch(e) {
-            this.sendingNotification( event, 'error' );
-        }
-    }
-
-    private async activateReviewInvitesCallback( event: { payload: Channel } ) {
-        await this.updateReviewInvitesCallback( event.payload, true );
-    }
-
-    private async deactivateReviewInvitesCallback( event: { payload: Channel } ) {
-        await this.updateReviewInvitesCallback( event.payload, false );
-    }
-
-    private async exportOrdersCallback( event: { payload: { id: string; numberOfDays: number, salesChannelRef: string } } ) {
-        try {
-            await this.exportOrders( 1, event.payload.numberOfDays, event.payload.salesChannelRef ).then( ( url ) => {
+            await this.exportOrders( 1, event.payload.numberOfDays, event.payload.includeProductData, event.payload.salesChannelRef ).then( ( url ) => {
                 const a = document.createElement( 'a' );
                 a.href = url;
                 a.download = 'orders.csv';
@@ -297,20 +306,20 @@ class BaseLayer {
             [ this.eventsLib.EVENTS.GET_LOCATION_FOR_WIDGET ]: this.getAdditionalWidgetLocationsCallback.bind( this ),
             [ this.eventsLib.EVENTS.GET_WIDGET_PROVIDED ]: this.getWidgetsCallback.bind( this ),
             [ this.eventsLib.EVENTS.SAVE_WIDGET_CHANGES ]: this.saveWidgetsCallback.bind( this ),
-            [ this.eventsLib.EVENTS.GET_PRODUCT_REVIEW_FOR_CHANNEL ]: this.getHasReviewInvitesCallback.bind( this ),
-            [ this.eventsLib.EVENTS.ACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL ]: this.activateReviewInvitesCallback.bind( this ),
-            [ this.eventsLib.EVENTS.DEACTIVATE_PRODUCT_REVIEW_FOR_CHANNEL ]: this.deactivateReviewInvitesCallback.bind( this ),
             [ this.eventsLib.EVENTS.EXPORT_PREVIOUS_ORDER ]: this.exportOrdersCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_AVAILABLE_ORDER_STATUSES ]: this.getOrderStatusesCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_USED_ORDER_STATUSES ]: this.getUsedOrderStatusesCallback.bind( this ),
+            [ this.eventsLib.EVENTS.SAVE_USED_ORDER_STATUSES ]: this.saveUsedOrderStatusesCallback.bind( this ),
         });
     }
 
-    private async exportOrders( step: number, numberOfDays: number, salesChannelRef = '', filenameSuffix = '' ) : Promise<string> {
+    private async exportOrders( step: number, numberOfDays: number, includeProductData: boolean, salesChannelRef = '', filenameSuffix = '' ) : Promise<string> {
         return await fetch( this.getAjaxUrl( 'export_orders' ), {
             headers: {
                 'Content-Type': 'application/json;charset=UTF-8'
             },
             method: 'POST',
-            body: JSON.stringify({ 'step': step, 'sales_channel': salesChannelRef, 'number_of_days': numberOfDays, 'filename_suffix': filenameSuffix } )
+            body: JSON.stringify({ 'step': step, 'sales_channel': salesChannelRef, 'number_of_days': numberOfDays, 'include_product_data': includeProductData, 'filename_suffix': filenameSuffix } )
         }).catch( () => {
             throw new TypeError( "Error while exporting orders." );
         }).then(
@@ -319,7 +328,7 @@ class BaseLayer {
             if ( 'done' === result.step ) {
                 return result.url;
             } else if ( result.hasOwnProperty( 'step' ) && result.step > step ) {
-                return this.exportOrders( result.step, result.number_of_days, result.sales_channel, result.filename_suffix );
+                return this.exportOrders( result.step, result.number_of_days, result.include_product_data, result.sales_channel, result.filename_suffix );
             } else {
                 throw new TypeError( "Error while exporting orders." );
             }
@@ -357,8 +366,9 @@ class BaseLayer {
                 this.settings.client_secret = client_secret !== null ? atob( client_secret ) : '';
 
                 // Force parsing index signatures as objects to make sure JSON.stringify works as expected
-                this.settings.trustbadges    = { ...this.settings.trustbadges }
-                this.settings.widgets        = { ...this.settings.widgets }
+                this.settings.trustbadges         = { ...this.settings.trustbadges }
+                this.settings.widgets             = { ...this.settings.widgets }
+                this.settings.used_order_statuses = { ...this.settings.used_order_statuses }
 
                 return this.settings;
             } ).catch( () => {
@@ -408,6 +418,7 @@ class BaseLayer {
         const settingsToUpdate       = { ...settings };
         settingsToUpdate.trustbadges = { ...settings.trustbadges }
         settingsToUpdate.widgets     = { ...settings.widgets }
+        settingsToUpdate.used_order_statuses = { ...settings.used_order_statuses }
 
         const headers = {
             'Content-Type': 'application/json;charset=UTF-8',
@@ -509,13 +520,13 @@ class BaseLayer {
         }
     }
 
-    private async hasEnabledReviewInvites( id: string ): Promise<boolean> {
+    private async getUsedOrderStatuses( id: string ): Promise<{ product?: OrderStatus, service?: OrderStatus }|null> {
         try {
             return await this.getSettings().then( settings => {
-                return settings.enable_invites.includes( id );
+                return settings.used_order_statuses.hasOwnProperty( id ) ? settings.used_order_statuses[ id ] : null;
             });
         } catch(e) {
-            return false;
+            return null;
         }
     }
 

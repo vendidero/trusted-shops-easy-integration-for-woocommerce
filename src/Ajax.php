@@ -150,21 +150,24 @@ class Ajax {
 
 		$request_data = self::get_request_data();
 
-		if ( ! isset( $request_data->step, $request_data->number_of_days ) ) {
+		if ( ! isset( $request_data->step, $request_data->number_of_days, $request_data->include_product_data ) ) {
 			wp_die( -1 );
 		}
 
-		$step            = absint( wp_unslash( $request_data->step ) );
-		$number_of_days  = absint( wp_unslash( $request_data->number_of_days ) );
+		$step                 = absint( wp_unslash( $request_data->step ) );
+		$number_of_days       = absint( wp_unslash( $request_data->number_of_days ) );
+		$include_product_data = wc_string_to_bool( wp_unslash( $request_data->include_product_data ) );
+
 		$sales_channel   = ! empty( $request_data->sales_channel ) ? wc_clean( wp_unslash( $request_data->sales_channel ) ) : Package::get_current_sales_channel();
 		$filename_suffix = ! empty( $request_data->filename_suffix ) ? wc_clean( wp_unslash( $request_data->filename_suffix ) ) : self::generate_file_suffix( $sales_channel );
 
 		$exporter = new OrderExporter(
 			array(
-				'days_to_export'  => $number_of_days,
-				'sales_channel'   => $sales_channel,
-				'filename_suffix' => $filename_suffix,
-				'page'            => $step,
+				'days_to_export'       => $number_of_days,
+				'sales_channel'        => $sales_channel,
+				'filename_suffix'      => $filename_suffix,
+				'page'                 => $step,
+				'include_product_data' => $include_product_data,
 			)
 		);
 
