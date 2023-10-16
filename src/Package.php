@@ -17,7 +17,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.0.0';
+	const VERSION = '2.0.0-beta';
 
 	protected static $events_api = null;
 
@@ -90,7 +90,12 @@ class Package {
 						return;
 					}
 
-					$sales_channel  = self::get_sales_channel_by_order( $order );
+					$sales_channel = self::get_sales_channel_by_order( $order );
+
+					if ( ! self::is_configured( $sales_channel ) ) {
+						return;
+					}
+
 					$order_statuses = self::get_woo_order_statuses( $sales_channel );
 					$channel_ref    = self::get_etrusted_channel_ref( $sales_channel );
 
