@@ -86,10 +86,6 @@ class Package {
 			'woocommerce_order_status_changed',
 			function( $order_id, $old_status, $new_status ) {
 				if ( $order = wc_get_order( $order_id ) ) {
-					if ( $order->get_meta( '_ts_event_posted' ) ) {
-						return;
-					}
-
 					$sales_channel = self::get_sales_channel_by_order( $order );
 
 					if ( ! self::is_configured( $sales_channel ) ) {
@@ -104,13 +100,7 @@ class Package {
 							$event_type = $order_statuses[ $new_status ];
 
 							self::log( sprintf( 'Starting event trigger for order #%1$s as it transitioned from %2$s to %3$s. Sale channel detected: %4$s.', $order->get_order_number(), $old_status, $new_status, $sales_channel ) );
-
-							$result = self::get_events_api()->trigger( $order, $channel_ref, $event_type );
-
-							if ( ! is_wp_error( $result ) ) {
-								$order->update_meta_data( '_ts_event_posted', 'yes' );
-								$order->save();
-							}
+							self::get_events_api()->trigger( $order, $channel_ref, $event_type );
 						}
 					}
 				}
