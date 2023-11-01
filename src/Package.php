@@ -17,7 +17,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.0.2-beta';
+	const VERSION = '2.0.3-beta';
 
 	protected static $events_api = null;
 
