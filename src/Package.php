@@ -550,8 +550,8 @@ class Package {
 				'event_type' => '',
 			);
 
-			$used_order_status['product'] = wp_parse_args( $used_order_status['product'], $default );
-			$used_order_status['service'] = wp_parse_args( $used_order_status['service'], $default );
+			$used_order_status['product'] = wp_parse_args( (array) $used_order_status['product'], $default );
+			$used_order_status['service'] = wp_parse_args( (array) $used_order_status['service'], $default );
 
 			$used_order_status['product']['ID'] = 'wc-' === substr( $used_order_status['product']['ID'], 0, 3 ) ? substr( $used_order_status['product']['ID'], 3 ) : $used_order_status['product']['ID'];
 			$used_order_status['service']['ID'] = 'wc-' === substr( $used_order_status['service']['ID'], 0, 3 ) ? substr( $used_order_status['service']['ID'], 3 ) : $used_order_status['service']['ID'];
@@ -559,7 +559,7 @@ class Package {
 			$order_statuses = array_unique(
 				array(
 					$used_order_status['product']['ID'] => $used_order_status['product']['event_type'],
-					$used_order_status['service']['ID'] => $used_order_status['product']['event_type'],
+					$used_order_status['service']['ID'] => $used_order_status['service']['event_type'],
 				)
 			);
 
