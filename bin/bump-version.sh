@@ -28,6 +28,7 @@ while getopts 'scv:' flag; do
 done
 
 LAST_MAIN_FILE=$(perl -ne 'print $1 while /\s*\*\sVersion:\s(\d+\.\d+\.\d+)/sg' $MAIN_PLUGIN_FILE)
+LAST_MAIN_FILE_SUFFIX=$(perl -ne 'print $2 while /\s*\*\sVersion:\s(\d+\.\d+\.\d+(-(beta|alpha|dev))?)/sg' $MAIN_PLUGIN_FILE)
 LAST_PACKAGE_JSON=$LAST_MAIN_FILE
 LAST_PACKAGE=$LAST_MAIN_FILE
 
@@ -48,6 +49,7 @@ NEXT_VERSION=$(echo ${LATEST} | awk -F. -v OFS=. '{$NF += 1 ; print}')
 if [ "$VERSION" == "" ]; then
     VERSION=$NEXT_VERSION
 else
+    LAST_MAIN_FILE_SUFFIX=''
     TMP_LAST=$(printf "$LATEST\n$VERSION" | sort -V -r | head -1)
     # Do not bump the version in smooth mode in case the version has already been bumped.
     if [ "$SMOOTH_BUMP" == "true" ] && [ "$TMP_LAST" == "$LATEST" ]; then
@@ -58,10 +60,14 @@ fi
 # Use the latest version: Either detected in files or from custom argument
 NEW_VERSION=$(printf "$NEXT_VERSION\n$VERSION" | sort -V -r | head -1)
 
+if [ "$LAST_MAIN_FILE_SUFFIX" != "" ]; then
+    NEW_VERSION="$NEW_VERSION$LAST_MAIN_FILE_SUFFIX"
+fi
+
 export NEW_VERSION
 
 if test -f "$PACKAGE_JSON_FILE"; then
-    perl -pe '/^\s*"version":/ and s/(\d+\.\d+\.\d+)/$2 . ("$ENV{'NEW_VERSION'}")/e' -i $PACKAGE_JSON_FILE
+    perl -pe '/^\s*"version":/ and s/(\d+\.\d+\.\d+(-(beta|alpha|dev))?)/("$ENV{'NEW_VERSION'}")/e' -i $PACKAGE_JSON_FILE
 fi
 
 if test -f "$COMPOSER_FILE" && [ "$UPDATE_COMPOSER_VERSION" == "true" ]; then
@@ -69,10 +75,10 @@ if test -f "$COMPOSER_FILE" && [ "$UPDATE_COMPOSER_VERSION" == "true" ]; then
 fi
 
 if test -f "$PACKAGE_FILE"; then
-    perl -pe '/^\s*const\sVERSION\s=\s/ and s/(\d+\.\d+\.\d+)/$2 . ("$ENV{'NEW_VERSION'}")/e' -i $PACKAGE_FILE
+    perl -pe '/^\s*const\sVERSION\s=\s/ and s/(\d+\.\d+\.\d+(-(beta|alpha|dev))?)/("$ENV{'NEW_VERSION'}")/e' -i $PACKAGE_FILE
 fi
 
-perl -pe '/^\s*\*\sVersion:/ and s/(\d+\.\d+\.\d+)/$2 . ("$ENV{'NEW_VERSION'}")/e' -i $MAIN_PLUGIN_FILE
+perl -pe '/^\s*\*\sVersion:/ and s/(\d+\.\d+\.\d+(-(beta|alpha|dev))?)/("$ENV{'NEW_VERSION'}")/e' -i $MAIN_PLUGIN_FILE
 
 # Output the current package.json version including appendices
 echo $(perl -ne 'print $1 while /\s*\*\sVersion:\s(\d+\.\d+\.\d+(-(beta|alpha|dev))?)/sg' $MAIN_PLUGIN_FILE)
