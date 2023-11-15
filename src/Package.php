@@ -301,7 +301,17 @@ class Package {
 	 * @return string
 	 */
 	public static function get_order_locale( $order ) {
-		$locale = self::get_ts_locale( apply_filters( 'ts_easy_integration_order_locale', get_locale(), $order ) );
+		$locale        = apply_filters( 'ts_easy_integration_order_locale', get_locale(), $order );
+		$ts_locale     = strtolower( substr( $locale, 0, 2 ) );
+		$new_ts_locale = self::get_ts_locale( $locale );
+
+		if ( $new_ts_locale !== $ts_locale ) {
+			$locale = 'en_GB';
+		}
+
+		if ( 'en' === $ts_locale ) {
+			$locale = 'en_GB';
+		}
 
 		return $locale;
 	}

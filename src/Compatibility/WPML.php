@@ -122,8 +122,12 @@ class WPML implements Compatibility {
 	 * @return string
 	 */
 	public static function order_locale( $locale, $order ) {
+		global $sitepress;
+
 		if ( $wpml_lang = $order->get_meta( 'wpml_language' ) ) {
-			return $wpml_lang;
+			if ( isset( $sitepress ) && is_callable( array( $sitepress, 'get_locale' ) ) ) {
+				return $sitepress->get_locale( $wpml_lang );
+			}
 		}
 
 		return $locale;

@@ -181,20 +181,22 @@ class Ajax {
 			);
 
 			$step_args = array(
-				'step'            => 'done',
-				'percentage'      => 100,
-				'url'             => add_query_arg( $query_args, admin_url( 'admin-post.php' ) ),
-				'sales_channel'   => $sales_channel,
-				'number_of_days'  => $number_of_days,
-				'filename_suffix' => $filename_suffix,
+				'step'                 => 'done',
+				'percentage'           => 100,
+				'url'                  => add_query_arg( $query_args, admin_url( 'admin-post.php' ) ),
+				'sales_channel'        => $sales_channel,
+				'number_of_days'       => $number_of_days,
+				'include_product_data' => $include_product_data,
+				'filename_suffix'      => $filename_suffix,
 			);
 		} else {
 			$step_args = array(
-				'step'            => ++$step,
-				'percentage'      => $exporter->get_percent_complete(),
-				'sales_channel'   => $sales_channel,
-				'number_of_days'  => $number_of_days,
-				'filename_suffix' => $filename_suffix,
+				'step'                 => ++$step,
+				'percentage'           => $exporter->get_percent_complete(),
+				'sales_channel'        => $sales_channel,
+				'number_of_days'       => $number_of_days,
+				'include_product_data' => $include_product_data,
+				'filename_suffix'      => $filename_suffix,
 			);
 		}
 

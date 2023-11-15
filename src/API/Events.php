@@ -20,14 +20,13 @@ final class Events extends Rest {
 	 * @return RestResponse|\WP_Error
 	 */
 	public function trigger( $order, $channel, $event_type ) {
-		$locale     = Package::get_order_locale( $order );
-		$locale_str = $locale . '_' . strtoupper( $locale );
+		$locale = Package::get_order_locale( $order );
 
-		Package::log( sprintf( 'TS locale detected for order #%1$s: %2$s', $order->get_order_number(), $locale_str ) );
+		Package::log( sprintf( 'TS locale detected for order #%1$s: %2$s', $order->get_order_number(), $locale ) );
 
 		$request = array(
 			'type'          => $event_type,
-			'defaultLocale' => $locale_str,
+			'defaultLocale' => '',
 			'customer'      => array(
 				'firstName' => $order->get_billing_first_name(),
 				'lastName'  => $order->get_billing_last_name(),
