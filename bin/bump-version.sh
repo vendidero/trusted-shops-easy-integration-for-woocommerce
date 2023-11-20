@@ -42,7 +42,6 @@ fi
 
 # Store the latest version detected in the actual files
 LATEST=$(printf "$LAST_PACKAGE_JSON\n$LAST_PACKAGE\n$LAST_MAIN_FILE" | sort -V -r | head -1)
-
 NEXT_VERSION=$(echo ${LATEST} | awk -F. -v OFS=. '{$NF += 1 ; print}')
 
 # Set the version to next version in case no version has been passed
@@ -50,7 +49,8 @@ if [ "$VERSION" == "" ]; then
     VERSION=$NEXT_VERSION
 else
     LAST_MAIN_FILE_SUFFIX=''
-    TMP_LAST=$(printf "$LATEST\n$VERSION" | sort -V -r | head -1)
+    TMP_VERSION_WITHOUT_SUFFIX=$(echo $VERSION | perl -ne 'print $1 while /(\d+\.\d+\.\d+)/sg')
+    TMP_LAST=$(printf "$LATEST\n$TMP_VERSION_WITHOUT_SUFFIX" | sort -V -r | head -1)
     # Do not bump the version in smooth mode in case the version has already been bumped.
     if [ "$SMOOTH_BUMP" == "true" ] && [ "$TMP_LAST" == "$LATEST" ]; then
         NEXT_VERSION=$LATEST
