@@ -26,7 +26,6 @@ final class Events extends Rest {
 
 		$request = array(
 			'type'          => $event_type,
-			'defaultLocale' => '',
 			'customer'      => array(
 				'firstName' => $order->get_billing_first_name(),
 				'lastName'  => $order->get_billing_last_name(),
