@@ -4,7 +4,7 @@ Tags: trusted shops, woocommerce, badge, trust, business ratings, business revie
 Requires at least: 4.9
 Tested up to: 6.4
 WC requires at least: 3.9
-WC tested up to: 8.2
+WC tested up to: 8.3
 Stable tag: 2.0.0
 Requires PHP: 5.6
 License: GPLv3
