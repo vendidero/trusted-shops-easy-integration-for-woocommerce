@@ -78,8 +78,16 @@ final class Events extends Rest {
 
 		$result = $this->post( 'events', $request );
 
-		if ( is_wp_error( $result ) ) {
-			Package::log( sprintf( 'Error %1$s detected while posting event: %2$s', $result->get_error_code(), $result->get_error_message() ) );
+		if ( is_wp_error( $result ) || $result->is_error() ) {
+			if ( is_wp_error( $result ) ) {
+				$code    = $result->get_error_code();
+				$message = $result->get_error_message();
+			} else {
+				$code    = $result->get_code();
+				$message = esc_html( $result->get( 'Message' ) );
+			}
+
+			Package::log( sprintf( 'Error %1$s detected while posting event: %2$s', $code, $message ) );
 		} else {
 			$message = esc_html( $result->get( 'Message' ) );
 			Package::log( sprintf( 'Successfully posted event for order #%1$s: %2$s', $order->get_order_number(), $message ) );

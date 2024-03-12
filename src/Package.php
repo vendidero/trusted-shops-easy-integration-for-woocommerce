@@ -58,6 +58,7 @@ class Package {
 	public static function declare_feature_compatibility() {
 		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
 			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', trailingslashit( self::get_path() ) . 'trusted-shops-easy-integration-for-woocommerce.php', true );
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', trailingslashit( self::get_path() ) . 'trusted-shops-easy-integration-for-woocommerce.php', true );
 		}
 	}
 
