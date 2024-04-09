@@ -4,8 +4,8 @@ Tags: trusted shops, woocommerce, badge, trust, business ratings, business revie
 Requires at least: 4.9
 Tested up to: 6.5
 WC requires at least: 3.9
-WC tested up to: 8.6
-Stable tag: 2.0.1
+WC tested up to: 8.7
+Stable tag: 2.0.2
 Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -125,6 +125,9 @@ More technical insights in the [Github Repository](https://github.com/vendidero/
 5. Screenshot 5
 
 == Changelog ==
+= 2.0.2 =
+* Fix: Events API auth retry
+
 = 2.0.1 =
 * Fix: Events API error handling
 

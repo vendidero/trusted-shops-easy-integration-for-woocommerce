@@ -131,6 +131,7 @@ class Rest {
 				if ( 401 === absint( $code ) ) {
 					delete_option( 'ts_easy_integration_access_token' );
 					$header['auth-retry'] = true;
+					unset( $header['Authorization'] );
 
 					return $this->get_response( $url, $type, $body_args, $header );
 				}
