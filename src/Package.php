@@ -17,7 +17,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.0.2';
+	const VERSION = '2.0.3';
 
 	protected static $events_api = null;
 
@@ -161,6 +161,7 @@ class Package {
 
 	public static function load_plugin_textdomain() {
 		add_filter( 'plugin_locale', array( __CLASS__, 'support_german_language_variants' ), 10, 2 );
+		add_filter( 'load_translation_file', array( __CLASS__, 'force_load_german_language_variant' ), 10, 2 );
 
 		if ( function_exists( 'determine_locale' ) ) {
 			$locale = determine_locale();
@@ -170,14 +171,44 @@ class Package {
 
 		$locale = apply_filters( 'plugin_locale', $locale, 'trusted-shops-easy-integration-for-woocommerce' );
 
-		unload_textdomain( 'trusted-shops-easy-integration-for-woocommerce' );
 		load_textdomain( 'trusted-shops-easy-integration-for-woocommerce', trailingslashit( WP_LANG_DIR ) . 'trusted-shops-easy-integration-for-woocommerce/trusted-shops-easy-integration-for-woocommerce-' . $locale . '.mo' );
 		load_plugin_textdomain( 'trusted-shops-easy-integration-for-woocommerce', false, plugin_basename( self::get_path() ) . '/i18n/languages/' );
 	}
 
 	public static function support_german_language_variants( $locale, $domain ) {
-		if ( 'trusted-shops-easy-integration-for-woocommerce' === $domain && apply_filters( 'ts_easy_integration_force_de_language', in_array( $locale, array( 'de_CH', 'de_AT' ), true ) ) ) {
-			$locale = 'de_DE';
+		if ( 'trusted-shops-easy-integration-for-woocommerce' === $domain ) {
+			$locale = self::get_german_language_variant( $locale );
+		}
+
+		return $locale;
+	}
+
+	/**
+	 * Use a tweak to force loading german language variants in WP 6.5
+	 * as WP does not allow using the plugin_locale filter to load a plugin-specific locale any longer.
+	 *
+	 * @param $file
+	 * @param $domain
+	 *
+	 * @return mixed
+	 */
+	public static function force_load_german_language_variant( $file, $domain ) {
+		if ( 'trusted-shops-easy-integration-for-woocommerce' === $domain && function_exists( 'determine_locale' ) && class_exists( 'WP_Translation_Controller' ) ) {
+			$locale     = determine_locale();
+			$new_locale = self::get_german_language_variant( $locale );
+
+			if ( $new_locale !== $locale ) {
+				$i18n_controller = \WP_Translation_Controller::get_instance();
+				$i18n_controller->load_file( $file, $domain, $locale ); // Force loading the determined file in the original locale.
+			}
+		}
+
+		return $file;
+	}
+
+	protected static function get_german_language_variant( $locale ) {
+		if ( apply_filters( 'ts_easy_integration_force_de_language', in_array( $locale, array( 'de_CH', 'de_CH_informal', 'de_AT' ), true ) ) ) {
+			$locale = apply_filters( 'ts_easy_integration_german_language_variant_locale', 'de_DE' );
 		}
 
 		return $locale;

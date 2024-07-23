@@ -1,6 +1,6 @@
 {
   "name": "trusted-shops-easy-integration-for-woocommerce",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "TS Easy Integration for WooCommerce",
   "scripts": {
     "dev": "webpack --env development --watch",
@@ -10,6 +10,7 @@
   },
   "author": "vendidero",
   "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.24.7",
     "@babel/core": "^7.16.0",
     "@babel/preset-env": "^7.16.0",
     "@babel/preset-typescript": "^7.16.0",
