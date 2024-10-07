@@ -308,7 +308,7 @@ class Hooks {
 			$widgets[] = $ts_widget;
 		}
 
-		if ( ! $added_anchor && $product_review_list && isset( $product_review_list->extensions->product_star ) ) {
+		if ( ! $added_anchor && $product_review_list && isset( $product_review_list->extensions->product_star ) && ! empty( $product_review_list->extensions->product_star->tag ) ) {
 			$widgets[]    = $product_review_list->extensions->product_star;
 			$added_anchor = true;
 		}
