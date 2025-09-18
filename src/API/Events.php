@@ -40,7 +40,7 @@ final class Events extends Rest {
 				'reference' => $order->get_order_number(),
 				'date'      => $order->get_date_created()->format( \DateTime::ATOM ),
 			),
-			'system'        => 'WooCommerce',
+			'system'        => 'TRUSTEDSHOPS__PLUGIN__WOOCOMMERCE',
 			'systemVersion' => Package::get_version(),
 			'products'      => array(),
 		);

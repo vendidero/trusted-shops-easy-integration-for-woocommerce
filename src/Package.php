@@ -17,7 +17,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.0.3';
+	const VERSION = '2.0.4';
 
 	protected static $events_api = null;
 
@@ -945,12 +945,6 @@ class Package {
 			do_action( 'ts_easy_integration_connected' );
 		}
 
-		/**
-		 * Somehow there seems to be a bug/issue with the cache (tested at least for the channels option)
-		 * which might lead to wrong serialized data being returned.
-		 * Delete the option before updating to overcome the issue.
-		 */
-		delete_option( $option_name );
 		update_option( $option_name, $value );
 		wp_cache_delete( $option_name, 'options' );
 

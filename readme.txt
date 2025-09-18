@@ -2,10 +2,10 @@
 Contributors: vendidero
 Tags: trusted shops, woocommerce, badge, trust, business ratings, business reviews, trustbadge, integration
 Requires at least: 4.9
-Tested up to: 6.6
+Tested up to: 6.8
 WC requires at least: 3.9
-WC tested up to: 9.1
-Stable tag: 2.0.3
+WC tested up to: 10.1
+Stable tag: 2.0.4
 Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -125,6 +125,9 @@ More technical insights in the [Github Repository](https://github.com/vendidero/
 5. Screenshot 5
 
 == Changelog ==
+= 2.0.4 =
+* Fix: Cache issue
+
 = 2.0.3 =
 * New: WP 6.6 compatibility
 * Fix: ReferenceError regeneratorRuntime
