@@ -2,10 +2,10 @@
 Contributors: vendidero
 Tags: trusted shops, woocommerce, badge, trust, business ratings, business reviews, trustbadge, integration
 Requires at least: 4.9
-Tested up to: 6.8
+Tested up to: 6.9
 WC requires at least: 3.9
-WC tested up to: 10.1
-Stable tag: 2.0.4
+WC tested up to: 10.5
+Stable tag: 2.0.5
 Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -125,6 +125,10 @@ More technical insights in the [Github Repository](https://github.com/vendidero/
 5. Screenshot 5
 
 == Changelog ==
+= 2.0.5 =
+* Fix: Channel array reset
+* Improvement: Use Woo core gtin as fallback if available
+
 = 2.0.4 =
 * Fix: Cache issue
 

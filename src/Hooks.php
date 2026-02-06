@@ -20,7 +20,7 @@ class Hooks {
 		 * Execute single/loop rating hooks after the Woo core template (single-product/rating.php, loop/rating.php) is included
 		 * to display star widgets.
 		 */
-		add_action( 'woocommerce_after_template_part', array( __CLASS__, 'after_template' ), 10, 4 );
+		add_action( 'woocommerce_after_template_part', array( __CLASS__, 'after_template' ), 10, 1 );
 		/**
 		 * Register a fallback filter that will be triggered in case Woo reviews are disabled which leads
 		 * to single-product/rating.php not being included.
@@ -66,6 +66,30 @@ class Hooks {
 	}
 
 	public static function register_lazy_hooks() {
+		if ( self::is_fse_theme() ) {
+			add_filter(
+				'woocommerce_product_get_rating_html',
+				function ( $html ) {
+					if ( is_product() ) {
+						ob_start();
+						do_action( 'ts_easy_integration_single_product_title_widgets' );
+						$widget_html = ob_get_clean();
+
+						$html = $html . $widget_html;
+					} elseif ( is_product_taxonomy() || is_product_category() || is_product_tag() ) {
+						ob_start();
+						do_action( 'ts_easy_integration_product_loop_rating_widgets' );
+						$widget_html = ob_get_clean();
+
+						$html = $html . $widget_html;
+					}
+
+					return $html;
+				},
+				99
+			);
+		}
+
 		add_action( self::get_hook_name( 'woocommerce_after_shop_loop', 'product_loop' ), array( __CLASS__, 'register_product_loop' ), 50 );
 		add_action( self::get_hook_name( 'woocommerce_after_shop_loop_item', 'product_loop_inner' ), array( __CLASS__, 'register_product_loop_inner' ), 20 );
 		add_action( self::get_hook_name( 'dynamic_sidebar_after', 'sidebar' ), array( __CLASS__, 'register_sidebar' ), 500 );
@@ -81,9 +105,15 @@ class Hooks {
 	 * @return void
 	 */
 	public static function maybe_do_single_product_title_hooks() {
-		if ( ! post_type_supports( 'product', 'comments' ) && ! did_action( 'ts_easy_integration_single_product_title_widgets' ) ) {
+		$needs_fallback = ! post_type_supports( 'product', 'comments' );
+
+		if ( $needs_fallback && ! did_action( 'ts_easy_integration_single_product_title_widgets' ) ) {
 			do_action( 'ts_easy_integration_single_product_title_widgets' );
 		}
+	}
+
+	protected static function is_fse_theme() {
+		return function_exists( 'wp_is_block_theme' ) && wp_is_block_theme();
 	}
 
 	protected static function get_hook_name( $default_name, $location = '' ) {
@@ -318,7 +348,7 @@ class Hooks {
 		}
 	}
 
-	public static function after_template( $template_name, $template_path, $located, $args ) {
+	public static function after_template( $template_name ) {
 		$is_loop   = 'loop/rating.php' === $template_name;
 		$is_single = 'single-product/rating.php' === $template_name;
 

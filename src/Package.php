@@ -17,7 +17,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.0.4';
+	const VERSION = '2.0.5';
 
 	protected static $events_api = null;
 
@@ -85,7 +85,7 @@ class Package {
 	protected static function register_order_hooks() {
 		add_action(
 			'woocommerce_order_status_changed',
-			function( $order_id, $old_status, $new_status ) {
+			function ( $order_id, $old_status, $new_status ) {
 				if ( $order = wc_get_order( $order_id ) ) {
 					$sales_channel = self::get_sales_channel_by_order( $order );
 
@@ -475,7 +475,7 @@ class Package {
 	 * @return array
 	 */
 	public static function get_channels() {
-		$channels                 = array_filter( (array) self::get_setting( 'channels', array() ) );
+		$channels                 = array_values( array_filter( (array) self::get_setting( 'channels', array() ) ) );
 		self::$sales_channels_map = array();
 
 		if ( ! empty( $channels ) ) {
@@ -496,7 +496,7 @@ class Package {
 			}
 		}
 
-		return $channels;
+		return array_values( $channels );
 	}
 
 	public static function has_mapped_channel() {
@@ -607,7 +607,7 @@ class Package {
 
 			$order_statuses = array_filter(
 				$order_statuses,
-				function( $status ) {
+				function ( $status ) {
 					if ( 'checkout' === $status ) {
 						return false;
 					}
@@ -659,6 +659,10 @@ class Package {
 			$data = $product->{$getter}();
 		} else {
 			$data = $product->get_meta( $attribute, true );
+
+			if ( '_ts_gtin' === $attribute && empty( $data ) && is_callable( array( $product, 'get_global_unique_id' ) ) ) {
+				$data = $product->get_global_unique_id();
+			}
 		}
 
 		if ( '' === $data && $product->get_parent_id() ) {
@@ -886,13 +890,13 @@ class Package {
 	 * Returns TS settings.
 	 *
 	 * @param $name
-	 * @param $default
+	 * @param $default_option
 	 *
 	 * @return mixed
 	 */
-	public static function get_setting( $name, $default = false ) {
+	public static function get_setting( $name, $default_option = false ) {
 		$option_name  = "ts_easy_integration_{$name}";
-		$option_value = get_option( $option_name, $default );
+		$option_value = get_option( $option_name, $default_option );
 
 		if ( ! empty( $option_value ) && in_array( $name, array( 'client_id', 'client_secret', 'access_token' ), true ) ) {
 			$option_value = SecretsHelper::decrypt( $option_value );

@@ -70,8 +70,8 @@ class OrderExporter extends \WC_CSV_Batch_Exporter {
 		}
 	}
 
-	public function set_include_product_data( $include ) {
-		$this->include_product_data = (bool) $include;
+	public function set_include_product_data( $is_included ) {
+		$this->include_product_data = (bool) $is_included;
 	}
 
 	public function set_sales_channel( $channel ) {

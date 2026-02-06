@@ -27,16 +27,14 @@ class Settings {
 		<?php
 	}
 
-	public static function get_settings( $current_section = '' ) {
+	public static function get_settings( $current_section = '' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		return array();
 	}
 
 	public static function before_save() {
-
 	}
 
 	public static function after_save() {
-
 	}
 
 	public static function get_settings_url() {

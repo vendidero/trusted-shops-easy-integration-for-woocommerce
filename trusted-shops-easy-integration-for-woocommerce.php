@@ -5,12 +5,12 @@
  * Description: Trusted Shops Easy Integration for WooCommerce.
  * Author: vendidero
  * Author URI: https://vendidero.de
- * Version: 2.0.4
+ * Version: 2.0.5
  * Requires PHP: 5.6
  * License: GPLv3
  * Requires at least: 4.9
  * WC requires at least: 3.9
- * WC tested up to: 10.1
+ * WC tested up to: 10.5
  *
  * Text Domain: trusted-shops-easy-integration-for-woocommerce
  * Domain Path: /i18n/languages/
@@ -50,7 +50,7 @@ if ( is_readable( $autoloader ) ) {
 	 */
 	add_action(
 		'admin_notices',
-		function() {
+		function () {
 			?>
 			<div class="notice notice-error">
 				<p>

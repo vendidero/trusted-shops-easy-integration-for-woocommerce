@@ -39,7 +39,9 @@
 
     <rule ref="WordPress.WP.I18n">
         <properties>
-            <property name="text_domain" type="array" value="trusted-shops-easy-integration-for-woocommerce" />
+            <property name="text_domain" type="array">
+                <element value="trusted-shops-easy-integration-for-woocommerce" />
+            </property>
         </properties>
     </rule>
 
@@ -105,7 +107,17 @@
         <exclude-pattern>*</exclude-pattern>
     </rule>
 
-    <rule ref="WordPress.CodeAnalysis.AssignmentInCondition">
+    <rule ref="Generic.CodeAnalysis.AssignmentInCondition.Found">
         <exclude-pattern>*</exclude-pattern>
+    </rule>
+
+    <rule ref="WordPress.WP.Capabilities">
+        <properties>
+            <property name="custom_capabilities" type="array">
+                <element value="manage_woocommerce" />
+                <element value="pay_for_order" />
+                <element value="edit_shop_orders" />
+            </property>
+        </properties>
     </rule>
 </ruleset>

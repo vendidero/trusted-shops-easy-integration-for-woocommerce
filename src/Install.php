@@ -40,10 +40,8 @@ class Install {
 	}
 
 	private static function update() {
-
 	}
 
 	private static function add_options() {
-
 	}
 }
