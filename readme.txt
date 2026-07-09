@@ -116,6 +116,9 @@ More technical insights in the [Github Repository](https://github.com/vendidero/
 = Do you need help with Trusted Shops Easy Integration? =
 [Learn](https://help.etrusted.com/hc/en-gb/articles/4905016318237-Using-Trusted-Shops-with-a-plugin) how to use Trusted Shops with a Plugin.
 
+= Where do I report security bugs found in this plugin? =
+Please report security bugs found in the source code of the plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/1b34d5e3-c05d-4a86-ac92-44e0225e04ac). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
+
 == Screenshots ==
 
 1. Screenshot 1
