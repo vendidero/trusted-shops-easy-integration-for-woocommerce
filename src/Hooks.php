@@ -387,8 +387,12 @@ class Hooks {
 							continue;
 						}
 
+						if ( ! self::is_script_data_allowed( $attribute->attributeName ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+							continue;
+						}
+
 						$value = isset( $attribute->value ) ? $attribute->value : true;
-						$value = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
+						$value = is_bool( $value ) || self::is_bool_attribute( $attribute->attributeName ) ? ( $value ? 'true' : 'false' ) : $value; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 
 						$script_data .= ' ' . esc_attr( $attribute->attributeName ) . "='" . esc_attr( $value ) . "'"; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 					}
@@ -407,14 +411,16 @@ class Hooks {
 		if ( strstr( $handle, 'ts-easy-integration-' ) ) {
 			if ( wp_script_is( $handle, 'registered' ) ) {
 				foreach ( wp_scripts()->registered[ $handle ]->extra as $attr => $value ) {
+					$replacement = '';
+
 					if ( in_array( $attr, array( 'async', 'defer' ), true ) ) {
-						$replacement = " $attr";
-					} else {
+						$replacement = ' ' . esc_attr( $attr );
+					} elseif ( self::is_script_data_allowed( $attr ) ) {
 						$replacement = ' ' . esc_attr( $attr ) . "='" . esc_attr( $value ) . "'";
 					}
 
 					// Prevent adding attribute when already added.
-					if ( ! preg_match( ":\s$attr(=|>|\s):", $tag ) ) {
+					if ( ! empty( $replacement ) && ! preg_match( ':\s' . preg_quote( $attr, ':' ) . '(=|>|\s):', $tag ) ) {
 						$tag = preg_replace( ':(?=></script>):', $replacement, $tag, 1 );
 					}
 				}
@@ -422,6 +428,24 @@ class Hooks {
 		}
 
 		return $tag;
+	}
+
+	protected static function is_script_data_allowed( $name ) {
+		$is_allowed = Package::is_allowed_script_attribute( $name );
+
+		if ( 'src' === $name ) {
+			$is_allowed = false;
+		}
+
+		return $is_allowed;
+	}
+
+	protected static function is_bool_attribute( $name ) {
+		if ( strstr( $name, 'enable-' ) || strstr( $name, 'disable-' ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public static function register_scripts() {
@@ -439,12 +463,16 @@ class Hooks {
 
 				foreach ( $trustbadge->children[0]->attributes as $attribute ) {
 					if ( 'src' === $attribute->attributeName ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
-						$script_src = isset( $attribute->value ) ? $attribute->value : "//widgets.trustedshops.com/js/{$ts_id}.js";
+						$script_src = isset( $attribute->value ) && Package::is_allowed_trusted_shops_url( $attribute->value ) ? $attribute->value : "//widgets.trustedshops.com/js/{$ts_id}.js";
 					} else {
 						$value = isset( $attribute->value ) ? $attribute->value : true;
-						$value = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
+						$value = is_bool( $value ) || self::is_bool_attribute( $attribute->attributeName ) ? ( $value ? 'true' : 'false' ) : $value; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 
-						$script_data[ $attribute->attributeName ] = $value; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+						if ( ! self::is_script_data_allowed( $attribute->attributeName ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+							continue;
+						}
+
+						$script_data[ esc_attr( $attribute->attributeName ) ] = esc_attr( $value ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 					}
 				}
 

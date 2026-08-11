@@ -2,10 +2,10 @@
 Contributors: vendidero
 Tags: trusted shops, woocommerce, badge, trust, business ratings, business reviews, trustbadge, integration
 Requires at least: 4.9
-Tested up to: 6.9
+Tested up to: 7.1
 WC requires at least: 3.9
-WC tested up to: 10.5
-Stable tag: 2.0.5
+WC tested up to: 11.0
+Stable tag: 2.0.6
 Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -65,21 +65,17 @@ WooCommerce does by default not provide a global brand attribute/setting for pro
 the brand for a certain product. By default, the logic searches for an attribute stored within the product data matching the keyword `Brand` (or a translated version of it). 
 One might easily adjust the brand attribute name by using the filter `ts_easy_integration_product_brand_attribute_name`. E.g.:
 
-```php
-add_filter( 'ts_easy_integration_product_brand_attribute_name', function( $attribute_name, $product ) {
-    // Maybe adjust the $attribute_name based on the WC_Product $product
-    return $attribute_name;
-}, 10, 2 );
-```
+    add_filter( 'ts_easy_integration_product_brand_attribute_name', function( $attribute_name, $product ) {
+        // Maybe adjust the $attribute_name based on the WC_Product $product
+        return $attribute_name;
+    }, 10, 2 );
 
 Additionally the filter `ts_easy_integration_product_brand` is provided which allows filtering the actual brand per product.
 
-```php
-add_filter( 'ts_easy_integration_product_brand', function( $brand, $product ) {
-    // Maybe adjust the $brand based on the WC_Product $product
-    return $brand;
-}, 10, 2 );
-```
+    add_filter( 'ts_easy_integration_product_brand', function( $brand, $product ) {
+        // Maybe adjust the $brand based on the WC_Product $product
+        return $brand;
+    }, 10, 2 );
 
 = GTIN, MPN, SKU =
 
@@ -95,12 +91,10 @@ Filters exist to adjust the attributes:
 
 Example filter-usage to adjust the GTIN:
 
-```php
-add_filter( 'ts_easy_integration_product_gtin', function( $gtin, $product ) {
-    // Maybe adjust the $gtin based on the WC_Product $product
-    return $gtin;
-}, 10, 2 );
-```
+    add_filter( 'ts_easy_integration_product_gtin', function( $gtin, $product ) {
+        // Maybe adjust the $gtin based on the WC_Product $product
+        return $gtin;
+    }, 10, 2 );
 
 == Technical Insights ==
 More technical insights in the [Github Repository](https://github.com/vendidero/trusted-shops-easy-integration-for-woocommerce) readme.md
@@ -128,6 +122,10 @@ Please report security bugs found in the source code of the plugin through the [
 5. Screenshot 5
 
 == Changelog ==
+= 2.0.6 =
+* Improvement: Compatibility with WP 7.1 and Woo 11.0
+* Security: Harden script host src validation and script attribute embeddings to prevent a potential XSS - thanks to bekitousei for reporting
+
 = 2.0.5 =
 * Fix: Channel array reset
 * Improvement: Use Woo core gtin as fallback if available

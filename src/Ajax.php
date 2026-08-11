@@ -53,6 +53,55 @@ class Ajax {
 	}
 
 	/**
+	 * @param $attribute
+	 *
+	 * @return array
+	 * @throws \Exception
+	 */
+	protected static function parse_attribute( $attribute ) {
+		$attribute = wp_parse_args(
+			$attribute,
+			array(
+				'attributeName' => '',
+			)
+		);
+
+		$valid_attributes           = array( 'attributeName' );
+		$attribute['attributeName'] = wc_clean( $attribute['attributeName'] );
+
+		if ( ! Package::is_allowed_script_attribute( $attribute['attributeName'] ) ) {
+			throw new \Exception( 'Invalid attribute name: ' . esc_html( $attribute['attributeName'] ), 500 );
+		}
+
+		if ( isset( $attribute['value'] ) ) {
+			$valid_attributes[] = 'value';
+
+			$attribute['value'] = wc_clean( $attribute['value'] );
+
+			if ( ! empty( $attribute['value'] ) ) {
+				if ( 'src' === $attribute['attributeName'] ) {
+					if ( ! Package::is_allowed_trusted_shops_url( $attribute['value'] ) ) {
+						throw new \Exception( 'Invalid attribute host detected.', 500 );
+					}
+				} elseif ( filter_var( $attribute['value'], FILTER_VALIDATE_URL ) && ! Package::is_allowed_trusted_shops_url( $attribute['value'] ) ) {
+					throw new \Exception( 'Invalid attribute host detected.', 500 );
+				}
+			}
+		}
+
+		$attribute = array_intersect_key( $attribute, array_flip( $valid_attributes ) );
+
+		return $attribute;
+	}
+
+	protected static function parse_defaults( $value, $defaults = array() ) {
+		$value = wp_parse_args( $value, $defaults );
+		$value = array_intersect_key( $value, $defaults );
+
+		return $value;
+	}
+
+	/**
 	 * Update TS settings.
 	 *
 	 * @return void
@@ -69,42 +118,168 @@ class Ajax {
 		$result            = true;
 		$settings_allowed  = array_merge( array( 'client_id', 'client_secret' ), array_keys( $original_settings ) );
 
-		foreach ( $settings as $setting_name => $value ) {
-			$value = wc_clean( $value );
+		try {
+			foreach ( $settings as $setting_name => $value ) {
+				if ( ! in_array( $setting_name, $settings_allowed, true ) ) {
+					continue;
+				}
 
-			if ( ! in_array( $setting_name, $settings_allowed, true ) ) {
-				continue;
-			}
+				$value = json_decode( wp_json_encode( $value ), true );
+				$value = wc_clean( $value );
 
-			try {
 				if ( 'trustbadges' === $setting_name ) {
 					$value = (array) $value;
 
-					foreach ( $value as $setting_key => $trustbadge ) {
-						/**
-						 * Do not allow storing invalid trustbadges.
-						 */
-						if ( ! isset( $trustbadge->id ) || ! isset( $trustbadge->children ) || ! isset( $trustbadge->children[0]->attributes ) ) {
-							unset( $value[ $setting_key ] );
+					foreach ( $value as $trustbadge_key => $trustbadge ) {
+						$trustbadge = self::parse_defaults(
+							$trustbadge,
+							array(
+								'id'                 => '',
+								'eTrustedChannelRef' => '',
+								'children'           => array(),
+								'salesChannelRef'    => '',
+							)
+						);
 
-							throw new \Exception( 'Invalid trustbadge detected.', 'trustbadge-invalid' );
+						if ( empty( $trustbadge['id'] ) || empty( $trustbadge['children'] ) || ! isset( $trustbadge['children'][0]['attributes'] ) ) {
+							throw new \Exception( 'Invalid trustbadge detected.', 500 );
 						}
+
+						$trustbadge = wc_clean( $trustbadge );
+
+						foreach ( (array) $trustbadge['children'] as $child_key => $child ) {
+							$child = self::parse_defaults(
+								$child,
+								array(
+									'tag'        => '',
+									'attributes' => array(),
+								)
+							);
+
+							$child = wc_clean( $child );
+
+							foreach ( (array) $child['attributes'] as $attribute_key => $attribute ) {
+								$child['attributes'][ $attribute_key ] = self::parse_attribute( $attribute );
+							}
+
+							$trustbadge['children'][ $child_key ] = $child;
+						}
+
+						$value[ $trustbadge_key ] = $trustbadge;
 					}
 				} elseif ( 'channels' === $setting_name ) {
 					$value = (array) $value;
+
+					foreach ( $value as $channel_key => $channel ) {
+						$value[ $channel_key ] = wc_clean( $channel );
+					}
+				} elseif ( 'used_order_statuses' === $setting_name ) {
+					$value = (array) $value;
+
+					foreach ( $value as $channel_key => $used_order_status ) {
+						foreach ( $used_order_status as $status_type => $status ) {
+							$status                                = self::parse_defaults(
+								$status,
+								array(
+									'name'       => '',
+									'ID'         => '',
+									'event_type' => '',
+								)
+							);
+							$value[ $channel_key ][ $status_type ] = wc_clean( $status );
+						}
+					}
+				} elseif ( 'widgets' === $setting_name ) {
+					$value = (array) $value;
+
+					foreach ( $value as $channel_key => $widget ) {
+						$widget = self::parse_defaults(
+							$widget,
+							array(
+								'id'                 => '',
+								'eTrustedChannelRef' => '',
+								'children'           => array(),
+								'salesChannelRef'    => '',
+							)
+						);
+
+						if ( empty( $widget['id'] ) || empty( $widget['children'] ) || ! isset( $widget['children'][0]['attributes'] ) ) {
+							throw new \Exception( 'Invalid widget detected.', 500 );
+						}
+
+						$widget = wc_clean( $widget );
+
+						foreach ( (array) $widget['children'] as $child_key => $child ) {
+							$child = self::parse_defaults(
+								$child,
+								array(
+									'tag'        => '',
+									'attributes' => array(),
+									'children'   => array(),
+								)
+							);
+
+							$child = wc_clean( $child );
+
+							foreach ( (array) $child['attributes'] as $attribute_key => $attribute ) {
+								$child['attributes'][ $attribute_key ] = self::parse_attribute( $attribute );
+							}
+
+							foreach ( (array) $child['children'] as $widget_child_key => $widget_child ) {
+								$widget_child = self::parse_defaults(
+									$widget_child,
+									array(
+										'applicationType' => '',
+										'attributes'      => array(),
+										'extensions'      => array(),
+										'tag'             => '',
+										'widgetId'        => '',
+										'widgetLocation'  => array(),
+									)
+								);
+
+								$widget_child = wc_clean( $widget_child );
+
+								foreach ( (array) $widget_child['attributes'] as $attribute_key => $attribute ) {
+									$widget_child['attributes'][ $attribute_key ] = self::parse_attribute( $attribute );
+								}
+
+								foreach ( (array) $widget_child['extensions'] as $extension_key => $extension ) {
+									$widget_child['extensions'][ $extension_key ] = self::parse_defaults(
+										$extension,
+										array(
+											'tag' => '',
+										)
+									);
+								}
+
+								$widget_child['widgetLocation'] = self::parse_defaults(
+									$widget_child['widgetLocation'],
+									array(
+										'id' => '',
+									)
+								);
+
+								$child['children'][ $widget_child_key ] = $widget_child;
+							}
+
+							$widget['children'][ $child_key ] = $child;
+						}
+
+						$value[ $channel_key ] = $widget;
+					}
 				}
 
+				// Convert to std class.
+				$value  = json_decode( wp_json_encode( $value ) );
 				$result = Package::update_setting( $setting_name, $value );
-			} catch ( \Exception $e ) {
-				$result = new \WP_Error( $e->getCode(), $e->getMessage() );
-			}
 
-			/**
-			 * If an error occurs during saving option, stop here.
-			 */
-			if ( is_wp_error( $result ) ) {
-				break;
+				if ( is_wp_error( $result ) ) {
+					throw new \Exception( $result->get_error_message(), 500 );
+				}
 			}
+		} catch ( \Exception $e ) {
+			$result = new \WP_Error( $e->getCode(), $e->getMessage() );
 		}
 
 		if ( is_wp_error( $result ) ) {

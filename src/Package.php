@@ -17,7 +17,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.0.5';
+	const VERSION = '2.0.6';
 
 	protected static $events_api = null;
 
@@ -923,6 +923,46 @@ class Package {
 		);
 
 		return $settings;
+	}
+
+	public static function get_allowed_trusted_shops_hosts() {
+		return array(
+			'widgets.trustedshops.com',
+			'widgets-qa.trustedshops.com',
+			'integrations.etrusted.com',
+			'integrations.etrusted.site',
+			'static-app.connect.trustedshops.com',
+			'static-app.connect-qa.trustedshops.com',
+		);
+	}
+
+	public static function is_allowed_trusted_shops_url( $url ) {
+		$remote_host = wp_parse_url( $url, PHP_URL_HOST );
+
+		if ( ! empty( $remote_host ) && in_array( strtolower( $remote_host ), self::get_allowed_trusted_shops_hosts(), true ) ) {
+			return true;
+		} elseif ( $remote_host ) {
+			self::log( 'Blocked unallowed remote host: ' . esc_html( $remote_host ) );
+		}
+
+		return false;
+	}
+
+	public static function is_allowed_script_attribute( $name ) {
+		$is_allowed = false;
+
+		/**
+		 * Attributes may not contain spaces or equal signs.
+		 */
+		if ( ! is_string( $name ) || ! preg_match( '/^[A-Za-z0-9_-]+$/', $name ) ) {
+			return false;
+		}
+
+		if ( in_array( $name, array( 'defer', 'async', 'src', 'charset' ), true ) || 'data-' === substr( $name, 0, 5 ) ) {
+			$is_allowed = true;
+		}
+
+		return $is_allowed;
 	}
 
 	/**
