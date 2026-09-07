@@ -44,4 +44,3 @@ Thumbs.db
 # Packages
 /packages/*
 !/packages/README.md
-/composer.lock
