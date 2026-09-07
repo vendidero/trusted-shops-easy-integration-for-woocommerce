@@ -10,6 +10,9 @@ export interface Params {
     disconnect_nonce: string;
     locale: string;
     name_of_system: string;
+    i18n_change_credentials: string;
+    i18n_disconnect: string;
+    i18n_export: string;
     order_statuses: {
         [key: string]: OrderStatus[]
     }

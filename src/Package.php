@@ -17,7 +17,7 @@ class Package {
 	 *
 	 * @var string
 	 */
-	const VERSION = '2.0.6';
+	const VERSION = '2.0.7';
 
 	protected static $events_api = null;
 
@@ -51,8 +51,23 @@ class Package {
 		self::register_order_hooks();
 
 		add_action( 'before_woocommerce_init', array( __CLASS__, 'declare_feature_compatibility' ) );
+		add_action( 'ts_easy_integration_delete_export', array( __CLASS__, 'delete_export' ), 10, 2 );
 
 		do_action( 'ts_easy_integration_init' );
+	}
+
+	public static function delete_export( $filename ) {
+		$upload_dir  = wp_upload_dir();
+		$path        = trailingslashit( $upload_dir['basedir'] ) . 'woocommerce_uploads/' . $filename;
+		$header_path = $path . '.headers';
+
+		if ( @file_exists( $path ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			@unlink( $path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.unlink_unlink
+		}
+
+		if ( @file_exists( $header_path ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			@unlink( $header_path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.unlink_unlink
+		}
 	}
 
 	public static function declare_feature_compatibility() {

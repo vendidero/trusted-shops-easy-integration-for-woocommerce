@@ -268,6 +268,14 @@ class Ajax {
 
 						$value[ $channel_key ] = $widget;
 					}
+				} elseif ( 'client_id' === $setting_name ) {
+					if ( ! preg_match( '/[a-zA-Z0-9]{12}__[a-zA-Z0-9]+$/', $value ) ) {
+						throw new \Exception( 'Invalid client id.', 500 );
+					}
+				} elseif ( 'client_secret' === $setting_name ) {
+					if ( ! preg_match( '/[a-zA-Z0-9-]{36}$/', $value ) ) {
+						throw new \Exception( 'Invalid client secret.', 500 );
+					}
 				}
 
 				// Convert to std class.
@@ -364,6 +372,10 @@ class Ajax {
 				'include_product_data' => $include_product_data,
 				'filename_suffix'      => $filename_suffix,
 			);
+
+			if ( function_exists( 'as_schedule_single_action' ) ) {
+				as_schedule_single_action( ( time() + MINUTE_IN_SECONDS * 2 ), 'ts_easy_integration_delete_export', array( 'file' => $exporter->get_filename() ), 'ts_easy_integration' );
+			}
 		} else {
 			$step_args = array(
 				'step'                 => ++$step,

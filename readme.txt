@@ -4,8 +4,8 @@ Tags: trusted shops, woocommerce, badge, trust, business ratings, business revie
 Requires at least: 4.9
 Tested up to: 7.1
 WC requires at least: 3.9
-WC tested up to: 11.0
-Stable tag: 2.0.6
+WC tested up to: 11.1
+Stable tag: 2.0.7
 Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -122,6 +122,10 @@ Please report security bugs found in the source code of the plugin through the [
 5. Screenshot 5
 
 == Changelog ==
+= 2.0.7 =
+* Improvement: Compatibility with Woo 11.1
+* Security: Locally register events to confirm origin. Fixes a potential XSS - thanks to bekitousei for reporting
+
 = 2.0.6 =
 * Improvement: Compatibility with WP 7.1 and Woo 11.0
 * Security: Harden script host src validation and script attribute embeddings to prevent a potential XSS - thanks to bekitousei for reporting

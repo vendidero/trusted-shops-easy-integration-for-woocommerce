@@ -20,7 +20,7 @@ class BaseLayer {
         this.eventsLib = ( window as any ).eventsLib as EventsLib;
         this.params = ( window as any ).ts_easy_integration_params as Params;
         
-        this.registerEvents();
+        this.initEvents();
     }
 
     private sendingNotification( event: any, status: string, type = 'save' ) {
@@ -71,6 +71,12 @@ class BaseLayer {
     private async saveCredentialsCallback(event: { payload: { clientId: string; clientSecret: string; }; }) {
         try {
             const settings = await this.getSettings().then( settings => {
+                if ( settings.client_id && settings.client_id.length > 0 ) {
+                    if ( ! confirm( this.params.i18n_change_credentials ) ) {
+                        throw new Error("unconfirmed");
+                    }
+                }
+
                 settings.client_id = event.payload.clientId;
                 settings.client_secret = event.payload.clientSecret;
 
@@ -144,6 +150,10 @@ class BaseLayer {
 
     private async disconnectCallback() {
         try {
+            if ( ! confirm( this.params.i18n_disconnect ) ) {
+                throw new Error( this.params.i18n_disconnect );
+            }
+
             await this.disconnect().then( result => {
                 this.eventsLib.dispatchAction({ action: this.eventsLib.EVENTS.SET_DISCONNECTED, payload: null });
                 this.settings = null;
@@ -267,12 +277,16 @@ class BaseLayer {
                 });
             });
         } catch(e) {
-            this.sendingNotification( this.eventsLib.EVENTS.SAVE_WIDGET_CHANGES, 'error' );
+            this.sendingNotification( this.eventsLib.EVENTS.SET_EXPORT_PREVIOUS_ORDER, 'error' );
         }
     }
 
     private async exportOrdersCallback( event: { payload: { id: string; numberOfDays: number, salesChannelRef: string, includeProductData: boolean } } ) {
         try {
+            if ( ! confirm( this.params.i18n_export ) ) {
+                throw new Error( "unconfirmed" );
+            }
+
             await this.exportOrders( 1, event.payload.numberOfDays, event.payload.includeProductData, event.payload.salesChannelRef ).then( ( url ) => {
                 const a = document.createElement( 'a' );
                 a.href = url;
@@ -286,13 +300,17 @@ class BaseLayer {
                     payload: event.payload as { id: string; numberOfDays: number },
                 });
             } );
-        } catch(e) {
-            this.sendingNotification( event, 'error', 'exportTimeout' );
+        } catch( e: any ) {
+            if ( "unconfirmed" === e?.message ) {
+                this.sendingNotification( this.eventsLib.EVENTS.EXPORT_PREVIOUS_ORDER, 'error' );
+            } else {
+                this.sendingNotification( this.eventsLib.EVENTS.EXPORT_PREVIOUS_ORDER, 'error', 'exportTimeout' );
+            }
         }
     }
 
-    private async registerEvents() {
-        this.eventsLib.registerEvents({
+    private initEvents() {
+        this.registerEvents({
             [ this.eventsLib.EVENTS.GET_INFORMATION_OF_SYSTEM ]: this.getInformationOfSystemCallback.bind( this ),
             [ this.eventsLib.EVENTS.GET_LOCALE ]: this.getLocaleCallback.bind( this ),
             [ this.eventsLib.EVENTS.SAVE_CREDENTIALS ]: this.saveCredentialsCallback.bind( this ),
@@ -311,6 +329,54 @@ class BaseLayer {
             [ this.eventsLib.EVENTS.GET_USED_ORDER_STATUSES ]: this.getUsedOrderStatusesCallback.bind( this ),
             [ this.eventsLib.EVENTS.SAVE_USED_ORDER_STATUSES ]: this.saveUsedOrderStatusesCallback.bind( this ),
         });
+    }
+
+    private isTrustedSender( msg: MessageEvent ): boolean {
+        if ( msg.source !== window ) {
+            return false;
+        }
+        // Defence in depth + makes the origin check explicit for auditors.
+        // Tolerates opaque origins (file:// demo pages) where msg.origin is '' / 'null'.
+        if ( msg.origin && msg.origin !== 'null' && msg.origin !== window.location.origin ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private processMessage ( msg: MessageEvent, handlers: any ) {
+        if ( ! this.isTrustedSender( msg ) ) {
+            return;
+        }
+        if ( !! msg.data && ( !! msg.data?.action || typeof msg.data === 'string' ) ) {
+            let result;
+            try {
+                result = JSON.parse(msg.data);
+            } catch (err) {
+                result = {
+                    action: this.eventsLib.EVENTS.ERROR,
+                    payload: { message: `Error receiving ${msg.data}` },
+                };
+            }
+
+            if ( handlers.hasOwnProperty( result.action ) ) {
+                handlers[ result.action ]( result );
+            }
+        }
+    }
+
+    private registerEvents( handlerEvent: any ) {
+        const areaListener = new AbortController();
+
+        window.addEventListener( "message", ( msg) => this.processMessage( msg, handlerEvent ),
+            { signal: areaListener.signal }
+        );
+
+        function usub() {
+            areaListener.abort();
+        }
+
+        return usub;
     }
 
     private async exportOrders( step: number, numberOfDays: number, includeProductData: boolean, salesChannelRef = '', filenameSuffix = '' ) : Promise<string> {
