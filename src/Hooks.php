@@ -392,7 +392,7 @@ class Hooks {
 						}
 
 						$value = isset( $attribute->value ) ? $attribute->value : true;
-						$value = is_bool( $value ) || self::is_bool_attribute( $attribute->attributeName ) ? ( $value ? 'true' : 'false' ) : $value; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+						$value = is_bool( $value ) || Package::is_bool_attribute( $attribute->attributeName ) ? ( $value ? 'true' : 'false' ) : $value; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 
 						$script_data .= ' ' . esc_attr( $attribute->attributeName ) . "='" . esc_attr( $value ) . "'"; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 					}
@@ -440,14 +440,6 @@ class Hooks {
 		return $is_allowed;
 	}
 
-	protected static function is_bool_attribute( $name ) {
-		if ( strstr( $name, 'enable-' ) || strstr( $name, 'disable-' ) ) {
-			return true;
-		}
-
-		return false;
-	}
-
 	public static function register_scripts() {
 		wp_register_script( 'ts-easy-integration-widgets', Package::get_widget_integration_url(), array(), Package::get_version(), true );
 		wp_script_add_data( 'ts-easy-integration-widgets', 'defer', true );
@@ -466,7 +458,7 @@ class Hooks {
 						$script_src = isset( $attribute->value ) && Package::is_allowed_trusted_shops_url( $attribute->value ) ? $attribute->value : "//widgets.trustedshops.com/js/{$ts_id}.js";
 					} else {
 						$value = isset( $attribute->value ) ? $attribute->value : true;
-						$value = is_bool( $value ) || self::is_bool_attribute( $attribute->attributeName ) ? ( $value ? 'true' : 'false' ) : $value; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+						$value = is_bool( $value ) || Package::is_bool_attribute( $attribute->attributeName ) ? ( $value ? 'true' : 'false' ) : $value; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 
 						if ( ! self::is_script_data_allowed( $attribute->attributeName ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 							continue;

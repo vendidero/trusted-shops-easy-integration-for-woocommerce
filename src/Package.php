@@ -205,6 +205,14 @@ class Package {
 		return class_exists( 'WooCommerce_Germanized' ) && version_compare( get_option( 'woocommerce_gzd_version', '1.0.0' ), '3.10.4', '>=' ) ? true : false;
 	}
 
+	public static function is_bool_attribute( $name ) {
+		if ( strstr( $name, 'enable-' ) || strstr( $name, 'disable-' ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
 	/**
 	 * Log via the Woo file logger if WP_DEBUG is enabled.
 	 *

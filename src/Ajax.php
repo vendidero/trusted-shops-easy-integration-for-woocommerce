@@ -67,7 +67,7 @@ class Ajax {
 		);
 
 		$valid_attributes           = array( 'attributeName' );
-		$attribute['attributeName'] = wc_clean( $attribute['attributeName'] );
+		$attribute['attributeName'] = self::wc_clean( $attribute['attributeName'] );
 
 		if ( ! Package::is_allowed_script_attribute( $attribute['attributeName'] ) ) {
 			throw new \Exception( 'Invalid attribute name: ' . esc_html( $attribute['attributeName'] ), 500 );
@@ -76,7 +76,7 @@ class Ajax {
 		if ( isset( $attribute['value'] ) ) {
 			$valid_attributes[] = 'value';
 
-			$attribute['value'] = wc_clean( $attribute['value'] );
+			$attribute['value'] = self::wc_clean( $attribute['value'] );
 
 			if ( ! empty( $attribute['value'] ) ) {
 				if ( 'src' === $attribute['attributeName'] ) {
@@ -99,6 +99,16 @@ class Ajax {
 		$value = array_intersect_key( $value, $defaults );
 
 		return $value;
+	}
+
+	protected static function wc_clean( $value ) {
+		if ( is_array( $value ) ) {
+			return array_map( array( __CLASS__, 'wc_clean' ), $value );
+		} elseif ( is_bool( $value ) ) {
+			return (bool) $value;
+		} else {
+			return wc_clean( $value );
+		}
 	}
 
 	/**
@@ -125,7 +135,7 @@ class Ajax {
 				}
 
 				$value = json_decode( wp_json_encode( $value ), true );
-				$value = wc_clean( $value );
+				$value = self::wc_clean( $value );
 
 				if ( 'trustbadges' === $setting_name ) {
 					$value = (array) $value;
@@ -145,7 +155,7 @@ class Ajax {
 							throw new \Exception( 'Invalid trustbadge detected.', 500 );
 						}
 
-						$trustbadge = wc_clean( $trustbadge );
+						$trustbadge = self::wc_clean( $trustbadge );
 
 						foreach ( (array) $trustbadge['children'] as $child_key => $child ) {
 							$child = self::parse_defaults(
@@ -156,7 +166,7 @@ class Ajax {
 								)
 							);
 
-							$child = wc_clean( $child );
+							$child = self::wc_clean( $child );
 
 							foreach ( (array) $child['attributes'] as $attribute_key => $attribute ) {
 								$child['attributes'][ $attribute_key ] = self::parse_attribute( $attribute );
@@ -171,7 +181,7 @@ class Ajax {
 					$value = (array) $value;
 
 					foreach ( $value as $channel_key => $channel ) {
-						$value[ $channel_key ] = wc_clean( $channel );
+						$value[ $channel_key ] = self::wc_clean( $channel );
 					}
 				} elseif ( 'used_order_statuses' === $setting_name ) {
 					$value = (array) $value;
@@ -186,7 +196,7 @@ class Ajax {
 									'event_type' => '',
 								)
 							);
-							$value[ $channel_key ][ $status_type ] = wc_clean( $status );
+							$value[ $channel_key ][ $status_type ] = self::wc_clean( $status );
 						}
 					}
 				} elseif ( 'widgets' === $setting_name ) {
@@ -207,7 +217,7 @@ class Ajax {
 							throw new \Exception( 'Invalid widget detected.', 500 );
 						}
 
-						$widget = wc_clean( $widget );
+						$widget = self::wc_clean( $widget );
 
 						foreach ( (array) $widget['children'] as $child_key => $child ) {
 							$child = self::parse_defaults(
@@ -219,7 +229,7 @@ class Ajax {
 								)
 							);
 
-							$child = wc_clean( $child );
+							$child = self::wc_clean( $child );
 
 							foreach ( (array) $child['attributes'] as $attribute_key => $attribute ) {
 								$child['attributes'][ $attribute_key ] = self::parse_attribute( $attribute );
@@ -238,7 +248,7 @@ class Ajax {
 									)
 								);
 
-								$widget_child = wc_clean( $widget_child );
+								$widget_child = self::wc_clean( $widget_child );
 
 								foreach ( (array) $widget_child['attributes'] as $attribute_key => $attribute ) {
 									$widget_child['attributes'][ $attribute_key ] = self::parse_attribute( $attribute );
