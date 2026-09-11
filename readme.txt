@@ -1,6 +1,6 @@
 === Trusted Shops Easy Integration for WooCommerce ===
 Contributors: vendidero
-Tags: trusted shops, woocommerce, badge, trust, business ratings, business reviews, trustbadge, integration
+Tags: trusted shops, woocommerce, badge, trust, business ratings
 Requires at least: 4.9
 Tested up to: 7.1
 WC requires at least: 3.9
@@ -10,7 +10,7 @@ Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
-Show that your customers love you with reviews in your online store and boost your business with the free Trusted Shops Easy Integration Plugin for WooCommerce.
+Show that your customers love you with reviews in your online store and boost your business with the free Trusted Shops Plugin for WooCommerce.
 
 == Description ==
 
