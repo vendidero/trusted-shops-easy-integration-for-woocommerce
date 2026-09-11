@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Trusted Shops Easy Integration for WooCommerce\n"
-"POT-Creation-Date: 2022-12-09 11:53+0100\n"
-"PO-Revision-Date: 2022-12-09 11:53+0100\n"
+"POT-Creation-Date: 2026-09-11 10:30+0200\n"
+"PO-Revision-Date: 2026-09-11 10:31+0200\n"
 "Last-Translator: Dennis Nissle <info@vendidero.de>\n"
 "Language-Team: \n"
 "Language: de_DE@formal\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.1.1\n"
+"X-Generator: Poedit 3.5\n"
 "X-Poedit-Basepath: ../..\n"
 "X-Poedit-Flags-xgettext: --add-comments=translators:\n"
 "X-Poedit-WPHeader: trusted-shops-easy-integration-for-woocommerce.php\n"
@@ -61,22 +61,43 @@ msgstr ""
 "Wenn Ihre Produkte keine GTIN haben, können Sie den Markennamen zusammen mit "
 "der MPN übergeben, um die Trusted Shops Google Integration zu nutzen."
 
+#: src/Admin/Helper.php:204
+msgctxt "trusted-shops"
+msgid "Are you sure you want to change your login information?"
+msgstr "Wollen Sie Ihre Zugangsdaten wirklich ändern?"
+
+#: src/Admin/Helper.php:205
+msgctxt "trusted-shops"
+msgid "Disconnecting will delete all your current settings. Are you sure?"
+msgstr ""
+"Beim Trennen der Verbindung werden alle Ihre Einstellungen gelöscht. Sind "
+"Sie sicher?"
+
+#: src/Admin/Helper.php:206
+msgctxt "trusted-shops"
+msgid ""
+"Do you want to export your latest orders to a CSV file and start the "
+"download?"
+msgstr ""
+"Wollen Sie Ihre letzten Bestellungen als CSV-Datei exportieren und den "
+"Download starten?"
+
 #: src/Admin/SettingsPage.php:17
 msgctxt "trusted-shops"
 msgid "Trusted Shops New"
 msgstr "Trusted Shops New"
 
-#: src/Hooks.php:258
+#: src/Hooks.php:288
 msgctxt "trusted-shops"
 msgid "Trusted Shops Reviews"
 msgstr "Trusted Shops Bewertungen"
 
-#: src/Package.php:55
+#: src/Package.php:94
 msgctxt "trusted-shops"
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: src/Package.php:93
+#: src/Package.php:161
 msgctxt "trusted-shops"
 msgid ""
 "To use the Trusted Shops Easy Integration for WooCommerce plugin please make "
@@ -86,7 +107,7 @@ msgstr ""
 "verwenden, stellen Sie bitte sicher, dass WooCommerce installiert und "
 "aktiviert ist."
 
-#: src/Package.php:581
+#: src/Package.php:730
 msgctxt "trusted-shops-brand-attribute"
 msgid "Brand"
 msgstr "Marke"
@@ -103,15 +124,15 @@ msgid ""
 "Attention! The <em>%1$s</em> (%2$s) constant is missing. Trusted Shops Easy "
 "Integration uses a derived key based on the <em>LOGGED_IN_KEY</em> constant "
 "instead. This constant might change under certain circumstances. To prevent "
-"data losses, please insert the following snippet within your <a href=\"%3$s"
-"\" target=\"_blank\">wp-config.php</a> file:"
+"data losses, please insert the following snippet within your <a "
+"href=\"%3$s\" target=\"_blank\">wp-config.php</a> file:"
 msgstr ""
 "Achtung! Es fehlt die Konstante <em>%1$s</em> (%2$s). Trusted Shops Easy "
 "Integration verwendet stattdessen einen abgeleiteten Schlüssel, der auf der "
 "Konstante <em>LOGGED_IN_KEY</em> basiert. Diese Konstante kann sich unter "
 "bestimmten Umständen verändern. Um Datenverluste zu verhindern, fügen Sie "
-"bitte den folgenden Code-Schnipsel in Ihre <a href=\"%3$s\" target=\"_blank"
-"\">wp-config.php</a> Datei:"
+"bitte den folgenden Code-Schnipsel in Ihre <a href=\"%3$s\" "
+"target=\"_blank\">wp-config.php</a> Datei:"
 
 #. Plugin Name of the plugin/theme
 msgid "Trusted Shops Easy Integration for WooCommerce"
