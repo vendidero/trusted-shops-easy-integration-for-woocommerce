@@ -125,6 +125,7 @@ Please report security bugs found in the source code of the plugin through the [
 = 2.0.7 =
 * Improvement: Compatibility with Woo 11.1
 * Security: Locally register events to confirm origin. Fixes a potential XSS - thanks to bekitousei for reporting
+* Fix: Trustbadges bool value conversion
 
 = 2.0.6 =
 * Improvement: Compatibility with WP 7.1 and Woo 11.0
