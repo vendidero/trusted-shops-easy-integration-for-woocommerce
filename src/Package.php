@@ -169,6 +169,20 @@ class Package {
 	protected static function init_hooks() {
 		add_action( 'init', array( '\Vendidero\TrustedShopsEasyIntegration\Shortcodes', 'init' ) );
 		add_action( 'init', array( __CLASS__, 'check_version' ), 10 );
+		add_action( 'init', array( __CLASS__, 'load_plugin_textdomain' ) );
+	}
+
+	public static function load_plugin_textdomain() {
+		if ( function_exists( 'determine_locale' ) ) {
+			$locale = determine_locale();
+		} else {
+			$locale = is_admin() ? get_user_locale() : get_locale();
+		}
+
+		$locale = apply_filters( 'plugin_locale', $locale, 'trusted-shops-easy-integration-for-woocommerce' );
+
+		load_textdomain( 'trusted-shops-easy-integration-for-woocommerce', trailingslashit( WP_LANG_DIR ) . 'trusted-shops-easy-integration-for-woocommerce/trusted-shops-easy-integration-for-woocommerce-' . $locale . '.mo' );
+		load_plugin_textdomain( 'trusted-shops-easy-integration-for-woocommerce', false, plugin_basename( self::get_path() ) . '/i18n/languages/' );
 	}
 
 	public static function check_version() {
