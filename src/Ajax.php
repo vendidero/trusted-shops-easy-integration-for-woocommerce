@@ -283,7 +283,7 @@ class Ajax {
 						throw new \Exception( 'Invalid client id.', 500 );
 					}
 				} elseif ( 'client_secret' === $setting_name ) {
-					if ( ! preg_match( '/[a-zA-Z0-9-]{36}$/', $value ) ) {
+					if ( ! preg_match( '/[a-zA-Z0-9]{32}$/', $value ) ) {
 						throw new \Exception( 'Invalid client secret.', 500 );
 					}
 				}

@@ -5,7 +5,7 @@ Requires at least: 4.9
 Tested up to: 7.1
 WC requires at least: 3.9
 WC tested up to: 11.1
-Stable tag: 2.0.7
+Stable tag: 2.0.8
 Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -122,6 +122,9 @@ Please report security bugs found in the source code of the plugin through the [
 5. Screenshot 5
 
 == Changelog ==
+= 2.0.8 =
+* Fix: Saving credentials
+
 = 2.0.7 =
 * Improvement: Compatibility with Woo 11.1
 * Security: Locally register events to confirm origin. Fixes a potential XSS - thanks to bekitousei for reporting
