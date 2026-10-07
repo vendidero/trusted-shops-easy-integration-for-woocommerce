@@ -12,10 +12,13 @@ class RestResponse {
 
 	protected $type = 'GET';
 
-	public function __construct( $code, $body, $type = 'GET' ) {
-		$this->code = absint( $code );
-		$this->body = $body;
-		$this->type = $type;
+	protected $headers = array();
+
+	public function __construct( $code, $body, $type = 'GET', $headers = array() ) {
+		$this->code    = absint( $code );
+		$this->body    = $body;
+		$this->type    = $type;
+		$this->headers = is_a( $headers, '\WpOrg\Requests\Utility\CaseInsensitiveDictionary' ) ? $headers->getAll() : (array) $headers;
 	}
 
 	public function get_body_raw() {
@@ -38,6 +41,10 @@ class RestResponse {
 
 	public function get_type() {
 		return $this->type;
+	}
+
+	public function get_headers() {
+		return $this->headers;
 	}
 
 	public function is_error() {

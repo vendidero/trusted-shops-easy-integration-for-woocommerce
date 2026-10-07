@@ -101,9 +101,19 @@ class Ajax {
 		return $value;
 	}
 
-	protected static function wc_clean( $value ) {
+	public static function wc_clean( $value, $with_key = false ) {
 		if ( is_array( $value ) ) {
-			return array_map( array( __CLASS__, 'wc_clean' ), $value );
+			if ( $with_key ) {
+				$helper = array();
+
+				foreach ( $value as $key => $v ) {
+					$helper[ self::wc_clean( $key, true ) ] = self::wc_clean( $v, true );
+				}
+
+				return $helper;
+			} else {
+				return array_map( array( __CLASS__, 'wc_clean' ), $value );
+			}
 		} elseif ( is_bool( $value ) ) {
 			return (bool) $value;
 		} else {
@@ -277,6 +287,33 @@ class Ajax {
 						}
 
 						$value[ $channel_key ] = $widget;
+					}
+				} elseif ( 'structured_markup' === $setting_name ) {
+					$value       = (array) $value;
+					$needs_queue = false;
+
+					foreach ( $value as $channel_key => $structured_markup ) {
+						$structured_markup = self::parse_defaults(
+							$structured_markup,
+							array(
+								'eTrustedChannelRef' => '',
+								'salesChannelRef'    => '',
+								'tsId'               => '',
+								'enabled'            => false,
+							)
+						);
+
+						$value[ $channel_key ] = self::wc_clean( $structured_markup );
+
+						if ( true === $value[ $channel_key ]['enabled'] ) {
+							$needs_queue = true;
+						}
+					}
+
+					if ( $needs_queue ) {
+						if ( $queue = WC()->queue() ) {
+							$queue->schedule_single( time() + 10, 'ts_easy_integration_fetch_json_ld', array(), 'ts_easy_integration' );
+						}
 					}
 				} elseif ( 'client_id' === $setting_name ) {
 					if ( ! preg_match( '/[a-zA-Z0-9]{12}__[a-zA-Z0-9]+$/', $value ) ) {

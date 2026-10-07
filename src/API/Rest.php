@@ -81,10 +81,14 @@ class Rest {
 		return $body_args;
 	}
 
+	protected function needs_auth() {
+		return true;
+	}
+
 	protected function get_response( $url, $type = 'GET', $body_args = array(), $header = array() ) {
 		$is_auth_call = strstr( $url, 'login.etrusted.com' );
 
-		if ( ! $is_auth_call && ! $this->has_auth() ) {
+		if ( ! $is_auth_call && $this->needs_auth() && ! $this->has_auth() ) {
 			$this->auth();
 		}
 
@@ -137,9 +141,10 @@ class Rest {
 				}
 			}
 
-			$body = wp_remote_retrieve_body( $response );
+			$body    = wp_remote_retrieve_body( $response );
+			$headers = wp_remote_retrieve_headers( $response );
 
-			return new RestResponse( $code, $body, $type );
+			return new RestResponse( $code, $body, $type, $headers );
 		}
 
 		return new \WP_Error( 'rest-error', sprintf( 'Error while trying to perform REST request to %s', $url ) );
