@@ -33,7 +33,19 @@ class Install {
 		}
 	}
 
+	public static function deactivate() {
+		if ( ! function_exists( 'WC' ) ) {
+			return;
+		}
+
+		if ( $queue = WC()->queue() ) {
+			$queue->cancel_all( 'ts_easy_integration_fetch_json_ld', array(), 'ts_easy_integration' );
+		}
+	}
+
 	public static function uninstall() {
+		self::deactivate();
+
 		Package::delete_settings();
 
 		delete_option( 'ts_easy_integration_version' );

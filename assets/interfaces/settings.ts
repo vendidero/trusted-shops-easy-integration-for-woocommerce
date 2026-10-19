@@ -1,7 +1,8 @@
 import type { Channel } from './channel'
 import type { Trustbadge } from './trustbadge'
 import type { Widgets } from './widgets'
-import {OrderStatus} from "./order-status";
+import type { StructuredMarkup } from './structured-markup'
+import type { OrderStatus } from "./order-status";
 
 export interface Settings {
     client_id?: string;
@@ -9,6 +10,9 @@ export interface Settings {
     channels: Channel[],
     trustbadges: {
         [key: string]: Trustbadge
+    }
+    structured_markup: {
+        [key: string]: StructuredMarkup
     }
     used_order_statuses: {
         [key: string]: {

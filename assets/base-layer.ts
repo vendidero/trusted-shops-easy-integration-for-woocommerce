@@ -5,6 +5,7 @@ import type { Trustbadge } from "./interfaces/trustbadge";
 import type { Channel } from './interfaces/channel'
 import type { Widgets } from './interfaces/widgets'
 import type { OrderStatus } from './interfaces/order-status'
+import type { StructuredMarkup } from "./interfaces/structured-markup";
 
 class BaseLayer {
     private static _instance: BaseLayer;
@@ -55,6 +56,7 @@ class BaseLayer {
                 allowsEditIntegrationCode: true,
                 allowsSupportWidgets: true,
                 useVersionNumberOfConnector: '2.0',
+                allowsSupportStructuredMarkup: true,
             },
         });
     }
@@ -174,6 +176,43 @@ class BaseLayer {
                 payload: trustbadge ? trustbadge : { id: 'id' , children: [] },
             })
         });
+    }
+
+    private async getStructuredMarkupConfigurationCallback( event: { payload: { salesChannelRef: string; eTrustedChannelRef: string; }; } ) {
+        await this.getStructuredMarkupEnabled( this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ).then( markupEnabled => {
+            this.eventsLib.dispatchAction({
+                action: this.eventsLib.EVENTS.SET_STRUCTURED_MARKUP_CONFIGURATION_PROVIDED,
+                payload: null === markupEnabled ? null : { 'structuredMarkupEnabled': markupEnabled.enabled },
+            })
+        });
+    }
+
+    private async getStructuredMarkupEnabled( id: string ): Promise<StructuredMarkup|null> {
+        try {
+            return await this.getSettings().then( settings => {
+                return settings.structured_markup.hasOwnProperty( id ) ? settings.structured_markup[ id ] : null;
+            });
+        } catch(e) {
+            return null;
+        }
+    }
+
+    private async saveStructuredMarkupConfigurationCallback(event: { payload: StructuredMarkup }) {
+        try {
+            const settings = await this.getSettings().then( settings => {
+                settings.structured_markup[ this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ] = event.payload;
+
+                return settings;
+            }).then( settings => {
+                return this.updateSettings( settings );
+            }).then( () => {
+                this.getStructuredMarkupConfigurationCallback( { payload: event.payload } ).then( () => {
+                    this.sendingNotification( this.eventsLib.EVENTS.SAVE_STRUCTURED_MARKUP_CONFIGURATION, 'success' );
+                });
+            });
+        } catch(e) {
+            this.sendingNotification( this.eventsLib.EVENTS.SAVE_STRUCTURED_MARKUP_CONFIGURATION, 'error' );
+        }
     }
 
     private async saveTrustbadgeCallback(event: { payload: Trustbadge }) {
@@ -328,6 +367,8 @@ class BaseLayer {
             [ this.eventsLib.EVENTS.GET_AVAILABLE_ORDER_STATUSES ]: this.getOrderStatusesCallback.bind( this ),
             [ this.eventsLib.EVENTS.GET_USED_ORDER_STATUSES ]: this.getUsedOrderStatusesCallback.bind( this ),
             [ this.eventsLib.EVENTS.SAVE_USED_ORDER_STATUSES ]: this.saveUsedOrderStatusesCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_STRUCTURED_MARKUP_CONFIGURATION_PROVIDED ]: this.getStructuredMarkupConfigurationCallback.bind( this ),
+            [ this.eventsLib.EVENTS.SAVE_STRUCTURED_MARKUP_CONFIGURATION ]: this.saveStructuredMarkupConfigurationCallback.bind( this ),
         });
     }
 
@@ -435,6 +476,7 @@ class BaseLayer {
                 this.settings.trustbadges         = { ...this.settings.trustbadges }
                 this.settings.widgets             = { ...this.settings.widgets }
                 this.settings.used_order_statuses = { ...this.settings.used_order_statuses }
+                this.settings.structured_markup   = { ...this.settings.structured_markup }
 
                 return this.settings;
             } ).catch( () => {

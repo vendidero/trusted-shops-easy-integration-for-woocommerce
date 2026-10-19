@@ -4,6 +4,7 @@ namespace Vendidero\TrustedShopsEasyIntegration;
 
 use Vendidero\TrustedShopsEasyIntegration\Admin\Helper;
 use Vendidero\TrustedShopsEasyIntegration\API\Events;
+use Vendidero\TrustedShopsEasyIntegration\API\JsonLd;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -20,6 +21,8 @@ class Package {
 	const VERSION = '2.0.8';
 
 	protected static $events_api = null;
+
+	protected static $json_ld_api = null;
 
 	protected static $sales_channels_map = null;
 
@@ -56,6 +59,23 @@ class Package {
 		do_action( 'ts_easy_integration_init' );
 	}
 
+	public static function setup_recurring_actions() {
+		if ( ! function_exists( 'WC' ) ) {
+			return;
+		}
+
+		if ( $queue = WC()->queue() ) {
+			if ( null === $queue->get_next( 'ts_easy_integration_fetch_json_ld', array(), 'ts_easy_integration' ) ) {
+				$date          = new \WC_DateTime();
+				$random_offset = wp_rand( 1, 3600 );
+				$date->modify( "+{$random_offset} seconds" );
+
+				$queue->cancel_all( 'ts_easy_integration_fetch_json_ld', array(), 'ts_easy_integration' );
+				$queue->schedule_recurring( $date->getTimestamp(), HOUR_IN_SECONDS * 4, 'ts_easy_integration_fetch_json_ld', array(), 'ts_easy_integration' );
+			}
+		}
+	}
+
 	public static function delete_export( $filename ) {
 		$upload_dir  = wp_upload_dir();
 		$path        = trailingslashit( $upload_dir['basedir'] ) . 'woocommerce_uploads/' . $filename;
@@ -86,6 +106,17 @@ class Package {
 		}
 
 		return self::$events_api;
+	}
+
+	/**
+	 * @return JsonLd
+	 */
+	public static function get_json_ld_api() {
+		if ( is_null( self::$json_ld_api ) ) {
+			self::$json_ld_api = new JsonLd();
+		}
+
+		return self::$json_ld_api;
 	}
 
 	public static function action_links( $links ) {
@@ -170,6 +201,17 @@ class Package {
 		add_action( 'init', array( '\Vendidero\TrustedShopsEasyIntegration\Shortcodes', 'init' ) );
 		add_action( 'init', array( __CLASS__, 'check_version' ), 10 );
 		add_action( 'init', array( __CLASS__, 'load_plugin_textdomain' ) );
+		add_action( 'init', array( __CLASS__, 'setup_recurring_actions' ), 10 );
+		add_action( 'ts_easy_integration_fetch_json_ld', array( __CLASS__, 'fetch_json_ld' ) );
+	}
+
+	public static function fetch_json_ld() {
+		foreach ( self::get_sales_channels() as $channel ) {
+			if ( $markup = self::channel_supports_json_ld( $channel['id'] ) ) {
+				self::log( sprintf( 'Attempting to update JSON LD schema for %1$s', wc_clean( $markup->tsId ) ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+				self::get_json_ld_api()->update_schema( $channel['id'] );
+			}
+		}
 	}
 
 	public static function load_plugin_textdomain() {
@@ -194,6 +236,11 @@ class Package {
 	public static function install() {
 		self::init();
 		Install::install();
+	}
+
+	public static function deactivate() {
+		self::init();
+		Install::deactivate();
 	}
 
 	public static function uninstall() {
@@ -510,6 +557,74 @@ class Package {
 		$trustbadges = array_filter( (array) self::get_setting( 'trustbadges', array() ) );
 
 		return $trustbadges;
+	}
+
+	public static function get_structured_markup( $sales_channel = '' ) {
+		$sales_channel      = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
+		$setting_key        = self::get_setting_key( $sales_channel );
+		$structured_markups = self::get_structured_markups();
+		$structured_markup  = ( self::is_configured( $sales_channel ) && array_key_exists( $setting_key, $structured_markups ) ) ? $structured_markups[ $setting_key ] : null;
+		$structured_markup  = ! is_null( $structured_markup ) && ! $structured_markup->enabled ? null : $structured_markup;
+
+		return $structured_markup;
+	}
+
+	public static function get_structured_markups() {
+		$structured_markup = array_filter( (array) self::get_setting( 'structured_markup', array() ) );
+
+		return $structured_markup;
+	}
+
+	public static function get_json_lds() {
+		$json_ld = array_filter( (array) self::get_setting( 'json_ld', array() ) );
+
+		return $json_ld;
+	}
+
+	public static function update_json_ld( $json_ld, $sales_channel = '' ) {
+		$sales_channel = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
+		$setting_key   = self::get_setting_key( $sales_channel );
+		$json_lds      = self::get_json_lds();
+
+		$json_lds[ $setting_key ] = $json_ld;
+
+		self::update_setting( 'json_ld', $json_lds );
+	}
+
+	public static function channel_supports_json_ld( $sales_channel = '' ) {
+		$sales_channel = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
+
+		if ( self::has_valid_trustbadge( $sales_channel ) && ( $markup = self::get_structured_markup( $sales_channel ) ) ) {
+			return $markup;
+		}
+
+		return false;
+	}
+
+	public static function get_json_ld( $sales_channel = '' ) {
+		$sales_channel = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
+		$setting_key   = self::get_setting_key( $sales_channel );
+		$json_lds      = self::get_json_lds();
+		$json_ld       = ( self::is_configured( $sales_channel ) && array_key_exists( $setting_key, $json_lds ) ) ? $json_lds[ $setting_key ] : false;
+
+		if ( false !== $json_ld ) {
+			$json_ld = wp_parse_args(
+				$json_ld,
+				array(
+					'json'       => '',
+					'etag'       => '',
+					'fetched_at' => 0,
+				)
+			);
+
+			$cutoff = strtotime( 'now' ) - ( HOUR_IN_SECONDS * 24 );
+
+			if ( $json_ld['fetched_at'] < $cutoff ) {
+				$json_ld = false;
+			}
+		}
+
+		return $json_ld;
 	}
 
 	public static function get_available_order_statuses( $sales_channel = '' ) {
@@ -905,6 +1020,8 @@ class Package {
 			'trustbadges'         => self::get_trustbadges(),
 			'widgets'             => self::get_widgets( false ),
 			'used_order_statuses' => self::get_used_order_statuses(),
+			'json_ld'             => self::get_json_ld(),
+			'structured_markup'   => self::get_structured_markups(),
 		);
 
 		return $settings;

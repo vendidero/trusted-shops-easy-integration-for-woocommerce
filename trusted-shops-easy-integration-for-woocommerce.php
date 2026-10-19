@@ -71,6 +71,7 @@ if ( is_readable( $autoloader ) ) {
 }
 
 register_activation_hook( __FILE__, array( '\Vendidero\TrustedShopsEasyIntegration\Package', 'install' ) );
+register_deactivation_hook( __FILE__, array( '\Vendidero\TrustedShopsEasyIntegration\Package', 'deactivate' ) );
 register_uninstall_hook( __FILE__, array( '\Vendidero\TrustedShopsEasyIntegration\Package', 'uninstall' ) );
 
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( '\Vendidero\TrustedShopsEasyIntegration\Package', 'action_links' ) );
