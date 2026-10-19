@@ -60,16 +60,24 @@ final class JsonLd extends Rest {
 				Package::log( sprintf( 'Error %1$s detected while retrieving JSON LD for %2$s: %3$s', $code, esc_html( $ts_id ), 'No markup is currently published for this TSID' ), 'error' );
 			} elseif ( 304 === $code ) {
 				Package::log( sprintf( 'Skipping JSON LD schema update due to etag match for %1$s', $ts_id ) );
+
+				/**
+				 * Update fetched_at timestamp anyway.
+				 */
+				if ( $existing_json ) {
+					$existing_json['fetched_at'] = strtotime( 'now' );
+					Package::update_json_ld( $existing_json, $sales_channel );
+				}
 			} else {
 				Package::log( sprintf( 'Error %1$s detected while retrieving JSON LD for %2$s: %3$s', $code, esc_html( $ts_id ), $message ), 'error' );
 			}
 		} else {
 			$headers        = $result->get_headers();
 			$json_ld_schema = Ajax::wc_clean( $result->get_body(), true );
-			$schema_as_json = wp_json_encode( $json_ld_schema, JSON_UNESCAPED_SLASHES );
+			$schema_as_json = wp_json_encode( $json_ld_schema, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG );
 			$result         = false;
 
-			if ( false !== $schema_as_json ) {
+			if ( false !== $schema_as_json && ! empty( $json_ld_schema['@context'] ) && ! empty( $json_ld_schema['@type'] ) ) {
 				$result = array(
 					'json'       => $schema_as_json,
 					'fetched_at' => strtotime( 'now' ),
@@ -86,9 +94,12 @@ final class JsonLd extends Rest {
 
 				if ( $needs_cache_update ) {
 					wp_cache_flush();
+					do_action( 'ts_easy_integration_json_ld_update_flush_cache' );
 				}
 
 				Package::log( sprintf( 'Updated JSON LD schema for %1$s: %2$s', $ts_id, wc_print_r( $result, true ) ) );
+			} else {
+				Package::log( sprintf( 'Issue while encoding schema for %1$s as JSON: %2$s', $ts_id, wc_print_r( $json_ld_schema, true ) ) );
 			}
 		}
 

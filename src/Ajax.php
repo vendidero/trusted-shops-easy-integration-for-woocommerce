@@ -133,10 +133,11 @@ class Ajax {
 			wp_die( -1 );
 		}
 
-		$settings          = self::get_request_data();
-		$original_settings = Package::get_settings();
-		$result            = true;
-		$settings_allowed  = array_merge( array( 'client_id', 'client_secret' ), array_keys( $original_settings ) );
+		$settings             = self::get_request_data();
+		$original_settings    = Package::get_settings();
+		$result               = true;
+		$settings_allowed     = array_merge( array( 'client_id', 'client_secret' ), array_keys( $original_settings ) );
+		$needs_json_ld_update = array();
 
 		try {
 			foreach ( $settings as $setting_name => $value ) {
@@ -289,8 +290,7 @@ class Ajax {
 						$value[ $channel_key ] = $widget;
 					}
 				} elseif ( 'structured_markup' === $setting_name ) {
-					$value       = (array) $value;
-					$needs_queue = false;
+					$value = (array) $value;
 
 					foreach ( $value as $channel_key => $structured_markup ) {
 						$structured_markup = self::parse_defaults(
@@ -305,14 +305,8 @@ class Ajax {
 
 						$value[ $channel_key ] = self::wc_clean( $structured_markup );
 
-						if ( true === $value[ $channel_key ]['enabled'] ) {
-							$needs_queue = true;
-						}
-					}
-
-					if ( $needs_queue ) {
-						if ( $queue = WC()->queue() ) {
-							$queue->schedule_single( time() + 10, 'ts_easy_integration_fetch_json_ld', array(), 'ts_easy_integration' );
+						if ( ! Package::get_structured_markup( $structured_markup['salesChannelRef'] ) && true === $value[ $channel_key ]['enabled'] ) {
+							$needs_json_ld_update[] = $structured_markup['salesChannelRef'];
 						}
 					}
 				} elseif ( 'client_id' === $setting_name ) {
@@ -344,6 +338,16 @@ class Ajax {
 				'settings' => Package::get_settings(),
 			);
 		} else {
+			if ( ! empty( $needs_json_ld_update ) ) {
+				if ( count( $needs_json_ld_update ) > 1 ) {
+					if ( $queue = WC()->queue() ) {
+						$queue->schedule_single( time() + 10, 'ts_easy_integration_fetch_json_ld', array(), 'ts_easy_integration' );
+					}
+				} else {
+					Package::get_json_ld_api()->update_schema( array_values( $needs_json_ld_update )[0] );
+				}
+			}
+
 			$response = array(
 				'success'  => true,
 				'message'  => '',

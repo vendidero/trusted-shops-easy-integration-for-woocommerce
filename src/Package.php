@@ -616,6 +616,12 @@ class Package {
 					'fetched_at' => 0,
 				)
 			);
+
+			$cutoff = strtotime( 'now' ) - ( HOUR_IN_SECONDS * 24 );
+
+			if ( $json_ld['fetched_at'] < $cutoff ) {
+				$json_ld = false;
+			}
 		}
 
 		return $json_ld;

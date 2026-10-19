@@ -13,6 +13,7 @@ class Hooks {
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register_scripts' ) );
 		add_filter( 'script_loader_tag', array( __CLASS__, 'filter_script_loader_tag' ), 1500, 2 );
 		add_action( 'wp_footer', array( __CLASS__, 'fallback_scripts' ), 500 );
+		add_action( 'wp_head', array( __CLASS__, 'json_ld' ), 50 );
 
 		add_action( 'woocommerce_thankyou', array( __CLASS__, 'thankyou' ), 10, 1 );
 
@@ -369,6 +370,16 @@ class Hooks {
 
 				$order->update_meta_data( '_ts_tb_shown', 'yes' );
 				$order->save();
+			}
+		}
+	}
+
+	public static function json_ld() {
+		$sales_channel = Package::get_current_sales_channel();
+
+		if ( Package::channel_supports_json_ld( $sales_channel ) ) {
+			if ( $json_ld = Package::get_json_ld( $sales_channel ) ) {
+				echo '<!-- added by Trusted Shops app: Start --><script type="application/ld+json">' . wc_esc_json( $json_ld['json'], true ) . '</script><!-- End -->'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
 		}
 	}
