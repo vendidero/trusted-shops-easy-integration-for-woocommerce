@@ -55,9 +55,9 @@ final class JsonLd extends Rest {
 			}
 
 			if ( 404 === $code ) {
-				Package::log( sprintf( 'Error %1$s detected while retrieving JSON LD for %2$s: %3$s', $code, esc_html( $ts_id ), 'Download refused due to origin: ' . esc_url_raw( $channel_url ) ), 'error' );
-			} elseif ( 400 === $code ) {
 				Package::log( sprintf( 'Error %1$s detected while retrieving JSON LD for %2$s: %3$s', $code, esc_html( $ts_id ), 'No markup is currently published for this TSID' ), 'error' );
+			} elseif ( 400 === $code ) {
+				Package::log( sprintf( 'Error %1$s detected while retrieving JSON LD for %2$s: %3$s', $code, esc_html( $ts_id ), 'Download refused due to origin: ' . esc_url_raw( $channel_url ) ), 'error' );
 			} elseif ( 304 === $code ) {
 				Package::log( sprintf( 'Skipping JSON LD schema update due to etag match for %1$s', $ts_id ) );
 

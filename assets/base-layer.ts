@@ -7,17 +7,26 @@ import type { Widgets } from './interfaces/widgets'
 import type { OrderStatus } from './interfaces/order-status'
 import type { StructuredMarkup } from "./interfaces/structured-markup";
 
+/**
+ * @see https://github.com/trustedshops-public/connect-app-eventslib
+ */
 class BaseLayer {
     private static _instance: BaseLayer;
 
     private settings: Settings|null;
-    
+
+    private settingsRequest: Promise<Settings>|null;
+
+    private updateQueue: Promise<unknown>;
+
     private eventsLib: EventsLib;
 
     private params: Params;
 
     private constructor() {
         this.settings = null;
+        this.settingsRequest = null;
+        this.updateQueue = Promise.resolve();
         this.eventsLib = ( window as any ).eventsLib as EventsLib;
         this.params = ( window as any ).ts_easy_integration_params as Params;
         
@@ -72,7 +81,7 @@ class BaseLayer {
 
     private async saveCredentialsCallback(event: { payload: { clientId: string; clientSecret: string; }; }) {
         try {
-            const settings = await this.getSettings().then( settings => {
+            await this.enqueueUpdate( () => this.getSettings().then( settings => {
                 if ( settings.client_id && settings.client_id.length > 0 ) {
                     if ( ! confirm( this.params.i18n_change_credentials ) ) {
                         throw new Error("unconfirmed");
@@ -82,10 +91,8 @@ class BaseLayer {
                 settings.client_id = event.payload.clientId;
                 settings.client_secret = event.payload.clientSecret;
 
-                return settings;
-            }).then( settings => {
                 return this.updateSettings( settings, true );
-            }).then( () => {
+            }) ).then( () => {
                 this.sendingNotification( this.eventsLib.EVENTS.SAVE_CREDENTIALS, 'success' );
             });
         } catch(e) {
@@ -118,7 +125,7 @@ class BaseLayer {
 
     private async saveMappedChannelsCallback(event: { payload: Channel[]; }) {
         try {
-            const settings = await this.getSettings().then( settings => {
+            await this.enqueueUpdate( () => this.getSettings().then( settings => {
                 const currentChannels = settings.channels.map( (obj) => {
                     return obj.salesChannelRef + '_' + obj.eTrustedChannelRef;
                 });
@@ -137,10 +144,8 @@ class BaseLayer {
 
                 settings.channels = event.payload;
 
-                return settings;
-            }).then( settings => {
                 return this.updateSettings( settings );
-            }).then( () => {
+            }) ).then( () => {
                 this.getMappedChannelsCallback().then( () => {
                     this.sendingNotification( this.eventsLib.EVENTS.SET_MAPPED_CHANNELS, 'success' );
                 });
@@ -156,9 +161,11 @@ class BaseLayer {
                 throw new Error( this.params.i18n_disconnect );
             }
 
-            await this.disconnect().then( result => {
-                this.eventsLib.dispatchAction({ action: this.eventsLib.EVENTS.SET_DISCONNECTED, payload: null });
+            await this.enqueueUpdate( async () => {
+                await this.disconnect();
                 this.settings = null;
+            } ).then( () => {
+                this.eventsLib.dispatchAction({ action: this.eventsLib.EVENTS.SET_DISCONNECTED, payload: null });
             });
         } catch(e) {
             this.sendingNotification( this.eventsLib.EVENTS.SET_DISCONNECTED, 'error' );
@@ -199,13 +206,11 @@ class BaseLayer {
 
     private async saveStructuredMarkupConfigurationCallback(event: { payload: StructuredMarkup }) {
         try {
-            const settings = await this.getSettings().then( settings => {
+            await this.enqueueUpdate( () => this.getSettings().then( settings => {
                 settings.structured_markup[ this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ] = event.payload;
 
-                return settings;
-            }).then( settings => {
                 return this.updateSettings( settings );
-            }).then( () => {
+            }) ).then( () => {
                 this.getStructuredMarkupConfigurationCallback( { payload: event.payload } ).then( () => {
                     this.sendingNotification( this.eventsLib.EVENTS.SAVE_STRUCTURED_MARKUP_CONFIGURATION, 'success' );
                 });
@@ -217,13 +222,11 @@ class BaseLayer {
 
     private async saveTrustbadgeCallback(event: { payload: Trustbadge }) {
         try {
-            const settings = await this.getSettings().then( settings => {
+            await this.enqueueUpdate( () => this.getSettings().then( settings => {
                 settings.trustbadges[ this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ] = event.payload;
 
-                return settings;
-            }).then( settings => {
                 return this.updateSettings( settings );
-            }).then( () => {
+            }) ).then( () => {
                 this.getTrustbadgeCallback( { payload: event.payload } ).then( () => {
                     this.sendingNotification( this.eventsLib.EVENTS.SAVE_TRUSTBADGE_CONFIGURATION, 'success' );
                 });
@@ -286,13 +289,11 @@ class BaseLayer {
 
     private async saveUsedOrderStatusesCallback(event: { payload: { id: string, eTrustedChannelRef: string, salesChannelRef: string, activeStatus: { product: OrderStatus, service: OrderStatus } } }) {
         try {
-            const settings = await this.getSettings().then( settings => {
+            await this.enqueueUpdate( () => this.getSettings().then( settings => {
                 settings.used_order_statuses[ this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ] = event.payload.activeStatus;
 
-                return settings;
-            }).then(settings => {
                 return this.updateSettings( settings );
-            }).then( () => {
+            }) ).then( () => {
                 this.getUsedOrderStatusesCallback( { payload: event.payload } ).then( () => {
                     this.sendingNotification( this.eventsLib.EVENTS.SAVE_USED_ORDER_STATUSES, 'success' );
                 });
@@ -304,13 +305,11 @@ class BaseLayer {
 
     private async saveWidgetsCallback(event: { payload: Widgets }) {
         try {
-            const settings = await this.getSettings().then( settings => {
+            await this.enqueueUpdate( () => this.getSettings().then( settings => {
                 settings.widgets[ this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ] = event.payload;
 
-                return settings;
-            }).then(settings => {
                 return this.updateSettings( settings );
-            }).then( () => {
+            }) ).then( () => {
                 this.getWidgetsCallback( { payload: event.payload } ).then( () => {
                     this.sendingNotification( this.eventsLib.EVENTS.SAVE_WIDGET_CHANGES, 'success' );
                 });
@@ -451,44 +450,67 @@ class BaseLayer {
         return this.params.ajax_url + '?action=' + action + '&security=' + nonce;
     }
 
+    /**
+     * Run settings updates sequentially. Each task reads the settings only after
+     * the previous update finished, which prevents concurrent requests from
+     * overriding each other.
+     */
+    private enqueueUpdate<T>( task: () => Promise<T> ): Promise<T> {
+        const result = this.updateQueue.then( task );
+
+        // Keep the queue going even if a task fails
+        this.updateQueue = result.catch( () => undefined );
+
+        return result;
+    }
+
     private async getSettings(): Promise<Settings> {
-        if ( ! this.settings ) {
-            const response = await fetch( this.getAjaxUrl( 'get_settings' ), {
-                headers: {
-                    'Content-Type': 'application/json;charset=UTF-8'
-                },
-                method: 'POST',
-                body: JSON.stringify({})
-            }).catch( () => {
-                throw new TypeError("Error message");
-            });
-
-            return await response.json().then( data => {
-                this.settings = data.settings as Settings;
-
-                const client_id     = response.headers.get('Client-Id');
-                const client_secret = response.headers.get('Client-Secret');
-
-                this.settings.client_id     = client_id !== null ? atob( client_id ) : '';
-                this.settings.client_secret = client_secret !== null ? atob( client_secret ) : '';
-
-                // Force parsing index signatures as objects to make sure JSON.stringify works as expected
-                this.settings.trustbadges         = { ...this.settings.trustbadges }
-                this.settings.widgets             = { ...this.settings.widgets }
-                this.settings.used_order_statuses = { ...this.settings.used_order_statuses }
-                this.settings.structured_markup   = { ...this.settings.structured_markup }
-
-                return this.settings;
-            } ).catch( () => {
-                throw new TypeError("Error message");
-            });
+        if ( this.settings ) {
+            return this.settings;
         }
 
-        if ( ! this.settings ) {
+        // Share a pending request between concurrent callers
+        if ( ! this.settingsRequest ) {
+            this.settingsRequest = this.fetchSettings();
+        }
+
+        try {
+            return await this.settingsRequest;
+        } finally {
+            this.settingsRequest = null;
+        }
+    }
+
+    private async fetchSettings(): Promise<Settings> {
+        const response = await fetch( this.getAjaxUrl( 'get_settings' ), {
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8'
+            },
+            method: 'POST',
+            body: JSON.stringify({})
+        }).catch( () => {
             throw new TypeError("Error message");
-        }
+        });
 
-        return this.settings;
+        return await response.json().then( data => {
+            this.settings = data.settings as Settings;
+
+            const client_id     = response.headers.get('Client-Id');
+            const client_secret = response.headers.get('Client-Secret');
+
+            this.settings.client_id     = client_id !== null ? atob( client_id ) : '';
+            this.settings.client_secret = client_secret !== null ? atob( client_secret ) : '';
+
+            // Force parsing index signatures as objects to make sure JSON.stringify works as expected
+            this.settings.trustbadges         = { ...this.settings.trustbadges }
+            this.settings.widgets             = { ...this.settings.widgets }
+            this.settings.used_order_statuses = { ...this.settings.used_order_statuses }
+            this.settings.structured_markup   = { ...this.settings.structured_markup }
+
+            return this.settings;
+        } ).catch( () => {
+            throw new TypeError("Error message");
+        });
     }
 
     private updateSettingsData( result: Settings ) {
@@ -527,6 +549,7 @@ class BaseLayer {
         settingsToUpdate.trustbadges = { ...settings.trustbadges }
         settingsToUpdate.widgets     = { ...settings.widgets }
         settingsToUpdate.used_order_statuses = { ...settings.used_order_statuses }
+        settingsToUpdate.structured_markup = { ...settings.structured_markup }
 
         const headers = {
             'Content-Type': 'application/json;charset=UTF-8',
