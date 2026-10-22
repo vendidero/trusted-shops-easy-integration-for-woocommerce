@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || exit;
 final class JsonLd extends Rest {
 
 	protected function get_url() {
-		return Package::is_debug_mode() ? 'https://widgets-qa.trustedshops.com/js/' : 'https://widgets-qa.trustedshops.com/js/';
+		return Package::is_debug_mode() ? 'https://widgets-qa.trustedshops.com/js/' : 'https://widgets.trustedshops.com/js/';
 	}
 
 	protected function has_auth() {
