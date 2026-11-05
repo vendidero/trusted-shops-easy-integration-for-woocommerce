@@ -3,6 +3,7 @@ import type { Trustbadge } from './trustbadge'
 import type { Widgets } from './widgets'
 import type { StructuredMarkup } from './structured-markup'
 import type { OrderStatus } from "./order-status";
+import type { TrstdLogin } from './trstd-login'
 
 export interface Settings {
     client_id?: string;
@@ -22,5 +23,8 @@ export interface Settings {
     }
     widgets: {
         [key: string]: Widgets
+    }
+    trstd_login: {
+        [key: string]: TrstdLogin
     }
 }

@@ -199,6 +199,7 @@ class Package {
 
 	protected static function init_hooks() {
 		add_action( 'init', array( '\Vendidero\TrustedShopsEasyIntegration\Shortcodes', 'init' ) );
+		add_action( 'init', array( '\Vendidero\TrustedShopsEasyIntegration\TrstdLogin', 'init' ) );
 		add_action( 'init', array( __CLASS__, 'check_version' ), 10 );
 		add_action( 'init', array( __CLASS__, 'load_plugin_textdomain' ) );
 		add_action( 'init', array( __CLASS__, 'setup_recurring_actions' ), 10 );
@@ -418,18 +419,6 @@ class Package {
 					'url'    => get_bloginfo( 'url' ),
 					'locale' => self::get_ts_locale( get_locale() ),
 				),
-                'test' => array(
-                    'id'     => 'test',
-                    'name'   => html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES ) . '-test',
-                    'url'    => get_bloginfo( 'url' ),
-                    'locale' => self::get_ts_locale( get_locale() ),
-                ),
-                'test_2' => array(
-                    'id'     => 'test_2',
-                    'name'   => html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES ) . 'test-2',
-                    'url'    => get_bloginfo( 'url' ),
-                    'locale' => self::get_ts_locale( get_locale() ),
-                ),
 			)
 		);
 
@@ -637,6 +626,179 @@ class Package {
 		}
 
 		return $json_ld;
+	}
+
+	/**
+	 * Returns the #trstd login configurations, per channel key, as provided by the connector.
+	 * Configurations are persisted as JSON strings and decoded on read.
+	 *
+	 * @return \stdClass[]
+	 */
+	public static function get_trstd_logins() {
+		$stored = array_filter( (array) self::get_setting( 'trstd_login', array() ) );
+		$result = array();
+
+		foreach ( $stored as $setting_key => $config ) {
+			$config = is_string( $config ) ? json_decode( $config ) : json_decode( wp_json_encode( $config ) );
+
+			if ( is_object( $config ) ) {
+				$result[ $setting_key ] = $config;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Returns the #trstd login configuration for a certain sales channel.
+	 *
+	 * @param string $sales_channel
+	 *
+	 * @return \stdClass|false
+	 */
+	public static function get_trstd_login( $sales_channel = '' ) {
+		$sales_channel = '' === $sales_channel ? self::get_current_sales_channel() : $sales_channel;
+		$setting_key   = self::get_setting_key( $sales_channel );
+		$configs       = self::get_trstd_logins();
+
+		return ( self::is_configured( $sales_channel ) && array_key_exists( $setting_key, $configs ) ) ? $configs[ $setting_key ] : false;
+	}
+
+	/**
+	 * Whether #trstd login is explicitly enabled for a certain sales channel.
+	 *
+	 * @param string $sales_channel
+	 *
+	 * @return bool
+	 */
+	public static function is_trstd_login_enabled( $sales_channel = '' ) {
+		$config = self::get_trstd_login( $sales_channel );
+
+		return $config && isset( $config->configuration->integration->trstdLoginEnabled ) && true === $config->configuration->integration->trstdLoginEnabled; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+	}
+
+	/**
+	 * Returns the custom element tag name to be placed in the header, e.g. trstd-login.
+	 *
+	 * @param string $sales_channel
+	 *
+	 * @return string
+	 */
+	public static function get_trstd_login_element_tag( $sales_channel = '' ) {
+		$tag    = 'trstd-login';
+		$config = self::get_trstd_login( $sales_channel );
+
+		if ( $config && isset( $config->configuration->integration->tag ) && self::is_valid_custom_element_name( $config->configuration->integration->tag ) ) {
+			$tag = strtolower( $config->configuration->integration->tag );
+		}
+
+		return $tag;
+	}
+
+	/**
+	 * Builds the #trstd login integration script tag from the stored configuration.script node.
+	 * Every attribute present is replayed (e.g. type, src, data-integration-id) as long as it is safe to embed.
+	 *
+	 * @param string $sales_channel
+	 *
+	 * @return string Script HTML or an empty string in case the script could not be built.
+	 */
+	public static function get_trstd_login_script_html( $sales_channel = '' ) {
+		$config = self::get_trstd_login( $sales_channel );
+
+		if ( ! $config || ! isset( $config->configuration->script ) ) {
+			return '';
+		}
+
+		$attributes = self::get_trstd_login_script_attributes( $config->configuration->script );
+
+		if ( is_wp_error( $attributes ) ) {
+			self::log( 'Skipped #trstd login script output: ' . $attributes->get_error_message() );
+			return '';
+		}
+
+		$html = '<script';
+
+		foreach ( $attributes as $name => $value ) {
+			$html .= true === $value ? ' ' . esc_attr( $name ) : ' ' . esc_attr( $name ) . '="' . esc_attr( $value ) . '"';
+		}
+
+		$html .= '></script>';
+
+		return $html;
+	}
+
+	/**
+	 * Parses and validates the attributes of a #trstd login script node.
+	 *
+	 * @param mixed $script The script node (object or array).
+	 *
+	 * @return array|\WP_Error attribute name => value (true for boolean attributes)
+	 */
+	public static function get_trstd_login_script_attributes( $script ) {
+		$script = json_decode( wp_json_encode( $script ), true );
+
+		if ( ! is_array( $script ) ) {
+			return new \WP_Error( 'trstd_login_invalid_script', 'Invalid script node.' );
+		}
+
+		$tag = isset( $script['tag'] ) && is_string( $script['tag'] ) && '' !== $script['tag'] ? strtolower( trim( $script['tag'] ) ) : 'script';
+
+		if ( 'script' !== $tag ) {
+			return new \WP_Error( 'trstd_login_invalid_tag', 'Invalid script tag.' );
+		}
+
+		$attributes = array();
+
+		foreach ( ( isset( $script['attributes'] ) && is_array( $script['attributes'] ) ? $script['attributes'] : array() ) as $key => $attribute ) {
+			if ( is_array( $attribute ) ) {
+				$name  = isset( $attribute['attributeName'] ) && is_string( $attribute['attributeName'] ) && '' !== $attribute['attributeName'] ? $attribute['attributeName'] : $key;
+				$value = array_key_exists( 'value', $attribute ) ? $attribute['value'] : true;
+			} else {
+				// Tolerate plain string entries, e.g. "type": "module".
+				$name  = $key;
+				$value = $attribute;
+			}
+
+			if ( ! is_string( $name ) || ! preg_match( '/^[A-Za-z][A-Za-z0-9_.:-]*$/', $name ) ) {
+				return new \WP_Error( 'trstd_login_invalid_attribute', 'Invalid attribute name: ' . esc_html( (string) $name ) );
+			}
+
+			$name = strtolower( $name );
+
+			// Never replay inline event handlers.
+			if ( 'on' === substr( $name, 0, 2 ) ) {
+				return new \WP_Error( 'trstd_login_invalid_attribute', 'Invalid attribute name: ' . esc_html( $name ) );
+			}
+
+			if ( is_bool( $value ) ) {
+				if ( ! $value ) {
+					continue;
+				}
+			} elseif ( is_scalar( $value ) ) {
+				$value = (string) $value;
+
+				if ( 'src' === $name || filter_var( $value, FILTER_VALIDATE_URL ) || '//' === substr( $value, 0, 2 ) ) {
+					if ( ! self::is_allowed_trusted_shops_url( $value ) ) {
+						return new \WP_Error( 'trstd_login_invalid_host', 'Invalid attribute host detected.' );
+					}
+				}
+			} else {
+				continue;
+			}
+
+			$attributes[ $name ] = $value;
+		}
+
+		if ( empty( $attributes['src'] ) || true === $attributes['src'] ) {
+			return new \WP_Error( 'trstd_login_missing_src', 'Missing script src.' );
+		}
+
+		return $attributes;
+	}
+
+	public static function is_valid_custom_element_name( $name ) {
+		return is_string( $name ) && (bool) preg_match( '/^[a-z][a-z0-9]*(-[a-z0-9]+)+$/', strtolower( $name ) );
 	}
 
 	public static function get_available_order_statuses( $sales_channel = '' ) {
@@ -1034,6 +1196,7 @@ class Package {
 			'used_order_statuses' => self::get_used_order_statuses(),
 			'json_ld'             => self::get_json_ld(),
 			'structured_markup'   => self::get_structured_markups(),
+			'trstd_login'         => self::get_trstd_logins(),
 		);
 
 		return $settings;

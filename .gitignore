@@ -38,6 +38,7 @@ Thumbs.db
 /lib/vendor/
 /bin/composer/**/vendor/
 /dist
+/build
 
 /release/
 

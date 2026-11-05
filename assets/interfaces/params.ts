@@ -1,6 +1,7 @@
 import type { SaleChannel } from './sale-channel'
 import type { WidgetLocation } from './widget-location'
 import {OrderStatus} from "./order-status";
+import type { TrstdLoginLocation } from './trstd-login'
 
 export interface Params {
     ajax_url: string;
@@ -18,6 +19,8 @@ export interface Params {
     }
     version_of_system: string;
     supports_estimated_delivery_date: boolean;
+    supports_trstd_login: boolean;
+    trstd_login_locations: TrstdLoginLocation[];
     version: string;
     widget_locations: [],
     sales_channels: WidgetLocation[];
