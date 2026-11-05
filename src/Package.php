@@ -418,18 +418,6 @@ class Package {
 					'url'    => get_bloginfo( 'url' ),
 					'locale' => self::get_ts_locale( get_locale() ),
 				),
-                'test' => array(
-                    'id'     => 'test',
-                    'name'   => html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES ) . '-test',
-                    'url'    => get_bloginfo( 'url' ),
-                    'locale' => self::get_ts_locale( get_locale() ),
-                ),
-                'test_2' => array(
-                    'id'     => 'test_2',
-                    'name'   => html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES ) . 'test-2',
-                    'url'    => get_bloginfo( 'url' ),
-                    'locale' => self::get_ts_locale( get_locale() ),
-                ),
 			)
 		);
 
