@@ -67,7 +67,7 @@ class Package {
 		if ( $queue = WC()->queue() ) {
 			if ( null === $queue->get_next( 'ts_easy_integration_fetch_json_ld', array(), 'ts_easy_integration' ) ) {
 				$date          = new \WC_DateTime();
-				$random_offset = wp_rand( 1, 3600 );
+				$random_offset = wp_rand( 2, 3600 );
 				$date->modify( "+{$random_offset} seconds" );
 
 				$queue->cancel_all( 'ts_easy_integration_fetch_json_ld', array(), 'ts_easy_integration' );
@@ -418,6 +418,18 @@ class Package {
 					'url'    => get_bloginfo( 'url' ),
 					'locale' => self::get_ts_locale( get_locale() ),
 				),
+                'test' => array(
+                    'id'     => 'test',
+                    'name'   => html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES ) . '-test',
+                    'url'    => get_bloginfo( 'url' ),
+                    'locale' => self::get_ts_locale( get_locale() ),
+                ),
+                'test_2' => array(
+                    'id'     => 'test_2',
+                    'name'   => html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES ) . 'test-2',
+                    'url'    => get_bloginfo( 'url' ),
+                    'locale' => self::get_ts_locale( get_locale() ),
+                ),
 			)
 		);
 
