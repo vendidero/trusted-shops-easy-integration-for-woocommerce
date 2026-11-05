@@ -1,0 +1,1 @@
+import{getContext as t,store as n}from"@wordpress/interactivity";n("ts-easy-integration/trstd-login",{callbacks:{init:function(){var n=t();n.tag&&window.customElements&&window.customElements.whenDefined(n.tag).then(function(){n.isReady=!0}).catch(function(){})}}});
