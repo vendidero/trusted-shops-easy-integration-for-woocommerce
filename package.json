@@ -9,6 +9,10 @@
     "phpunit": "docker-compose up -d db && docker-compose up -d --build wordpress-unit-tests && docker exec -it --workdir /var/www/html/wp-content/plugins/trusted-shops-easy-integration-for-woocommerce ts_easy_integration_wordpress_test php ./vendor/bin/phpunit"
   },
   "author": "vendidero",
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=11.0.0"
+  },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.24.7",
     "@babel/core": "^7.16.0",

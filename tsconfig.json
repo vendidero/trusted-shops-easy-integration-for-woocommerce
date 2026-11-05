@@ -16,5 +16,6 @@
     "suppressImplicitAnyIndexErrors": true,
     "isolatedModules": true
   },
-  "exclude": ["node_modules", "dist"]
+  "include": ["assets/**/*.ts"],
+  "exclude": ["node_modules", "dist", "build", "vendor"]
 }
