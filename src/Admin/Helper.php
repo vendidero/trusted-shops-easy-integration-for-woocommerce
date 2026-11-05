@@ -237,6 +237,13 @@ class Helper {
 						),
 					),
 					'supports_estimated_delivery_date' => false,
+					'supports_trstd_login'             => (bool) apply_filters( 'ts_easy_integration_supports_trstd_login', true ),
+					'trstd_login_locations'            => array(
+						array(
+							'id'   => 'trstd-loc-navbar',
+							'name' => 'Header',
+						),
+					),
 				)
 			);
 		}

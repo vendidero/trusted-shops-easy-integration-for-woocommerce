@@ -2,6 +2,7 @@
 /*.md export-ignore
 /*.yml export-ignore
 /node_modules* export-ignore
+/build* export-ignore
 /tests export-ignore
 /bin export-ignore
 /composer.* export-ignore

@@ -8,7 +8,8 @@ class Shortcodes {
 
 	public static function init() {
 		$shortcodes = array(
-			'ts_widget' => __CLASS__ . '::widget',
+			'ts_widget'      => __CLASS__ . '::widget',
+			'ts_trstd_login' => __CLASS__ . '::trstd_login',
 		);
 
 		foreach ( $shortcodes as $shortcode => $function ) {
@@ -22,6 +23,10 @@ class Shortcodes {
 			 */
 			add_shortcode( $shortcode, $function );
 		}
+	}
+
+	public static function trstd_login( $args = array() ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+		return TrstdLogin::get_element_html();
 	}
 
 	public static function widget( $args ) {

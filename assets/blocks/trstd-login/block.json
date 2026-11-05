@@ -1,0 +1,20 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "ts-easy-integration/trstd-login",
+	"title": "#trstd login",
+	"description": "Places the Trusted Shops #trstd login element, e.g. next to the account or cart icon within your header. Rendered only in case #trstd login is enabled for the current channel.",
+	"category": "woocommerce",
+	"keywords": [ "Trusted Shops", "trstd", "login" ],
+	"icon": "shield",
+	"textdomain": "trusted-shops-easy-integration-for-woocommerce",
+	"supports": {
+		"html": false,
+		"interactivity": true,
+		"spacing": {
+			"margin": true
+		}
+	},
+	"attributes": {},
+	"editorScript": "ts-easy-integration-trstd-login-editor"
+}

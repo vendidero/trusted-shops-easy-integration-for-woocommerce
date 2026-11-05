@@ -54,11 +54,12 @@ class Ajax {
 
 	/**
 	 * @param $attribute
+	 * @param string[] $additional_allowed_names Additional attribute names allowed besides the default script attributes.
 	 *
 	 * @return array
 	 * @throws \Exception
 	 */
-	protected static function parse_attribute( $attribute ) {
+	protected static function parse_attribute( $attribute, $additional_allowed_names = array() ) {
 		$attribute = wp_parse_args(
 			$attribute,
 			array(
@@ -69,7 +70,7 @@ class Ajax {
 		$valid_attributes           = array( 'attributeName' );
 		$attribute['attributeName'] = self::wc_clean( $attribute['attributeName'] );
 
-		if ( ! Package::is_allowed_script_attribute( $attribute['attributeName'] ) ) {
+		if ( ! Package::is_allowed_script_attribute( $attribute['attributeName'] ) && ! in_array( $attribute['attributeName'], $additional_allowed_names, true ) ) {
 			throw new \Exception( 'Invalid attribute name: ' . esc_html( $attribute['attributeName'] ), 500 );
 		}
 
@@ -92,6 +93,109 @@ class Ajax {
 		$attribute = array_intersect_key( $attribute, array_flip( $valid_attributes ) );
 
 		return $attribute;
+	}
+
+	/**
+	 * Additional script attributes allowed for the #trstd login integration script, e.g. type="module".
+	 *
+	 * @return string[]
+	 */
+	protected static function get_trstd_login_additional_script_attributes() {
+		return array( 'type', 'crossorigin', 'integrity', 'referrerpolicy', 'nomodule' );
+	}
+
+	/**
+	 * Sanitize a #trstd login configuration as received from the connector.
+	 *
+	 * @param mixed $trstd_login
+	 *
+	 * @return array
+	 * @throws \Exception
+	 */
+	public static function sanitize_trstd_login( $trstd_login ) {
+		$trstd_login = self::parse_defaults(
+			self::wc_clean( json_decode( wp_json_encode( $trstd_login ), true ) ),
+			array(
+				'id'                 => '',
+				'salesChannelRef'    => '',
+				'eTrustedChannelRef' => '',
+				'configuration'      => array(),
+			)
+		);
+
+		if ( empty( $trstd_login['salesChannelRef'] ) || empty( $trstd_login['eTrustedChannelRef'] ) ) {
+			throw new \Exception( 'Invalid #trstd login configuration detected.', 500 );
+		}
+
+		$configuration = self::parse_defaults(
+			$trstd_login['configuration'],
+			array(
+				'script'      => array(),
+				'integration' => array(),
+			)
+		);
+
+		$script = self::parse_defaults(
+			$configuration['script'],
+			array(
+				'tag'        => 'script',
+				'attributes' => array(),
+			)
+		);
+
+		$attributes = array();
+
+		foreach ( (array) $script['attributes'] as $attribute_key => $attribute ) {
+			// Tolerate plain string entries, e.g. "type": "module".
+			if ( ! is_array( $attribute ) ) {
+				$attribute = array( 'value' => $attribute );
+			}
+
+			if ( empty( $attribute['attributeName'] ) ) {
+				$attribute['attributeName'] = $attribute_key;
+			}
+
+			$attribute_name = strtolower( self::wc_clean( $attribute['attributeName'] ) );
+
+			// Drop attributes which may not be embedded instead of rejecting the whole configuration.
+			if ( ! Package::is_allowed_script_attribute( $attribute_name ) && ! in_array( $attribute_name, self::get_trstd_login_additional_script_attributes(), true ) ) {
+				continue;
+			}
+
+			$attribute['attributeName']    = $attribute_name;
+			$attributes[ $attribute_name ] = self::parse_attribute( $attribute, self::get_trstd_login_additional_script_attributes() );
+		}
+
+		$integration = self::parse_defaults(
+			$configuration['integration'],
+			array(
+				'applicationType'   => '',
+				'tag'               => 'trstd-login',
+				'location'          => array(),
+				'trstdLoginEnabled' => false,
+			)
+		);
+
+		$integration['tag']               = Package::is_valid_custom_element_name( $integration['tag'] ) ? strtolower( $integration['tag'] ) : 'trstd-login';
+		$integration['trstdLoginEnabled'] = wc_string_to_bool( $integration['trstdLoginEnabled'] );
+		$integration['location']          = self::parse_defaults(
+			$integration['location'],
+			array(
+				'id'   => '',
+				'name' => '',
+			)
+		);
+
+		$trstd_login['configuration'] = array(
+			'script'      => array(
+				// The integration script is always embedded as script tag.
+				'tag'        => 'script',
+				'attributes' => $attributes,
+			),
+			'integration' => $integration,
+		);
+
+		return $trstd_login;
 	}
 
 	protected static function parse_defaults( $value, $defaults = array() ) {
@@ -308,6 +412,12 @@ class Ajax {
 						if ( ! Package::get_structured_markup( $structured_markup['salesChannelRef'] ) && true === $value[ $channel_key ]['enabled'] ) {
 							$needs_json_ld_update[] = $structured_markup['salesChannelRef'];
 						}
+					}
+				} elseif ( 'trstd_login' === $setting_name ) {
+					$value = (array) $value;
+
+					foreach ( $value as $channel_key => $trstd_login ) {
+						$value[ $channel_key ] = wp_json_encode( self::sanitize_trstd_login( $trstd_login ) );
 					}
 				} elseif ( 'client_id' === $setting_name ) {
 					if ( ! preg_match( '/[a-zA-Z0-9]{12}__[a-zA-Z0-9]+$/', $value ) ) {

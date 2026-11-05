@@ -6,6 +6,7 @@ import type { Channel } from './interfaces/channel'
 import type { Widgets } from './interfaces/widgets'
 import type { OrderStatus } from './interfaces/order-status'
 import type { StructuredMarkup } from "./interfaces/structured-markup";
+import type { TrstdLogin } from "./interfaces/trstd-login";
 
 /**
  * @see https://github.com/trustedshops-public/connect-app-eventslib
@@ -66,6 +67,7 @@ class BaseLayer {
                 allowsSupportWidgets: true,
                 useVersionNumberOfConnector: '2.0',
                 allowsSupportStructuredMarkup: true,
+                allowsSupportTrstdLogin: !! this.params.supports_trstd_login,
             },
         });
     }
@@ -140,6 +142,7 @@ class BaseLayer {
                     delete settings.trustbadges[ channelKey ];
                     delete settings.widgets[ channelKey ];
                     delete settings.used_order_statuses[ channelKey ];
+                    delete settings.trstd_login[ channelKey ];
                 });
 
                 settings.channels = event.payload;
@@ -217,6 +220,48 @@ class BaseLayer {
             });
         } catch(e) {
             this.sendingNotification( this.eventsLib.EVENTS.SAVE_STRUCTURED_MARKUP_CONFIGURATION, 'error' );
+        }
+    }
+
+    private getTrstdLoginLocationsCallback() {
+        this.eventsLib.dispatchAction({
+            action: this.eventsLib.EVENTS.SET_LOCATION_FOR_TRSTDLOGIN,
+            payload: this.params.trstd_login_locations,
+        });
+    }
+
+    private async getTrstdLoginConfigurationCallback( event: { payload: { salesChannelRef: string; eTrustedChannelRef: string; }; } ) {
+        await this.getTrstdLogin( this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ).then( trstdLogin => {
+            this.eventsLib.dispatchAction({
+                action: this.eventsLib.EVENTS.SET_TRSTDLOGIN_CONFIGURATION_PROVIDED,
+                payload: trstdLogin,
+            })
+        });
+    }
+
+    private async getTrstdLogin( id: string ): Promise<TrstdLogin|null> {
+        try {
+            return await this.getSettings().then( settings => {
+                return settings.trstd_login.hasOwnProperty( id ) ? settings.trstd_login[ id ] : null;
+            });
+        } catch(e) {
+            return null;
+        }
+    }
+
+    private async saveTrstdLoginConfigurationCallback( event: { payload: TrstdLogin } ) {
+        try {
+            await this.enqueueUpdate( () => this.getSettings().then( settings => {
+                settings.trstd_login[ this.getUniqueId( event.payload.salesChannelRef, event.payload.eTrustedChannelRef ) ] = event.payload;
+
+                return this.updateSettings( settings );
+            }) ).then( () => {
+                this.getTrstdLoginConfigurationCallback( { payload: event.payload } ).then( () => {
+                    this.sendingNotification( this.eventsLib.EVENTS.SAVE_TRSTDLOGIN_CONFIGURATION, 'success' );
+                });
+            });
+        } catch(e) {
+            this.sendingNotification( this.eventsLib.EVENTS.SAVE_TRSTDLOGIN_CONFIGURATION, 'error' );
         }
     }
 
@@ -368,6 +413,9 @@ class BaseLayer {
             [ this.eventsLib.EVENTS.SAVE_USED_ORDER_STATUSES ]: this.saveUsedOrderStatusesCallback.bind( this ),
             [ this.eventsLib.EVENTS.GET_STRUCTURED_MARKUP_CONFIGURATION_PROVIDED ]: this.getStructuredMarkupConfigurationCallback.bind( this ),
             [ this.eventsLib.EVENTS.SAVE_STRUCTURED_MARKUP_CONFIGURATION ]: this.saveStructuredMarkupConfigurationCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_LOCATION_FOR_TRSTDLOGIN ]: this.getTrstdLoginLocationsCallback.bind( this ),
+            [ this.eventsLib.EVENTS.GET_TRSTDLOGIN_CONFIGURATION_PROVIDED ]: this.getTrstdLoginConfigurationCallback.bind( this ),
+            [ this.eventsLib.EVENTS.SAVE_TRSTDLOGIN_CONFIGURATION ]: this.saveTrstdLoginConfigurationCallback.bind( this ),
         });
     }
 
@@ -506,6 +554,7 @@ class BaseLayer {
             this.settings.widgets             = { ...this.settings.widgets }
             this.settings.used_order_statuses = { ...this.settings.used_order_statuses }
             this.settings.structured_markup   = { ...this.settings.structured_markup }
+            this.settings.trstd_login         = { ...this.settings.trstd_login }
 
             return this.settings;
         } ).catch( () => {
@@ -550,6 +599,7 @@ class BaseLayer {
         settingsToUpdate.widgets     = { ...settings.widgets }
         settingsToUpdate.used_order_statuses = { ...settings.used_order_statuses }
         settingsToUpdate.structured_markup = { ...settings.structured_markup }
+        settingsToUpdate.trstd_login = { ...settings.trstd_login }
 
         const headers = {
             'Content-Type': 'application/json;charset=UTF-8',
