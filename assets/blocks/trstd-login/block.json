@@ -5,8 +5,7 @@
 	"title": "#trstd login",
 	"description": "Places the Trusted Shops #trstd login element, e.g. next to the account or cart icon within your header. Rendered only in case #trstd login is enabled for the current channel.",
 	"category": "woocommerce",
-	"keywords": [ "Trusted Shops", "trstd", "login" ],
-	"icon": "shield",
+	"keywords": [ "Trusted Shops", "trstd", "login", "trusted" ],
 	"textdomain": "trusted-shops-easy-integration-for-woocommerce",
 	"supports": {
 		"html": false,

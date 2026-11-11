@@ -46,7 +46,13 @@ module.exports = ({ development }) => {
                 path: path.resolve(__dirname, "dist/blocks/trstd-login")
             },
             module: {
-                rules: [ tsRule() ],
+                rules: [
+                    tsRule(),
+                    {
+                        test: /\.svg$/,
+                        type: "asset/source",
+                    },
+                ],
             },
         },
         /**

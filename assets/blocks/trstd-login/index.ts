@@ -4,6 +4,7 @@
  * (34px * 38 / 24 + 2px rail x 34px + 2px rail) as the element itself is filled by Trusted Shops at runtime.
  */
 import metadata from './block.json';
+import iconMarkup from '../../ts-icon.svg';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const wp = ( window as any ).wp;
@@ -16,7 +17,25 @@ const { __ } = wp.i18n;
 
 const height = 'var(--ts-trstd-login-height, 34px)';
 
+/**
+ * Convert the raw SVG markup into (React) elements as the block icon must be an element, not a markup string.
+ * Attribute names are camelCased (e.g. fill-rule -> fillRule) to match the React DOM props.
+ */
+const toElement = ( node: Element ): unknown => {
+    const props: Record<string, string> = {};
+
+    Array.from( node.attributes ).forEach( ( attr ) => {
+        props[ attr.name.replace( /-([a-z])/g, ( _, char: string ) => char.toUpperCase() ) ] = attr.value;
+    } );
+
+    return el( node.tagName, props, ...Array.from( node.children ).map( toElement ) );
+};
+
+const iconSvg = new DOMParser().parseFromString( iconMarkup, 'image/svg+xml' ).documentElement;
+const icon = 'svg' === iconSvg.tagName ? toElement( iconSvg ) : 'shield';
+
 registerBlockType( metadata.name, {
+    icon,
     edit: () => {
         const blockProps = useBlockProps( {
             className: 'ts-trstd-login-hd-wrapper',
