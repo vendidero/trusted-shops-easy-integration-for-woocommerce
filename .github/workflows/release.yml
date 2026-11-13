@@ -1,111 +1,148 @@
----
-name: Release
+name: Release (GitHub)
+
+# Builds the plugin and creates a GitHub release (tag v<version> pointing to a build commit which
+# includes vendor/ and dist/) with the distributable zip attached.
+# Does NOT touch wordpress.org - use the "Deploy to wordpress.org" workflow afterwards.
+
 on:
   workflow_dispatch:
     inputs:
-      versionName:
-        description: 'Version (falls back to the next version available)'
-        required: false
+      version:
+        description: 'Version to release, e.g. 4.1.8 (must match the plugin header). Versions containing "-" are pre-releases.'
+        required: true
+        type: string
+      branch:
+        description: 'Branch to release from'
+        required: true
+        default: 'main'
+        type: string
+
+run-name: Release ${{ inputs.version }} from ${{ inputs.branch }}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  PLUGIN_SLUG: trusted-shops-easy-integration-for-woocommerce
+  VERSION: ${{ inputs.version }}
+  BRANCH: ${{ inputs.branch }}
+  TERM: xterm
+
 jobs:
-  create_release:
-    name: Create release
+  release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@master
-      - name: "Get latest GitHub Release"
-        id: last_release
-        uses: InsonusK/get-latest-release@v1.0.1
-        with:
-          myToken: ${{ secrets.GITHUB_TOKEN }}
-          view_top: 1
-      - name: Initialize mandatory git config
+      - name: Validate input
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email noreply@github.com
-      - name: Increase version
-        id: increase_version
-        run: |
-          CUR_V=${{ steps.last_release.outputs.tag_name }}
-          LAST_VERSION=$(sed 's/[^0-9.]//g' <<< "$CUR_V")
-          echo "Latest version -> $LAST_VERSION"
-          NEXT_VERSION=$(echo $LAST_VERSION | awk -F. -v OFS=. '{$NF += 1 ; print}')
-          echo ::set-output name=version::$NEXT_VERSION
-      - name: Next GitHub version
-        run: echo "Version increased -> ${{ steps.increase_version.outputs.version }}"
-      - name: Set version
-        id: set_version
-        run: |
-          if [ "${{ github.event.inputs.versionName }}" == "" ]; then
-            echo ::set-output name=version::${{ steps.increase_version.outputs.version }}
-          else
-            echo ::set-output name=version::${{ github.event.inputs.versionName }}
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::Invalid version \"$VERSION\"."
+            exit 1
           fi
-      - name: Maybe bump version
-        id: "bump_version"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Check versions and tag
         run: |
-          # make file runnable, might not be necessary
-          chmod +x "bin/bump-version.sh"
-          echo "::set-output name=VERSION::$(bin/bump-version.sh -s -v ${{ steps.set_version.outputs.version }})"
-      - name: Validate version
-        run: echo "Next release version will be -> ${{ steps.bump_version.outputs.VERSION }}"
-      - name: Commit version
-        id: commit_version
-        run: |
-          git add .
-          git diff-index --quiet HEAD || git commit -m 'Version bump' --no-verify && git push -f
-      - name: Create release branch
-        run: git checkout -b release/v${{ steps.bump_version.outputs.VERSION }}
-      - name: Bump composer.json version
-        id: "bump_composer_version"
-        run: |
-          echo "::set-output name=VERSION::$(bin/bump-version.sh -s -c -v ${{ steps.bump_version.outputs.VERSION }})"
+          PLUGIN_VERSION=$(grep -i "^ \* Version:" "${PLUGIN_SLUG}.php" | awk '{print $NF}' | tr -d '\r')
+          README_STABLE=$(grep -i "^Stable tag:" readme.txt | awk '{print $NF}' | tr -d '\r')
+
+          if [ "$PLUGIN_VERSION" != "$VERSION" ]; then
+            echo "::error::Version in ${PLUGIN_SLUG}.php is \"${PLUGIN_VERSION}\" but \"${VERSION}\" was requested."
+            exit 1
+          fi
+
+          if [ "$README_STABLE" != "$VERSION" ] && [ "$README_STABLE" != "trunk" ]; then
+            echo "::warning::Stable tag in readme.txt is \"${README_STABLE}\", not \"${VERSION}\"."
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" > /dev/null; then
+            echo "::error::Tag v${VERSION} already exists."
+            exit 1
+          fi
+
+      # Build with the lowest supported PHP version (matches config.platform.php in composer.json) so that
+      # composer scripts and autoloader generation run under the same version the dependencies are resolved for.
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
           tools: composer
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, mysql, mysqli, pdo_mysql, bcmath, soap, intl, gd, exif, iconv, imagick
-          ini-values: post_max_size=256M, short_open_tag=On #optional, setup php.ini configuration
-          coverage: xdebug #optional, setup coverage driver
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Bump composer.json version
+        run: bash bin/bump-version.sh -s -c -v "$VERSION"
+
       - name: Composer install
-        run: composer install --no-dev && composer dump-autoload
-      - name: Use Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: '24.x'
-      - name: Build Project
-        run: |
-          npm install
-          npm run build
-      - name: Commit build
-        id: make-commit
-        run: |
-          git add vendor/. --force
-          git add .
-          git commit -m "Adding /vendor directory to release" --no-verify
-          git add dist/. --force
-          git add .
-          git commit -m "Adding /dist directory to release" --no-verify
-          git add assets/. --force
-          git add .
-          git diff-index --quiet HEAD || git commit -m 'Adding /assets directory with compiled and minified files to release' --no-verify
-      - name: Push new branch
-        run: git push origin release/v${{ steps.bump_version.outputs.VERSION }}
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+        run: composer install --no-dev --no-interaction --prefer-dist
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.bump_version.outputs.VERSION }}
-          release_name: ${{ steps.bump_version.outputs.VERSION }}
-          body: "Release of version ${{ steps.bump_version.outputs.VERSION }}. See readme.txt for details."
-          draft: false
-          prerelease: false
-          commitish: release/v${{ steps.bump_version.outputs.VERSION }}
-      - name: Remove branch
-        run: git checkout main && git branch -D release/v${{ steps.bump_version.outputs.VERSION }} && git push origin --delete release/v${{ steps.bump_version.outputs.VERSION }}
-    env:
-      NODE_VERSION: "12.x"
-      APP_VERSION: "1.0.O"
+          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.GITHUB_TOKEN }}"}}'
+
+      - name: JS build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build distributable zip
+        run: |
+          # Built outside the workspace so that the build commit below does not pick it up.
+          mkdir -p "${RUNNER_TEMP}/dist/${PLUGIN_SLUG}"
+          rsync -r --delete --delete-excluded --exclude-from=.distignore ./ "${RUNNER_TEMP}/dist/${PLUGIN_SLUG}/"
+          (cd "${RUNNER_TEMP}/dist" && zip -qr "${RUNNER_TEMP}/${PLUGIN_SLUG}.zip" "${PLUGIN_SLUG}")
+          unzip -l "${RUNNER_TEMP}/${PLUGIN_SLUG}.zip" | tail -1
+
+      # Guards backwards compatibility: fails in case any shipped file (incl. vendor/)
+      # contains syntax unsupported by PHP 7.4.
+      - name: Lint shipped PHP files (PHP 7.4)
+        run: |
+          php -v | head -1
+          if find "${RUNNER_TEMP}/dist/${PLUGIN_SLUG}" -name '*.php' -print0 | xargs -0 -n 100 -P 4 php -l 2>&1 | grep -v '^No syntax errors'; then
+            echo "::error::PHP 7.4 syntax errors found in shipped files."
+            exit 1
+          fi
+
+      - name: Create build commit and tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "build/${VERSION}"
+          git add --force vendor/. dist/.
+          git add .
+          git commit -m "Build ${VERSION}: add vendor/ and dist/" --no-verify
+
+          git tag "v${VERSION}"
+          git push origin "refs/tags/v${VERSION}"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PRERELEASE=""
+          case "$VERSION" in
+            *-*) PRERELEASE="--prerelease" ;;
+          esac
+
+          gh release create "v${VERSION}" "${RUNNER_TEMP}/${PLUGIN_SLUG}.zip" \
+            --verify-tag \
+            --title "${VERSION}" \
+            --notes "Release of version ${VERSION}. See readme.txt for details." \
+            $PRERELEASE
+
+          {
+            echo "### Released v${VERSION} on GitHub"
+            echo
+            echo "Push it to wordpress.org via the **Deploy to wordpress.org** workflow (tag \`v${VERSION}\`)."
+          } >> "$GITHUB_STEP_SUMMARY"
