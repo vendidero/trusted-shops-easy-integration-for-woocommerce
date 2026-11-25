@@ -174,7 +174,10 @@ wordpress.org is not touched by this workflow.
 
 #### 3. Deploy to wordpress.org
 
-Run the **Deploy to wordpress.org** workflow (`.github/workflows/deploy-wporg.yml`) with the release tag, e.g. `v2.1.1`, and one of the following modes:
+Run the **Deploy to wordpress.org** workflow (`.github/workflows/deploy-wporg.yml`) with the release tag, e.g. `v2.1.1`, and one of the following modes.
+The tag is optional: if left empty, the latest published GitHub release (no drafts or pre-releases) is used. For `release` and `tag-only` the run fails early
+in case that version has already been deployed (`tags/{version}` exists in SVN).
+
 
 * `release` - syncs the release zip to `trunk`, copies `trunk` to `tags/{version}` and syncs `.wordpress-org/` to `assets`.
 * `tag-only` - only creates `tags/{version}` from the release zip (e.g. for backports). Optionally updates the `Stable tag` in `trunk/readme.txt`.
@@ -182,5 +185,5 @@ Run the **Deploy to wordpress.org** workflow (`.github/workflows/deploy-wporg.ym
 
 Use the `dry_run` option to prepare everything and review the pending SVN changes in the run summary without committing.
 
-The SVN username is read from the repository variable `SVN_USERNAME` (Settings -> Variables -> Actions). The SVN password is not stored in GitHub -
+The SVN username is read from the `SVN_USERNAME` secret of the `wordpress-org` environment (Settings -> Environments -> wordpress-org). The SVN password is not stored in GitHub -
 generate a fresh SVN password (wordpress.org profile -> Account & Security), pass it as `svn_password` input and revoke it after the deployment.

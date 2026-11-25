@@ -11,18 +11,23 @@ name: Deploy to wordpress.org
 #
 # Asset changes are only committed in case something actually changed.
 #
+# In case no tag is entered, the latest (published, non pre-release) GitHub release is used. For release and tag-only
+# the run fails early in case that version has already been deployed (tags/<version> exists in SVN).
+#
 # The SVN password is supplied per run (never stored in GitHub). It is read from the event payload and
 # masked before use. Workflow inputs are NOT secrets: they are kept with the run's event payload. Use a
 # freshly generated SVN password (wordpress.org profile -> Account & Security) and revoke it after deploying.
 #
-# The SVN username is read from the repository variable SVN_USERNAME (Settings -> Variables -> Actions).
+# The SVN username is read from the SVN_USERNAME secret of the wordpress-org environment (Settings -> Environments ->
+# wordpress-org). Environment secrets are only available within the job referencing the environment - never read
+# them via the workflow-level env below.
 
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag, e.g. v4.1.8 (assets-only mode: any tag or branch to take assets/readme from)'
-        required: true
+        description: 'Release tag, e.g. v4.1.8 (assets-only mode: any tag or branch to take assets/readme from). Falls back to the latest GitHub release.'
+        required: false
         type: string
       mode:
         description: 'What to deploy'
@@ -55,7 +60,7 @@ on:
 
 # Never reference the password input here or anywhere else in this file via ${{ }} expressions -
 # expressions are expanded into the logged step scripts before masking takes effect.
-run-name: Deploy ${{ inputs.tag }} to wordpress.org (${{ inputs.mode }}${{ inputs.dry_run && ', dry run' || '' }})
+run-name: Deploy ${{ inputs.tag || 'latest release' }} to wordpress.org (${{ inputs.mode }}${{ inputs.dry_run && ', dry run' || '' }})
 
 concurrency:
   group: wporg-deploy
@@ -74,7 +79,6 @@ env:
   UPDATE_STABLE_TAG: ${{ inputs.update_stable_tag }}
   SYNC_README: ${{ inputs.sync_readme }}
   DRY_RUN: ${{ inputs.dry_run }}
-  SVN_USERNAME: ${{ vars.SVN_USERNAME }}
 
 jobs:
   deploy:
@@ -85,6 +89,8 @@ jobs:
     steps:
       # Must stay the first step: masks the password for all following log output.
       - name: Mask SVN password
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
         run: |
           SVN_PASSWORD="$(jq -r '.inputs.svn_password // ""' "$GITHUB_EVENT_PATH")"
 
@@ -96,12 +102,35 @@ jobs:
           fi
 
           if [ -z "$SVN_USERNAME" ] && [ "$DRY_RUN" != "true" ]; then
-            echo "::error::Repository variable SVN_USERNAME is not set."
+            echo "::error::SVN_USERNAME is not set: add it as secret to the wordpress-org environment."
             exit 1
           fi
 
-      - name: Validate input
+      - name: Install Subversion
         run: |
+          if ! command -v svn > /dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq subversion
+          fi
+          svn --version --quiet
+
+      - name: Validate input
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "$TAG" ]; then
+            # Latest published release - drafts and pre-releases are skipped.
+            TAG=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq '.tagName' 2> /dev/null || true)
+
+            if [ -z "$TAG" ]; then
+              echo "::error::No tag entered and no GitHub release found."
+              exit 1
+            fi
+
+            echo "No tag entered, using latest GitHub release -> ${TAG}"
+            echo "TAG=${TAG}" >> "$GITHUB_ENV"
+          fi
+
           if [ "$MODE" = "assets-only" ]; then
             if ! printf '%s' "$TAG" | grep -Eq '^[A-Za-z0-9._/-]+$'; then
               echo "::error::Invalid ref \"$TAG\"."
@@ -115,15 +144,12 @@ jobs:
             fi
             echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
             echo "TAG=v${VERSION}" >> "$GITHUB_ENV"
-          fi
 
-      - name: Install Subversion
-        run: |
-          if ! command -v svn > /dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq subversion
+            if svn info "${SVN_URL}/tags/${VERSION}" > /dev/null 2>&1; then
+              echo "::error::Version ${VERSION} has already been deployed to wordpress.org (tags/${VERSION} exists)."
+              exit 1
+            fi
           fi
-          svn --version --quiet
 
       - name: Checkout
         uses: actions/checkout@v7
@@ -239,6 +265,8 @@ jobs:
           svn status --depth infinity | grep -v '^Performing' || true
 
       - name: Commit to SVN
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
         run: |
           cd "$SVN_DIR"
 
