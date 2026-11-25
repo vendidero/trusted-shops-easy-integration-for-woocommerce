@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Trusted Shops Easy Integration for WooCommerce\n"
-"POT-Creation-Date: 2026-09-11 10:30+0200\n"
+"POT-Creation-Date: 2026-11-25 09:42+0100\n"
 "PO-Revision-Date: 2026-09-11 10:31+0200\n"
 "Last-Translator: Dennis Nissle <info@vendidero.de>\n"
 "Language-Team: \n"
@@ -15,9 +15,8 @@ msgstr ""
 "X-Poedit-Flags-xgettext: --add-comments=translators:\n"
 "X-Poedit-WPHeader: trusted-shops-easy-integration-for-woocommerce.php\n"
 "X-Poedit-SourceCharset: UTF-8\n"
-"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
-"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
-"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-KeywordsList: "
+"__;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: *.min.js\n"
 "X-Poedit-SearchPathExcluded-1: vendor\n"
@@ -25,17 +24,44 @@ msgstr ""
 "X-Poedit-SearchPathExcluded-3: build\n"
 "X-Poedit-SearchPathExcluded-4: dist\n"
 
+#. Plugin Name of the plugin
+#: trusted-shops-easy-integration-for-woocommerce.php
+msgid "Trusted Shops Easy Integration for WooCommerce"
+msgstr "Trusted Shops Easy Integration for WooCommerce"
+
+#. Plugin URI of the plugin
+#: trusted-shops-easy-integration-for-woocommerce.php
+msgid ""
+"https://wordpress.org/plugins/trusted-shops-easy-integration-for-woocommerce"
+msgstr ""
+"https://wordpress.org/plugins/trusted-shops-easy-integration-for-woocommerce"
+
+#. Description of the plugin
+#: trusted-shops-easy-integration-for-woocommerce.php
+msgid "Trusted Shops Easy Integration for WooCommerce."
+msgstr "Trusted Shops Easy Integration for WooCommerce."
+
+#. Author of the plugin
+#: trusted-shops-easy-integration-for-woocommerce.php
+msgid "vendidero"
+msgstr "vendidero"
+
+#. Author URI of the plugin
+#: trusted-shops-easy-integration-for-woocommerce.php
+msgid "https://vendidero.de"
+msgstr "https://vendidero.de"
+
 #: src/Admin/Helper.php:41
 msgctxt "trusted-shops"
 msgid "Encryption key missing"
 msgstr "Der Verschlüsselungscode fehlt"
 
-#: src/Admin/Helper.php:120 src/Admin/Helper.php:150
+#: src/Admin/Helper.php:159 src/Admin/Helper.php:203
 msgctxt "trusted-shops"
 msgid "GTIN"
 msgstr "GTIN"
 
-#: src/Admin/Helper.php:123 src/Admin/Helper.php:153
+#: src/Admin/Helper.php:162 src/Admin/Helper.php:206
 msgctxt "trusted-shops"
 msgid ""
 "ID that allows your products to be identified worldwide. If you want to "
@@ -47,12 +73,12 @@ msgstr ""
 "Shopping und bezahlten Google Produktanzeigen ausspielen möchtest, benötigt "
 "Google die GTIN."
 
-#: src/Admin/Helper.php:134 src/Admin/Helper.php:160
+#: src/Admin/Helper.php:175 src/Admin/Helper.php:215
 msgctxt "trusted-shops"
 msgid "MPN"
 msgstr "MPN"
 
-#: src/Admin/Helper.php:137 src/Admin/Helper.php:163
+#: src/Admin/Helper.php:178 src/Admin/Helper.php:218
 msgctxt "trusted-shops"
 msgid ""
 "If you don't have a GTIN for your products, you can pass the brand name and "
@@ -61,19 +87,19 @@ msgstr ""
 "Wenn Ihre Produkte keine GTIN haben, können Sie den Markennamen zusammen mit "
 "der MPN übergeben, um die Trusted Shops Google Integration zu nutzen."
 
-#: src/Admin/Helper.php:204
+#: src/Admin/Helper.php:260
 msgctxt "trusted-shops"
 msgid "Are you sure you want to change your login information?"
 msgstr "Wollen Sie Ihre Zugangsdaten wirklich ändern?"
 
-#: src/Admin/Helper.php:205
+#: src/Admin/Helper.php:261
 msgctxt "trusted-shops"
 msgid "Disconnecting will delete all your current settings. Are you sure?"
 msgstr ""
 "Beim Trennen der Verbindung werden alle Ihre Einstellungen gelöscht. Sind "
 "Sie sicher?"
 
-#: src/Admin/Helper.php:206
+#: src/Admin/Helper.php:262
 msgctxt "trusted-shops"
 msgid ""
 "Do you want to export your latest orders to a CSV file and start the "
@@ -87,17 +113,17 @@ msgctxt "trusted-shops"
 msgid "Trusted Shops New"
 msgstr "Trusted Shops New"
 
-#: src/Hooks.php:288
+#: src/Hooks.php:289
 msgctxt "trusted-shops"
 msgid "Trusted Shops Reviews"
 msgstr "Trusted Shops Bewertungen"
 
-#: src/Package.php:94
+#: src/Package.php:125
 msgctxt "trusted-shops"
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: src/Package.php:161
+#: src/Package.php:192
 msgctxt "trusted-shops"
 msgid ""
 "To use the Trusted Shops Easy Integration for WooCommerce plugin please make "
@@ -107,7 +133,7 @@ msgstr ""
 "verwenden, stellen Sie bitte sicher, dass WooCommerce installiert und "
 "aktiviert ist."
 
-#: src/Package.php:730
+#: src/Package.php:1041
 msgctxt "trusted-shops-brand-attribute"
 msgid "Brand"
 msgstr "Marke"
@@ -117,7 +143,8 @@ msgctxt "trusted-shops"
 msgid "Encrypt your Client ID and Client Secret"
 msgstr "Verschlüsseln Sie Client ID und Client Secret"
 
-#: src/SecretsHelper.php:24
+#. translators: 1: constant name 2: constant explanation 3: wp-config.php docs URL
+#: src/SecretsHelper.php:25
 #, php-format
 msgctxt "trusted-shops"
 msgid ""
@@ -134,24 +161,41 @@ msgstr ""
 "bitte den folgenden Code-Schnipsel in Ihre <a href=\"%3$s\" "
 "target=\"_blank\">wp-config.php</a> Datei:"
 
-#. Plugin Name of the plugin/theme
-msgid "Trusted Shops Easy Integration for WooCommerce"
-msgstr "Trusted Shops Easy Integration for WooCommerce"
-
-#. Plugin URI of the plugin/theme
+#: dist/blocks/trstd-login/index.js:1
 msgid ""
-"https://wordpress.org/plugins/trusted-shops-easy-integration-for-woocommerce"
-msgstr ""
-"https://wordpress.org/plugins/trusted-shops-easy-integration-for-woocommerce"
+"#trstd login - displayed in your storefront as soon as it is enabled in your "
+"Trusted Shops settings."
+msgstr "#trstd login - wird in Ihrem Shop angezeigt, sobald es in Ihren Trusted Shops Einstellungen aktiviert ist."
 
-#. Description of the plugin/theme
-msgid "Trusted Shops Easy Integration for WooCommerce."
-msgstr "Trusted Shops Easy Integration for WooCommerce."
+#: assets/blocks/trstd-login/block.json
+msgctxt "block title"
+msgid "#trstd login"
+msgstr "#trstd login"
 
-#. Author of the plugin/theme
-msgid "vendidero"
-msgstr "vendidero"
+#: assets/blocks/trstd-login/block.json
+msgctxt "block description"
+msgid ""
+"Places the Trusted Shops #trstd login element, e.g. next to the account or "
+"cart icon within your header. Rendered only in case #trstd login is enabled "
+"for the current channel."
+msgstr "Platziert das Trusted Shops #trstd login Element, z.B. neben dem Konto- oder Warenkorb-Icon in Ihrem Header. Wird nur ausgegeben, sofern #trstd login für den aktuellen Kanal aktiviert ist."
 
-#. Author URI of the plugin/theme
-msgid "https://vendidero.de"
-msgstr "https://vendidero.de"
+#: assets/blocks/trstd-login/block.json
+msgctxt "block keyword"
+msgid "Trusted Shops"
+msgstr "Trusted Shops"
+
+#: assets/blocks/trstd-login/block.json
+msgctxt "block keyword"
+msgid "trstd"
+msgstr "trstd"
+
+#: assets/blocks/trstd-login/block.json
+msgctxt "block keyword"
+msgid "login"
+msgstr "Login"
+
+#: assets/blocks/trstd-login/block.json
+msgctxt "block keyword"
+msgid "trusted"
+msgstr "vertrauen"

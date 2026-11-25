@@ -4,7 +4,7 @@ Tags: trusted shops, woocommerce, badge, trust, business ratings
 Requires at least: 4.9
 Tested up to: 7.2
 WC requires at least: 3.9
-WC tested up to: 11.2
+WC tested up to: 11.3
 Stable tag: 2.1.0
 Requires PHP: 5.6
 License: GPLv3
@@ -38,6 +38,10 @@ Install this plugin via WP-Admin > Plugins and connect your site via WooCommerce
 `[ts_widget id="{widget_id}" product_identifier="{identifier}"]`
 Use this shortcode to embed a specific widget, e.g.: `[ts_widget id="wdg-d6dc1e38-d43b-46aa-123e-232441"]`. Please mind that
 embedding product-specific widgets by passing an identifier (e.g. sku, gtin, mpn) will only work on product-specific pages.
+
+`[ts_trstd_login]`
+Use this shortcode to embed the #trstd login element at a custom location. The element is only rendered in case #trstd login is enabled for the current channel.
+Alternatively place the #trstd login block within your (block theme) header or use `do_action( 'ts_easy_integration_trstd_login' );` within your (classic) theme.
 
 = Hooks =
 
@@ -122,6 +126,14 @@ Please report security bugs found in the source code of the plugin through the [
 5. Screenshot 5
 
 == Changelog ==
+= 2.1.0 =
+* New: #trstd login support - automatically placed within your (block theme) header, available as a block and via the `[ts_trstd_login]` shortcode
+* New: Product review rich snippets (JSON-LD) - periodically synced from Trusted Shops and embedded within your shop
+* Improvement: Hide the GTIN/MPN product fields in case Woo core supports these identifiers and no Trusted Shops specific value exists
+* Improvement: Use Woo core MPN (Woo 11.4+) as fallback
+* Improvement: Compatibility with Woo 11.3
+* Fix: Prevent race conditions when updating settings on multiple simultaneous events
+
 = 2.0.8 =
 * Fix: Saving credentials
 

@@ -97,6 +97,23 @@ output a certain widget (with an ID) at a custom location, e.g. in a page, post 
 
 Please be aware that product-related widgets will only work if the global `$product` variable is set and valid, e.g. on single product pages.
 
+The `ts_trstd_login` shortcode outputs the #trstd login element at a custom location, e.g. `[ts_trstd_login]`. The element is only rendered in case
+#trstd login is enabled for the current channel. Alternatively, place the `ts-easy-integration/trstd-login` block within your (block theme) header or
+call `do_action( 'ts_easy_integration_trstd_login' );` within your (classic) theme. Automatic placement within block theme headers may be disabled via the
+`ts_easy_integration_trstd_login_auto_insert` filter.
+
+### Translations
+
+The POT file is generated via WP-CLI (Poedit is not able to parse `block.json` and the built block script). Run `npm run build` first so that the strings
+of `dist/blocks/trstd-login/index.js` are included:
+
+```
+wp i18n make-pot . i18n/languages/trusted-shops-easy-integration-for-woocommerce.pot --exclude=vendor,node_modules,build,tests,release
+wp i18n make-json i18n/languages --no-purge
+```
+
+`make-json` creates the JSON translation files for the block editor script. Re-run it whenever the block script strings change.
+
 ### Secrets Storage
 
 The secrets (Client ID, Client secret) are stored as encrypted values in the `wp_options` table. The `src/SecretsHelper.php` file contains the 
@@ -129,22 +146,40 @@ define( 'TS_EASY_INTEGRATION_IS_DEBUG_MODE', true );
 
 ### Deployment
 
-Deploying a new version of the plugin works as follows:
+Releases are created and deployed via GitHub Actions (Actions tab of the repository). Deploying a new version works in two steps:
+the GitHub release is created first, the wordpress.org deployment is triggered separately afterwards.
 
-1. Composer is updated, `vendor` dir is committed. JS build runs, TypeScript is compiled.
-2. A GitHub Release is created
-3. The new version is pushed via SVN to the WordPress plugin repository to publish the update.
+#### 1. Prepare the version
 
-To create a new version, make sure to bump versions in the following files:
+Bump the version in the following files (`bin/bump-version.sh -v {version}` updates the plugin header, `package.json` and `src/Package.php` for you):
 
 1. `trusted-shops-easy-integration-for-woocommerce.php`
-2. Update stable tag in `readme.txt` and provide changelog
-3. `src/Package.php`
+2. `src/Package.php`
+3. Update the stable tag in `readme.txt` and provide a changelog
 
-Afterwards you may use the deployment script via shell:
+Commit and push the changes to the branch you want to release from (usually `main`).
 
-```
-./bin/release.sh
-```
+#### 2. Create the GitHub release
 
-This script uses [hub](https://github.com/github/hub) to create a new GitHub release and automatically updates the necessary SVN files.
+Run the **Release (GitHub)** workflow (`.github/workflows/release.yml`) with:
+
+* `version` - the version to release, e.g. `2.1.1`. Must match the version in the plugin header. Versions containing a `-` (e.g. `2.2.0-beta`) are published as pre-release.
+* `branch` - the branch to release from (defaults to `main`).
+
+The workflow installs the composer (no-dev) and npm dependencies, runs the JS build, lints all shipped PHP files against PHP 7.4,
+creates a build commit (including `vendor/` and `dist/`) tagged as `v{version}` and creates the GitHub release with the
+distributable `trusted-shops-easy-integration-for-woocommerce.zip` attached. Files excluded from the zip are listed in `.distignore`.
+wordpress.org is not touched by this workflow.
+
+#### 3. Deploy to wordpress.org
+
+Run the **Deploy to wordpress.org** workflow (`.github/workflows/deploy-wporg.yml`) with the release tag, e.g. `v2.1.1`, and one of the following modes:
+
+* `release` - syncs the release zip to `trunk`, copies `trunk` to `tags/{version}` and syncs `.wordpress-org/` to `assets`.
+* `tag-only` - only creates `tags/{version}` from the release zip (e.g. for backports). Optionally updates the `Stable tag` in `trunk/readme.txt`.
+* `assets-only` - syncs `.wordpress-org/` (of the given tag or branch) to `assets`. Optionally syncs `readme.txt` to `trunk` and the current stable tag.
+
+Use the `dry_run` option to prepare everything and review the pending SVN changes in the run summary without committing.
+
+The SVN username is read from the repository variable `SVN_USERNAME` (Settings -> Variables -> Actions). The SVN password is not stored in GitHub -
+generate a fresh SVN password (wordpress.org profile -> Account & Security), pass it as `svn_password` input and revoke it after the deployment.

@@ -198,10 +198,13 @@ class Package {
 	}
 
 	protected static function init_hooks() {
+		/**
+		 * Load the textdomain before registering the #trstd login block to make sure block.json strings are translated.
+		 */
+		add_action( 'init', array( __CLASS__, 'load_plugin_textdomain' ) );
 		add_action( 'init', array( '\Vendidero\TrustedShopsEasyIntegration\Shortcodes', 'init' ) );
 		add_action( 'init', array( '\Vendidero\TrustedShopsEasyIntegration\TrstdLogin', 'init' ) );
 		add_action( 'init', array( __CLASS__, 'check_version' ), 10 );
-		add_action( 'init', array( __CLASS__, 'load_plugin_textdomain' ) );
 		add_action( 'init', array( __CLASS__, 'setup_recurring_actions' ), 10 );
 		add_action( 'ts_easy_integration_fetch_json_ld', array( __CLASS__, 'fetch_json_ld' ) );
 	}
@@ -931,11 +934,19 @@ class Package {
 
 		if ( '_' !== substr( $attribute, 0, 1 ) && is_callable( array( $product, $getter ) ) ) {
 			$data = $product->{$getter}();
+		} elseif ( '_ts_mpn' === $attribute && self::is_integration() && function_exists( 'wc_gzd_get_product' ) ) {
+			/**
+			 * Let Germanized determine the MPN, e.g. to prefer the Woo core MPN (11.4+) over the Germanized MPN.
+			 */
+			$gzd_product = wc_gzd_get_product( $product );
+			$data        = $gzd_product ? $gzd_product->get_mpn() : '';
 		} else {
 			$data = $product->get_meta( $attribute, true );
 
 			if ( '_ts_gtin' === $attribute && empty( $data ) && is_callable( array( $product, 'get_global_unique_id' ) ) ) {
 				$data = $product->get_global_unique_id();
+			} elseif ( '_ts_mpn' === $attribute && empty( $data ) && is_callable( array( $product, 'get_mpn' ) ) ) {
+				$data = $product->get_mpn();
 			}
 		}
 

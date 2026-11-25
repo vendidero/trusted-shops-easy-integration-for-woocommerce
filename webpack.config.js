@@ -45,6 +45,15 @@ module.exports = ({ development }) => {
                 filename: "index.js",
                 path: path.resolve(__dirname, "dist/blocks/trstd-login")
             },
+            optimization: {
+                minimizeOptions: {
+                    // Keep the i18n function names so that wp i18n make-pot is able to extract the strings from the build.
+                    javascript: {
+                        compress: { passes: 2 },
+                        mangle: { reserved: [ "__", "_x", "_n", "_nx" ] },
+                    },
+                },
+            },
             module: {
                 rules: [
                     tsRule(),
