@@ -3,21 +3,30 @@ name: Release (GitHub)
 # Builds the plugin and creates a GitHub release (tag v<version> pointing to a build commit which
 # includes vendor/ and dist/) with the distributable zip attached.
 # Does NOT touch wordpress.org - use the "Deploy to wordpress.org" workflow afterwards.
+#
+# In case no version is entered, the current version (plugin header) is used as long as it has not been released yet.
+# The force option rebuilds an already released version: the existing release (and tag) is deleted after the build
+# succeeded and a new one is created.
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release, e.g. 4.1.8 (must match the plugin header). Versions containing "-" are pre-releases.'
-        required: true
+        description: 'Version to release, e.g. 4.1.8 (must match the plugin header). Falls back to the current version in case it has not been released yet (or force is set). Versions containing "-" are pre-releases.'
+        required: false
         type: string
       branch:
         description: 'Branch to release from'
         required: true
         default: 'main'
         type: string
+      force:
+        description: 'Force: rebuild a version that has already been released (deletes the existing release and tag and creates a new one)'
+        required: false
+        type: boolean
+        default: false
 
-run-name: Release ${{ inputs.version }} from ${{ inputs.branch }}
+run-name: Release ${{ inputs.version || 'current version' }} from ${{ inputs.branch }}${{ inputs.force && ' (force)' || '' }}
 
 concurrency:
   group: release
@@ -28,8 +37,11 @@ permissions:
 
 env:
   PLUGIN_SLUG: trusted-shops-easy-integration-for-woocommerce
-  VERSION: ${{ inputs.version }}
+  # Never expand inputs directly within run scripts via ${{ }} - pass them as env vars instead.
+  VERSION_INPUT: ${{ inputs.version }}
   BRANCH: ${{ inputs.branch }}
+  FORCE: ${{ inputs.force }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TERM: xterm
 
 jobs:
@@ -38,8 +50,8 @@ jobs:
     steps:
       - name: Validate input
         run: |
-          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
-            echo "::error::Invalid version \"$VERSION\"."
+          if [ -n "$VERSION_INPUT" ] && ! printf '%s' "$VERSION_INPUT" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::Invalid version \"$VERSION_INPUT\"."
             exit 1
           fi
 
@@ -48,7 +60,31 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
 
+      - name: Determine version
+        run: |
+          is_released() {
+            gh release view "v$1" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1 || git ls-remote --exit-code --tags origin "refs/tags/v$1" > /dev/null 2>&1
+          }
+
+          CURRENT=$(grep -i "^ \* Version:" "${PLUGIN_SLUG}.php" | awk '{print $NF}' | tr -d '\r')
+          LAST_TAG=$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=1" --jq '.[0].tag_name // ""')
+          echo "Latest release -> ${LAST_TAG:-none}, current version -> ${CURRENT:-none}"
+
+          if [ -n "$VERSION_INPUT" ]; then
+            VERSION="$VERSION_INPUT"
+          elif [ -n "$CURRENT" ] && { [ "$FORCE" = "true" ] || ! is_released "$CURRENT"; }; then
+            # The current version has not been released yet (or is rebuilt by force).
+            VERSION="$CURRENT"
+          else
+            echo "::error::The current version \"${CURRENT}\" has already been released. Bump the version (bin/bump-version.sh) or use the force option to rebuild it."
+            exit 1
+          fi
+
+          echo "Version -> ${VERSION}"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
       - name: Check versions and tag
+        id: check_tag
         run: |
           PLUGIN_VERSION=$(grep -i "^ \* Version:" "${PLUGIN_SLUG}.php" | awk '{print $NF}' | tr -d '\r')
           README_STABLE=$(grep -i "^Stable tag:" readme.txt | awk '{print $NF}' | tr -d '\r')
@@ -62,9 +98,16 @@ jobs:
             echo "::warning::Stable tag in readme.txt is \"${README_STABLE}\", not \"${VERSION}\"."
           fi
 
-          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" > /dev/null; then
-            echo "::error::Tag v${VERSION} already exists."
-            exit 1
+          if gh release view "v${VERSION}" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1 || git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" > /dev/null 2>&1; then
+            if [ "$FORCE" = "true" ]; then
+              echo "::warning::Release v${VERSION} already exists - force rebuild: the existing release and tag will be replaced."
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "::error::Release/tag v${VERSION} already exists. Use the force option to rebuild it."
+              exit 1
+            fi
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
       # Build with the lowest supported PHP version (matches config.platform.php in composer.json) so that
@@ -113,7 +156,7 @@ jobs:
             exit 1
           fi
 
-      - name: Create build commit and tag
+      - name: Create build commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -123,12 +166,23 @@ jobs:
           git add .
           git commit -m "Build ${VERSION}: add vendor/ and dist/" --no-verify
 
-          git tag "v${VERSION}"
+      # Deleted as late as possible (after the build succeeded) to keep the window without a release short.
+      - name: Delete existing release and tag (force)
+        if: steps.check_tag.outputs.exists == 'true'
+        run: |
+          gh release delete "v${VERSION}" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true
+
+          # The tag may exist without a release.
+          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" > /dev/null 2>&1; then
+            git push origin --delete "refs/tags/v${VERSION}"
+          fi
+
+      - name: Create tag
+        run: |
+          git tag --force "v${VERSION}"
           git push origin "refs/tags/v${VERSION}"
 
       - name: Create GitHub release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PRERELEASE=""
           case "$VERSION" in

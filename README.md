@@ -163,8 +163,9 @@ Commit and push the changes to the branch you want to release from (usually `mai
 
 Run the **Release (GitHub)** workflow (`.github/workflows/release.yml`) with:
 
-* `version` - the version to release, e.g. `2.1.1`. Must match the version in the plugin header. Versions containing a `-` (e.g. `2.2.0-beta`) are published as pre-release.
+* `version` - the version to release, e.g. `2.1.1`. Must match the version in the plugin header. Optional: falls back to the current version (plugin header) in case it has not been released yet (or `force` is set). Versions containing a `-` (e.g. `2.2.0-beta`) are published as pre-release.
 * `branch` - the branch to release from (defaults to `main`).
+* `force` - rebuild a version that has already been released. The existing GitHub release and tag are deleted after the build succeeded and created again.
 
 The workflow installs the composer (no-dev) and npm dependencies, runs the JS build, lints all shipped PHP files against PHP 7.4,
 creates a build commit (including `vendor/` and `dist/`) tagged as `v{version}` and creates the GitHub release with the
