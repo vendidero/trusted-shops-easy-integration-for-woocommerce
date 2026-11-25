@@ -104,65 +104,121 @@ class Helper {
 		}
 	}
 
+	/**
+	 * Woo core supports a GTIN (global unique id) since 9.2 and a MPN since 11.4.
+	 *
+	 * @param string $type
+	 *
+	 * @return bool
+	 */
+	protected static function wc_supports_product_identifier( $type ) {
+		$getter = 'gtin' === $type ? 'get_global_unique_id' : 'get_mpn';
+
+		return class_exists( 'WC_Product' ) && method_exists( 'WC_Product', $getter );
+	}
+
+	/**
+	 * Hide the TS GTIN/MPN field in case Woo core supports the identifier natively
+	 * and no (legacy) TS fallback value exists for the product.
+	 *
+	 * @param \WC_Product|null $product
+	 * @param string $type
+	 *
+	 * @return bool
+	 */
+	protected static function show_product_identifier_field( $product, $type ) {
+		$show = true;
+
+		if ( self::wc_supports_product_identifier( $type ) ) {
+			$show = $product && '' !== (string) $product->get_meta( "_ts_{$type}", true );
+		}
+
+		return (bool) apply_filters( 'ts_easy_integration_show_product_identifier_field', $show, $product, $type );
+	}
+
 	public static function product_options_variable( $loop, $variation_data, $variation ) {
-		$_product = wc_get_product( $variation );
-		$_parent  = wc_get_product( $_product->get_parent_id() );
+		$_product  = wc_get_product( $variation );
+		$_parent   = wc_get_product( $_product->get_parent_id() );
+		$show_gtin = self::show_product_identifier_field( $_product, 'gtin' );
+		$show_mpn  = self::show_product_identifier_field( $_product, 'mpn' );
+
+		if ( ! $show_gtin && ! $show_mpn ) {
+			return;
+		}
 
 		echo '<div class="variable_gzd_ts_labels">';
 
-		woocommerce_wp_text_input(
-			array(
-				'wrapper_class' => 'form-row form-row-first',
-				'id'            => "variable_ts_gtin{$loop}",
-				'name'          => "variable_ts_gtin[{$loop}]",
-				'placeholder'   => $_parent->get_meta( '_ts_gtin' ) ? $_parent->get_meta( '_ts_gtin' ) : '',
-				'value'         => $_product->get_meta( '_ts_gtin' ) ? $_product->get_meta( '_ts_gtin' ) : '',
-				'label'         => _x( 'GTIN', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
-				'data_type'     => 'text',
-				'desc_tip'      => true,
-				'description'   => _x( 'ID that allows your products to be identified worldwide. If you want to display your Trusted Shops Product Reviews in Google Shopping and paid Google adverts, Google needs the GTIN.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
-			)
-		);
+		if ( $show_gtin ) {
+			woocommerce_wp_text_input(
+				array(
+					'wrapper_class' => 'form-row form-row-first',
+					'id'            => "variable_ts_gtin{$loop}",
+					'name'          => "variable_ts_gtin[{$loop}]",
+					'placeholder'   => $_parent && $_parent->get_meta( '_ts_gtin' ) ? $_parent->get_meta( '_ts_gtin' ) : '',
+					'value'         => $_product->get_meta( '_ts_gtin' ) ? $_product->get_meta( '_ts_gtin' ) : '',
+					'label'         => _x( 'GTIN', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
+					'data_type'     => 'text',
+					'desc_tip'      => true,
+					'description'   => _x( 'ID that allows your products to be identified worldwide. If you want to display your Trusted Shops Product Reviews in Google Shopping and paid Google adverts, Google needs the GTIN.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
+				)
+			);
+		}
 
-		woocommerce_wp_text_input(
-			array(
-				'wrapper_class' => 'form-row form-row-last',
-				'id'            => "variable_ts_mpn{$loop}",
-				'name'          => "variable_ts_mpn[{$loop}]",
-				'placeholder'   => $_parent->get_meta( '_ts_mpn' ) ? $_parent->get_meta( '_ts_mpn' ) : '',
-				'value'         => $_product->get_meta( '_ts_mpn' ) ? $_product->get_meta( '_ts_mpn' ) : '',
-				'label'         => _x( 'MPN', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
-				'data_type'     => 'text',
-				'desc_tip'      => true,
-				'description'   => _x( 'If you don\'t have a GTIN for your products, you can pass the brand name and the MPN on to Google to use the Trusted Shops Google Integration.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
-			)
-		);
+		if ( $show_mpn ) {
+			woocommerce_wp_text_input(
+				array(
+					'wrapper_class' => $show_gtin ? 'form-row form-row-last' : 'form-row form-row-first',
+					'id'            => "variable_ts_mpn{$loop}",
+					'name'          => "variable_ts_mpn[{$loop}]",
+					'placeholder'   => $_parent && $_parent->get_meta( '_ts_mpn' ) ? $_parent->get_meta( '_ts_mpn' ) : '',
+					'value'         => $_product->get_meta( '_ts_mpn' ) ? $_product->get_meta( '_ts_mpn' ) : '',
+					'label'         => _x( 'MPN', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
+					'data_type'     => 'text',
+					'desc_tip'      => true,
+					'description'   => _x( 'If you don\'t have a GTIN for your products, you can pass the brand name and the MPN on to Google to use the Trusted Shops Google Integration.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
+				)
+			);
+		}
 
 		echo '</div>';
 	}
 
 	public static function product_options() {
+		global $product_object;
+
+		$product   = is_a( $product_object, 'WC_Product' ) ? $product_object : null;
+		$show_gtin = self::show_product_identifier_field( $product, 'gtin' );
+		$show_mpn  = self::show_product_identifier_field( $product, 'mpn' );
+
+		if ( ! $show_gtin && ! $show_mpn ) {
+			return;
+		}
+
 		echo '<div class="options_group show_if_simple show_if_external show_if_variable">';
 
-		woocommerce_wp_text_input(
-			array(
-				'id'          => '_ts_gtin',
-				'label'       => _x( 'GTIN', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
-				'data_type'   => 'text',
-				'desc_tip'    => true,
-				'description' => _x( 'ID that allows your products to be identified worldwide. If you want to display your Trusted Shops Product Reviews in Google Shopping and paid Google adverts, Google needs the GTIN.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
-			)
-		);
+		if ( $show_gtin ) {
+			woocommerce_wp_text_input(
+				array(
+					'id'          => '_ts_gtin',
+					'label'       => _x( 'GTIN', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
+					'data_type'   => 'text',
+					'desc_tip'    => true,
+					'description' => _x( 'ID that allows your products to be identified worldwide. If you want to display your Trusted Shops Product Reviews in Google Shopping and paid Google adverts, Google needs the GTIN.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
+				)
+			);
+		}
 
-		woocommerce_wp_text_input(
-			array(
-				'id'          => '_ts_mpn',
-				'label'       => _x( 'MPN', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
-				'data_type'   => 'text',
-				'desc_tip'    => true,
-				'description' => _x( 'If you don\'t have a GTIN for your products, you can pass the brand name and the MPN on to Google to use the Trusted Shops Google Integration.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
-			)
-		);
+		if ( $show_mpn ) {
+			woocommerce_wp_text_input(
+				array(
+					'id'          => '_ts_mpn',
+					'label'       => _x( 'MPN', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
+					'data_type'   => 'text',
+					'desc_tip'    => true,
+					'description' => _x( 'If you don\'t have a GTIN for your products, you can pass the brand name and the MPN on to Google to use the Trusted Shops Google Integration.', 'trusted-shops', 'trusted-shops-easy-integration-for-woocommerce' ),
+				)
+			);
+		}
 
 		echo '</div>';
 	}
